@@ -1,0 +1,9 @@
+{
+  "name": "dragon-character-test",
+  "version": "0.1.0",
+  "title": "Dragon Character - headless tests",
+  "author": "MilkJugg24",
+  "factorio_version": "2.0",
+  "description": "Development only: exercises the character swap logic of dragon-character. Not meant to be installed by players.",
+  "dependencies": ["dragon-character"]
+}
