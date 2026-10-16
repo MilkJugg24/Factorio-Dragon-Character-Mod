@@ -1,0 +1,10 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.1.0
+Date: 2026-10-16
+  Features:
+    - The engineer is replaced by a dragon with wings and a tail.
+    - Customization window (shortcut bar, top-left button or Ctrl + Shift + D) with:
+      scale color (18 presets, RGB sliders, hex input), male/female body shape, hoodie and shorts.
+    - Dragon corpses match the dragon's body shape and outfit.
+    - With Space Age's mech armor the dragon flies by flapping its wings.
+    - /dragon-revert-all admin command to prepare a save for removing the mod.
