@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.1
+Date: 2026-10-17
+  Bugfixes:
+    - Fixed a crash when opening the customization window.
+    - A look change that has to wait no longer empties the player's hand; it waits until the hand is empty.
+    - The window no longer overwrites the hex/RGB value being typed while a look change is waiting.
+    - The window now closes when the player dies or rejoins instead of staying open without Esc closing it.
+    - Turning off the top-left button no longer leaves an empty box behind.
+    - Shows the right status message during cutscenes.
+    - Look changes no longer apply in the same tick handcrafting finishes or is cancelled.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.0
 Date: 2026-10-16
   Features:

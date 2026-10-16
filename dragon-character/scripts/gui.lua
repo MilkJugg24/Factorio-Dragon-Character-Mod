@@ -58,6 +58,11 @@ end
 
 function gui.update_top_button(player)
   local show = player.mod_settings["dragon-character-show-top-button"].value
+  local top = player.gui.top
+  if not show and not (top.mod_gui_top_frame or top.mod_gui_button_flow) then
+    -- nothing to remove, and get_button_flow() would create empty frames
+    return
+  end
   local flow = mod_gui.get_button_flow(player)
   local button = flow[gui.TOP_BUTTON]
   if show and not button then
@@ -71,6 +76,10 @@ function gui.update_top_button(player)
     })
   elseif button and not show then
     button.destroy()
+  end
+  -- drop the shared mod-gui frames once no mod has a button left in them
+  if not show and flow.name == "mod_gui_inner_frame" and #flow.children == 0 then
+    flow.parent.destroy()
   end
 end
 
@@ -120,7 +129,9 @@ function gui.open(player, prefs)
     tags = { dragon_action = "close" },
   })
 
-  local content = frame.add({ type = "frame", style = "inside_shallow_frame_with_padding", direction = "horizontal" })
+  -- frames have no cell spacing of their own, so lay the content out in a flow
+  local content_frame = frame.add({ type = "frame", style = "inside_shallow_frame_with_padding", direction = "horizontal" })
+  local content = content_frame.add({ type = "flow", direction = "horizontal" })
   content.style.horizontal_spacing = 12
 
   -- live preview of the character
@@ -264,6 +275,7 @@ function gui.open(player, prefs)
   player.opened = frame
   player.set_shortcut_toggled(gui.SHORTCUT, true)
   gui.refresh(player, prefs)
+  gui.refresh_color(player)
 end
 
 -- Updates the color widgets. `skip` is the element the change came from, so
@@ -342,7 +354,8 @@ function gui.refresh(player, prefs)
       status.caption = ""
     end
   end
-  gui.refresh_color(player)
+  -- the color widgets are only refreshed when the color changes, so this
+  -- periodic refresh never overwrites what the player is typing
 end
 
 return gui

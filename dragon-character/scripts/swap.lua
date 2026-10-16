@@ -43,20 +43,27 @@ end
 -- Returns nil when the character can be swapped right now, otherwise a
 -- reason string (used for the status message and to retry later).
 function swap.blocked_reason(player)
+  local controller = player.controller_type
+  -- during a cutscene player.character is nil, so check this first
+  if controller == defines.controllers.cutscene then
+    return "cutscene"
+  end
   local character = player.character
   if not (character and character.valid) then
     return "no-character"
   end
-  local controller = player.controller_type
   if controller == defines.controllers.remote then
     return "remote"
-  elseif controller == defines.controllers.cutscene then
-    return "cutscene"
   elseif controller ~= defines.controllers.character then
     return "no-character"
   end
   if character.vehicle then
     return "vehicle"
+  end
+  -- never empty the player's hand for them; wait until they do
+  local cursor = player.cursor_stack
+  if cursor and cursor.valid_for_read then
+    return "cursor"
   end
   if try_get(character, "cargo_pod") then
     return "cargo-pod"
@@ -234,10 +241,7 @@ end
 function swap.replace(player, target_name)
   local old = player.character
   if player.cursor_stack and player.cursor_stack.valid_for_read then
-    player.clear_cursor()
-    if player.cursor_stack.valid_for_read then
-      return nil, "cursor"
-    end
+    return nil, "cursor"
   end
 
   local new = old.surface.create_entity({

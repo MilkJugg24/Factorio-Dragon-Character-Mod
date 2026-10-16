@@ -136,6 +136,9 @@ end)
 
 script.on_event(defines.events.on_player_joined_game, function(event)
   local player = game.get_player(event.player_index)
+  -- a window left open when the player disconnected is no longer their
+  -- opened GUI (Esc would not close it), so start without it
+  gui.close(player, prefs_of(player.index))
   setup_player(player)
   retry_if_pending(event)
 end)
@@ -157,7 +160,9 @@ script.on_event(defines.events.on_player_died, function(event)
   local player = game.get_player(event.player_index)
   if player then
     storage.pending[player.index] = true
-    gui.refresh(player, prefs_of(player.index))
+    -- dying closes the opened GUI without raising on_gui_closed, which would
+    -- leave the window on screen with Esc no longer closing it
+    gui.close(player, prefs_of(player.index))
   end
 end)
 
@@ -166,8 +171,6 @@ for _, name in ipairs({
   "on_player_driving_changed_state",
   "on_cutscene_finished",
   "on_cutscene_cancelled",
-  "on_player_crafted_item",
-  "on_player_cancelled_crafting",
   "on_player_toggled_map_editor",
 }) do
   script.on_event(defines.events[name], retry_if_pending)
@@ -238,6 +241,7 @@ local function reset(player)
   prefs.body, prefs.hoodie, prefs.shorts = d.body, d.hoodie, d.shorts
   set_color(player, appearance.default_color)
   apply_appearance(player)
+  gui.refresh_color(player)
 end
 
 local function swatch_color(name)
