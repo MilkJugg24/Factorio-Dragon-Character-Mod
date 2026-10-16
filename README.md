@@ -3,7 +3,7 @@
 A mod for Factorio 2.0 that turns your character into a dragon, with wings and a
 tail, plus an in-game window to customize it.
 
-![thumbnail](dragon-character/thumbnail.png)
+![Male and female dragons idling, running, shooting, mining, hovering and flying while turning through all eight directions](docs/showcase.gif)
 
 ## Features
 
@@ -76,6 +76,7 @@ items it holds**. Before removing the mod:
 | `dragon-character/` | The mod itself. |
 | `dragon-character/prototypes/sprite-data.lua` | Generated sprite metadata: sizes and shifts of every sheet. |
 | `tools/dragon_render/` | The procedural renderer that draws all the dragon sprites. |
+| `docs/showcase.gif` | The animated README banner, built by `tools/dragon_render/showcase.py`. |
 | `tools/build_mod.sh` | Packs the mod into a zip. |
 | `tests/` | Headless Factorio test of the character swap logic. |
 
@@ -89,7 +90,12 @@ pip install numpy pillow numba
 python3 -m tools.dragon_render.generate --force          # everything (about 45 min on 4 cores)
 python3 -m tools.dragon_render.generate --only idle,run --force
 python3 -m tools.dragon_render.generate --extras         # corpse, icons, thumbnail, swatches only
+python3 -m tools.dragon_render.showcase                  # README banner (docs/showcase.gif)
 ```
+
+The README banner is assembled from the finished sheets, so it only needs
+`numpy` and `pillow` and takes a few seconds. Rebuild it after regenerating the
+sprites.
 
 The model (proportions, horns, wings, outfits) is in `model.py`, the poses for
 each animation are in `anims.py`, and materials and colors are in `scene.py`.
