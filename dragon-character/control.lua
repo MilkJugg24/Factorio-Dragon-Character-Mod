@@ -2,11 +2,14 @@ local appearance = require("scripts.appearance")
 local swap = require("scripts.swap")
 local gui = require("scripts.gui")
 local swatches = require("scripts.swatches")
+local packs = require("scripts.packs")
+local revert = require("scripts.revert")
 
 -- How often (in ticks) appearance changes that had to wait are retried.
 local RETRY_INTERVAL = 30
 
--- storage.players[player_index] = { body, hoodie, shorts, status, gui_location }
+-- storage.players[player_index] = { body, hoodie, shorts, avatar, status, gui_location }
+--   avatar: id of the chosen avatar pack, nil for the dragon
 -- storage.pending[player_index] = true while the player's character does not yet match
 -- storage.swap_tick[player_index] = tick of the player's last character swap
 local function init_storage()
@@ -25,19 +28,25 @@ local function prefs_of(player_index)
   return prefs
 end
 
--- Statuses that clear up by themselves (leaving a vehicle, finishing crafting, ...).
-local PERMANENT = { missing = true }
+-- Statuses that do not clear up by themselves; everything else (leaving a
+-- vehicle, finishing crafting, ...) is retried.
+local PERMANENT = { missing = true, ["avatar-missing"] = true }
+
+local function prototype_exists(name)
+  return prototypes.entity[name] ~= nil
+end
 
 -- Makes the player's character match their chosen appearance, or remembers to
 -- try again later. Returns nil on success, otherwise a status string.
 local function apply_appearance(player)
   local prefs = prefs_of(player.index)
-  local target = appearance.character_name(prefs.body, prefs.hoodie, prefs.shorts)
+  -- `note` is "avatar-missing" when the chosen avatar pack is gone; the dragon is used instead
+  local target, note = appearance.resolve(prefs, prototype_exists)
   local character = player.character
   local status
   if character and character.valid and character.name == target then
     status = nil
-  elseif character and character.valid and not appearance.from_character_name(character.name) then
+  elseif character and character.valid and not appearance.is_own_character(character.name) then
     -- A character prototype from another mod (e.g. a temporary jetpack
     -- character). Leave it alone and try again once it is ours again.
     status = "foreign"
@@ -65,6 +74,7 @@ local function apply_appearance(player)
   else
     storage.pending[player.index] = nil
   end
+  status = status or note
   prefs.status = status
   gui.refresh(player, prefs)
   return status
@@ -115,6 +125,10 @@ script.on_configuration_changed(function()
   for _, player in pairs(game.players) do
     -- rebuild the window in case its layout changed between versions
     local prefs = prefs_of(player.index)
+    if prefs.avatar and not packs.get(prefs.avatar) then
+      -- the preference is kept, so reinstalling the pack brings the look back
+      player.print({ "dragon-character.avatar-pack-gone", prefs.avatar })
+    end
     local was_open = gui.get_frame(player) ~= nil
     gui.close(player, prefs)
     setup_player(player)
@@ -235,10 +249,21 @@ local function set_outfit(player, outfit, state)
   end
 end
 
+local function set_avatar(player, id)
+  local prefs = prefs_of(player.index)
+  if prefs.avatar ~= id then
+    prefs.avatar = id
+    apply_appearance(player)
+  else
+    gui.refresh(player, prefs)
+  end
+end
+
 local function reset(player)
   local prefs = prefs_of(player.index)
   local d = appearance.default
   prefs.body, prefs.hoodie, prefs.shorts = d.body, d.hoodie, d.shorts
+  prefs.avatar = nil
   set_color(player, appearance.default_color)
   apply_appearance(player)
   gui.refresh_color(player)
@@ -277,6 +302,13 @@ script.on_event(defines.events.on_gui_click, function(event)
     end
   elseif action == "body" and element.type == "sprite-button" then
     set_body(player, tags.body)
+  elseif action == "look" then
+    local id = tags.avatar
+    if id == "" then
+      set_avatar(player, nil)
+    elseif packs.get(id) then
+      set_avatar(player, id)
+    end
   elseif action == "reset" then
     reset(player)
   end
@@ -366,9 +398,13 @@ commands.add_command("dragon", { "dragon-character.command-dragon-help" }, funct
   end
 end)
 
--- Before removing the mod, every character and corpse using one of this mod's
--- extra prototypes must be turned back into the vanilla ones, otherwise the
+-- Before removing the mod (or an avatar pack), every character and corpse using
+-- one of its prototypes must be turned back into the vanilla ones, otherwise the
 -- game deletes them (and the items they hold) when the save is loaded.
+local function revert_all(pack_id)
+  return revert.run(pack_id, prefs_of, apply_appearance, storage.pending)
+end
+
 commands.add_command("dragon-revert-all", { "dragon-character.command-revert-help" }, function(command)
   local caller = command.player_index and game.get_player(command.player_index)
   local function reply(message)
@@ -382,31 +418,13 @@ commands.add_command("dragon-revert-all", { "dragon-character.command-revert-hel
     reply({ "dragon-character.admin-only" })
     return
   end
-  local d = appearance.default
-  for _, player in pairs(game.players) do
-    local prefs = prefs_of(player.index)
-    prefs.body, prefs.hoodie, prefs.shorts = d.body, d.hoodie, d.shorts
-    if player.connected then
-      apply_appearance(player)
-    else
-      storage.pending[player.index] = true
-    end
+  local pack_id = command.parameter and command.parameter:match("^%s*(%S+)%s*$")
+  local result = revert_all(pack_id)
+  if pack_id then
+    reply({ "dragon-character.revert-pack-done", pack_id, result.corpses, result.remaining })
+  else
+    reply({ "dragon-character.revert-done", result.corpses, result.remaining })
   end
-  local corpses = 0
-  local remaining = 0
-  for _, surface in pairs(game.surfaces) do
-    for _, corpse in pairs(surface.find_entities_filtered({ type = "character-corpse" })) do
-      if appearance.is_mod_corpse(corpse.name) and swap.replace_corpse(corpse, "character-corpse") then
-        corpses = corpses + 1
-      end
-    end
-    for _, character in pairs(surface.find_entities_filtered({ type = "character" })) do
-      if appearance.is_mod_variant(character.name) then
-        remaining = remaining + 1
-      end
-    end
-  end
-  reply({ "dragon-character.revert-done", corpses, remaining })
 end)
 
 ---------------------------------------------------------------------------
@@ -419,19 +437,23 @@ remote.add_interface("dragon-character", {
   get_on_character_swapped_event = function()
     return swap.on_character_swapped
   end,
-  -- Returns { body = "male"|"female", hoodie = bool, shorts = bool }
+  -- Returns { body = "male"|"female", hoodie = bool, shorts = bool, avatar = pack id or nil }
   get_appearance = function(player_index)
     local prefs = prefs_of(player_index)
-    return { body = prefs.body, hoodie = prefs.hoodie, shorts = prefs.shorts }
+    return { body = prefs.body, hoodie = prefs.hoodie, shorts = prefs.shorts, avatar = prefs.avatar }
   end,
-  -- Changes any of body/hoodie/shorts. Returns nil when applied, or a status
-  -- string when the change has to wait (e.g. "vehicle", "crafting").
+  -- Changes any of body/hoodie/shorts/avatar (a pack id, or false for the
+  -- dragon). Returns nil when applied, or a status string when the change has
+  -- to wait (e.g. "vehicle", "crafting") or failed ("unknown-avatar").
   set_appearance = function(player_index, new)
     local player = game.get_player(player_index)
     if not player then
       return "no-player"
     end
     new = new or {}
+    if new.avatar and not packs.get(new.avatar) then
+      return "unknown-avatar"
+    end
     local prefs = prefs_of(player_index)
     if new.body == "male" or new.body == "female" then
       prefs.body = new.body
@@ -442,7 +464,35 @@ remote.add_interface("dragon-character", {
     if new.shorts ~= nil then
       prefs.shorts = new.shorts and true or false
     end
+    if new.avatar == false then
+      prefs.avatar = nil
+    elseif new.avatar ~= nil then
+      prefs.avatar = new.avatar
+    end
     return apply_appearance(player)
+  end,
+  -- Installed avatar packs: array of { id, title, author, tintable, character, corpse }
+  get_avatar_packs = function()
+    local list = {}
+    for _, pack in ipairs(packs.list()) do
+      list[#list + 1] = {
+        id = pack.id,
+        title = pack.title,
+        author = pack.author,
+        tintable = pack.tintable,
+        character = pack.character,
+        corpse = pack.corpse,
+      }
+    end
+    return list
+  end,
+  -- The avatar pack id of a character prototype name, or nil.
+  is_avatar_character = function(name)
+    return appearance.avatar_id_of_character(name)
+  end,
+  -- Same as /dragon-revert-all [pack_id]. Returns { corpses, remaining }.
+  revert_all = function(pack_id)
+    return revert_all(pack_id)
   end,
   -- True if the character prototype name is one of the dragon variants
   -- (including the vanilla "character", which this mod turns into a dragon).

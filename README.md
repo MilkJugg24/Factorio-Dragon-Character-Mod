@@ -22,6 +22,8 @@ tail, plus an in-game window to customize it.
   instead of using the mech's thrusters.
 - **Corpses match your look.** Body shape and outfits carry over to your corpse.
 - **Multiplayer.** Every player picks their own look.
+- **Avatar packs.** Extra looks, such as your own avatar, installed as separate
+  mods. See [Avatar packs](#avatar-packs).
 
 Body-shape and outfit changes apply instantly. If they can't apply right now
 (you're in a vehicle, handcrafting, using remote view, your personal robots are
@@ -34,10 +36,30 @@ Copy the `dragon-character` folder into your Factorio `mods` folder, or build a
 zip:
 
 ```sh
-tools/build_mod.sh            # -> build/dragon-character_0.1.0.zip
+tools/build_mod.sh            # -> build/dragon-character_<version>.zip
 ```
 
 The folder must be named `dragon-character` (or `dragon-character_<version>`).
+
+## Avatar packs
+
+An avatar pack is a small mod named `dragon-avatar-<id>` that adds one more look.
+Put its zip in the `mods` folder next to `dragon-character`. Installed packs
+appear in a **Look** section at the top of the customization window, next to the
+dragon. Body shape and outfits only apply to the dragon. Scale color applies to
+the dragon, and to packs that were made tintable.
+
+- **Multiplayer:** every player needs the same pack zips as the server. Factorio
+  refuses to join otherwise, so there is no desync.
+- **Removing a pack:** the same warning as for the mod itself applies. Run
+  `/dragon-revert-all <id>` first (see below). If a pack goes missing anyway,
+  players who chose it are shown as the dragon, and get their look back when it
+  is installed again.
+- **Making a pack:** the files a pack needs are described in
+  [docs/avatar-pack-format.md](docs/avatar-pack-format.md). A Unity tool that
+  renders a VRChat avatar into a pack is being worked on.
+- **Licensing:** many avatars may only be used in VRChat. Only share a pack made
+  from someone else's avatar if its author allows it.
 
 ## Removing the mod from a save
 
@@ -52,20 +74,26 @@ items it holds**. Before removing the mod:
    convert.
 3. Save, then disable the mod.
 
+To remove only one avatar pack, run `/dragon-revert-all <id>` instead. It turns
+everyone using that pack, and their corpses, back into the dragon.
+
 ## Compatibility notes
 
 - The vanilla `character` prototype becomes the default dragon. Other looks use
-  `dragon-character-<body>-<outfit>` prototypes, copied from `character` in
-  `data-final-fixes` so they inherit changes other mods make to it.
+  `dragon-character-<body>-<outfit>` and `dragon-avatar-<id>` prototypes, copied
+  from `character` in `data-final-fixes` so they inherit changes other mods make
+  to it.
 - Other mods that replace the character graphics will conflict with this one.
 - If another mod temporarily swaps your character (a jetpack, for example), this
   mod leaves it alone and reapplies your look once you're back to a normal
   character.
 - Remote interface `dragon-character`: `get_appearance(player_index)`,
-  `set_appearance(player_index, {body=, hoodie=, shorts=})`,
-  `is_dragon_character(name)` and `get_on_character_swapped_event()`. That
-  event is raised whenever the mod replaces a player's character entity, with
-  `old_character` and `new_character`.
+  `set_appearance(player_index, {body=, hoodie=, shorts=, avatar=})` (`avatar`
+  is a pack id, or `false` for the dragon), `is_dragon_character(name)`,
+  `is_avatar_character(name)`, `get_avatar_packs()`, `revert_all(pack_id)` and
+  `get_on_character_swapped_event()`. That event is raised whenever the mod
+  replaces a player's character entity, with `old_character` and
+  `new_character`.
 
 ## Development
 
@@ -77,6 +105,9 @@ items it holds**. Before removing the mod:
 | `dragon-character/prototypes/sprite-data.lua` | Generated sprite metadata: sizes and shifts of every sheet. |
 | `tools/dragon_render/` | The procedural renderer that draws all the dragon sprites. |
 | `docs/showcase.gif` | The animated README banner, built by `tools/dragon_render/showcase.py`. |
+| `docs/avatar-pack-format.md` | The avatar pack format. |
+| `tools/avatar_pack/` | Writes synthetic avatar packs for testing. |
+| `tools/validate_sprites.py` | Checks the dragon sheets, or an avatar pack with `--pack`. |
 | `tools/build_mod.sh` | Packs the mod into a zip. |
 | `tests/` | Headless Factorio test of the character swap logic. |
 
@@ -125,9 +156,29 @@ inventory including the armor's bonus slots, guns, ammo, trash, filters,
 logistic requests and bonuses) into a dragon variant and checks that nothing
 was lost.
 
+It also checks that the dragon prototypes are identical to the ones built by
+version 0.1.2 (`prototypes/legacy-dragon-animations.lua` in the test mod is a
+frozen copy of that code).
+
 ```sh
 tests/run_headless.sh /path/to/factorio               # base game
 tests/run_headless.sh /path/to/factorio --space-age   # with Space Age, Quality, Elevated Rails
+```
+
+Options for avatar packs (combine them freely):
+
+| Option | What it does |
+| --- | --- |
+| `--test-packs` | Adds two synthetic packs, checks their prototypes, swapping into them and `/dragon-revert-all <id>`, then loads the save again without the packs. |
+| `--broken-packs` | Checks that each deliberately broken pack stops the game from loading with the expected error, and that `tools/validate_sprites.py --pack` rejects it too. |
+| `--pack PATH` | Adds a pack (folder or zip) and runs the generic pack checks on it. |
+
+The synthetic packs come from `tools/avatar_pack/make_test_pack.py`. Every frame
+is a labelled stand-in figure, so a pack can also be tried in the real game:
+
+```sh
+python3 tools/avatar_pack/make_test_pack.py --out build/packs --flight --tint --zip
+python3 tools/validate_sprites.py --pack build/packs/dragon-avatar-test_1.0.0.zip
 ```
 
 The headless server is a free download from factorio.com. It can't connect a
