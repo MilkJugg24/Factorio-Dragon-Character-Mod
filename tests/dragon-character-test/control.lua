@@ -10,6 +10,7 @@
 local swap = require("__dragon-character__/scripts/swap")
 local appearance = require("__dragon-character__/scripts/appearance")
 local revert = require("__dragon-character__/scripts/revert")
+local pack_list = require("__dragon-character__/scripts/packs")
 
 local FIXTURE_CORPSE_POSITION = { 10, 10 }
 local FIXTURE_CHARACTER_POSITION = { -10, -10 }
@@ -218,9 +219,11 @@ local function test_any_packs(surface, force)
     check(call("is_avatar_character", pack.character) == pack.id, label .. "is_avatar_character")
     check(call("is_avatar_character", pack.corpse) == nil, label .. "a corpse is not a character")
     check(call("is_dragon_character", pack.character) == false, label .. "is not a dragon")
-    check(appearance.is_own_character(pack.character), label .. "is_own_character")
-    check(appearance.is_mod_variant(pack.character), label .. "is_mod_variant")
-    check(appearance.is_mod_corpse(pack.corpse), label .. "is_mod_corpse")
+    check(pack_list.id_of_character(pack.character) == pack.id, label .. "id_of_character")
+    check(pack_list.id_of_corpse(pack.corpse) == pack.id, label .. "id_of_corpse")
+    -- copies other mods make of every character (e.g. a jetpack mod's) are not the pack's
+    check(call("is_avatar_character", pack.character .. "-jetpack") == nil, label .. "suffixed copy is foreign")
+    check(not appearance.is_mod_variant(pack.character), label .. "is not a dragon variant")
     local resolved, note = appearance.resolve({ avatar = pack.id, body = "female", hoodie = true, shorts = false },
       function(name) return prototypes.entity[name] ~= nil end)
     check(resolved == pack.character and note == nil, label .. "resolve")
@@ -239,16 +242,19 @@ end
 -- The packs written by tests/run_headless.sh --test-packs.
 local function test_generated_packs(surface, force, packs)
   local by_id = {}
-  for _, pack in ipairs(packs) do
+  local index = {}
+  for i, pack in ipairs(packs) do
     by_id[pack.id] = pack
+    index[pack.id] = i
   end
   local test, small = by_id["test"], by_id["small"]
   check(test and small, "the test packs are not both listed")
   if not (test and small) then
     return
   end
-  -- "small" has a non-ASCII title, which sorts after "Test Avatar"
-  check(packs[1].id == "test" and packs[2].id == "small", "packs not sorted by title")
+  -- "small" has a non-ASCII title, which sorts after "Test Avatar" (other packs
+  -- added with --pack may come anywhere in between)
+  check(index.test < index.small, "packs not sorted by title")
   check(test.title == "Test Avatar" and test.author == "make_test_pack", "pack test: title/author")
   check(small.title == string.rep("竜", 30), "pack small: UTF-8 title")
   check(test.tintable == true and small.tintable == false, "tintable flags")
@@ -258,7 +264,7 @@ local function test_generated_packs(surface, force, packs)
   local resolved, note = appearance.resolve({ avatar = "gone", body = "female", hoodie = true, shorts = false },
     function(name) return prototypes.entity[name] ~= nil end)
   check(resolved == "dragon-character-female-hoodie" and note == "avatar-missing", "resolve of a missing pack")
-  check(not appearance.is_own_character("some-other-mod-character"), "foreign character is not ours")
+  check(call("is_avatar_character", "some-other-mod-character") == nil, "foreign character is not ours")
   check(not appearance.is_mod_variant("character") and not appearance.is_mod_corpse("character-corpse"),
     "vanilla prototypes are not mod variants")
 
@@ -267,7 +273,12 @@ local function test_generated_packs(surface, force, packs)
   local small_corpse = create_corpse(surface, "dragon-avatar-corpse-small", { 22, 20 }, 9)
   local dragon_corpse = create_corpse(surface, "dragon-character-corpse-female-plain", { 24, 20 }, 11)
   local unowned = surface.create_entity({ name = "dragon-avatar-small", position = { 26, 20 }, force = force })
-  local result = call("revert_all", "small")
+  check(call("revert_all", "no-such-pack") == nil, "revert_all of an unknown pack should change nothing")
+  check(call("revert_all", "small now") == nil, "revert_all of two words should change nothing")
+  check(call("revert_all", 5) == nil, "revert_all of a number should change nothing")
+  check(test_corpse.valid and small_corpse.valid and dragon_corpse.valid, "a refused revert_all converted corpses")
+  -- the pack's mod name works as well as its id
+  local result = call("revert_all", "dragon-avatar-small")
   check(result.corpses == 1 and result.remaining == 1,
     "revert_all(small): " .. result.corpses .. " corpses, " .. result.remaining .. " remaining")
   check(test_corpse.valid and dragon_corpse.valid and not small_corpse.valid, "revert_all(small) touched other corpses")
@@ -279,7 +290,8 @@ local function test_generated_packs(surface, force, packs)
   check(result.corpses == 2, "revert_all(): converted " .. result.corpses .. " corpses, expected 2")
   check(not test_corpse.valid and not dragon_corpse.valid, "revert_all() left mod corpses")
   for _, entity in pairs(surface.find_entities_filtered({ type = "character-corpse" })) do
-    check(not appearance.is_mod_corpse(entity.name), "corpse left after revert_all(): " .. entity.name)
+    check(not appearance.is_mod_corpse(entity.name) and not pack_list.id_of_corpse(entity.name),
+      "corpse left after revert_all(): " .. entity.name)
   end
   for _, entity in pairs(surface.find_entities_filtered({ type = "character-corpse", area = { { 18, 18 }, { 28, 22 } } })) do
     entity.destroy()

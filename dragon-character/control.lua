@@ -37,6 +37,12 @@ local function prototype_exists(name)
   return prototypes.entity[name] ~= nil
 end
 
+-- Dragon variants (including the vanilla "character") and installed packs'
+-- characters; anything else comes from another mod.
+local function is_own_character(name)
+  return appearance.from_character_name(name) ~= nil or packs.id_of_character(name) ~= nil
+end
+
 -- Makes the player's character match their chosen appearance, or remembers to
 -- try again later. Returns nil on success, otherwise a status string.
 local function apply_appearance(player)
@@ -47,7 +53,7 @@ local function apply_appearance(player)
   local status
   if character and character.valid and character.name == target then
     status = nil
-  elseif character and character.valid and not appearance.is_own_character(character.name) then
+  elseif character and character.valid and not is_own_character(character.name) then
     -- A character prototype from another mod (e.g. a temporary jetpack
     -- character). Leave it alone and try again once it is ours again.
     status = "foreign"
@@ -412,6 +418,20 @@ local function revert_all(pack_id)
   return revert.run(pack_id, prefs_of, apply_appearance, storage.pending)
 end
 
+-- Packs a revert can name: installed ones, and removed ones that players still
+-- have chosen (reverting those clears the choice).
+local function is_known_pack(id)
+  if packs.get(id) then
+    return true
+  end
+  for _, prefs in pairs(storage.players) do
+    if prefs.avatar == id then
+      return true
+    end
+  end
+  return false
+end
+
 commands.add_command("dragon-revert-all", { "dragon-character.command-revert-help" }, function(command)
   local caller = command.player_index and game.get_player(command.player_index)
   local function reply(message)
@@ -425,19 +445,7 @@ commands.add_command("dragon-revert-all", { "dragon-character.command-revert-hel
     reply({ "dragon-character.admin-only" })
     return
   end
-  -- a pack that is no longer installed is still accepted while players have it chosen
-  local function is_known(id)
-    if packs.get(id) then
-      return true
-    end
-    for _, prefs in pairs(storage.players) do
-      if prefs.avatar == id then
-        return true
-      end
-    end
-    return false
-  end
-  local ok, pack_id = revert.parse_pack_argument(command.parameter, is_known)
+  local ok, pack_id = revert.parse_pack_argument(command.parameter, is_known_pack)
   if not ok then
     local ids = {}
     for _, pack in ipairs(packs.list()) do
@@ -518,11 +526,20 @@ remote.add_interface("dragon-character", {
   end,
   -- The avatar pack id of a character prototype name, or nil.
   is_avatar_character = function(name)
-    return appearance.avatar_id_of_character(name)
+    return packs.id_of_character(name)
   end,
-  -- Same as /dragon-revert-all [pack_id]. Returns { corpses, remaining }.
+  -- Same as /dragon-revert-all [pack_id] (a pack id or the pack's mod name; nil
+  -- reverts everything). Returns { corpses, remaining }, or nil when pack_id
+  -- names no pack, in which case nothing was changed.
   revert_all = function(pack_id)
-    return revert_all(pack_id)
+    if pack_id ~= nil and type(pack_id) ~= "string" then
+      return nil
+    end
+    local ok, id = revert.parse_pack_argument(pack_id, is_known_pack)
+    if not ok then
+      return nil
+    end
+    return revert_all(id)
   end,
   -- True if the character prototype name is one of the dragon variants
   -- (including the vanilla "character", which this mod turns into a dragon).

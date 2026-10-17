@@ -112,13 +112,23 @@ class Checker:
         if text.split() != spec.DATA_LUA.split():
             self.error("data.lua is not the standard one from docs/avatar-pack-format.md")
 
+    def image(self, name, what):
+        """Opens an image of the pack, or reports it and returns None when it is not a readable image."""
+        try:
+            img = self.files.image(name)
+            img.load()
+            return img
+        except (OSError, SyntaxError, ValueError, Image.DecompressionBombError) as e:
+            self.error(f"{what}: {name} is not a readable PNG ({e})")
+            return None
+
     def check_extras(self):
         if not self.files.exists("thumbnail.png"):
             self.warn("thumbnail.png is missing (shown in the mod list)")
         else:
-            size = self.files.image("thumbnail.png").size
-            if size != (144, 144):
-                self.warn(f"thumbnail.png is {size[0]}x{size[1]}, Factorio expects 144x144")
+            img = self.image("thumbnail.png", "thumbnail")
+            if img and img.size != (144, 144):
+                self.warn(f"thumbnail.png is {img.size[0]}x{img.size[1]}, Factorio expects 144x144")
         if not self.files.exists("locale/en/locale.cfg"):
             self.warn("locale/en/locale.cfg is missing")
         if not self.files.exists("README.txt"):
@@ -139,7 +149,9 @@ class Checker:
         return name
 
     def check_sheet(self, name, where, expected, allowed_heights):
-        img = self.files.image(name)
+        img = self.image(name, where)
+        if img is None:
+            return
         w, h = img.size
         self.sheets[name] = (w, h)
         if img.mode != "RGBA":
@@ -263,7 +275,7 @@ class Checker:
             self.error(f"{path} is missing")
             return
         try:
-            d = lua_table.loads(self.files.read(path).decode("utf-8"))
+            d = lua_tables(lua_table.loads(self.files.read(path).decode("utf-8")))
         except (lua_table.LuaSyntaxError, UnicodeDecodeError) as e:
             self.error(f"{path} is not a plain Lua table: {e}")
             return
@@ -295,10 +307,9 @@ class Checker:
             self.error("needs an icon with a filename and a size")
         else:
             name = self.file(icon.get("filename"), "icon")
-            if name:
-                w, h = self.files.image(name).size
-                if (w, h) != (icon["size"], icon["size"]):
-                    self.error(f"icon {name} is {w}x{h}, but its size is {icon['size']}")
+            img = self.image(name, "icon") if name else None
+            if img and img.size != (icon["size"], icon["size"]):
+                self.error(f"icon {name} is {img.size[0]}x{img.size[1]}, but its size is {icon['size']}")
         ppt = d.get("pixels_per_tile", 64)
         if ppt not in (64, 32) or isinstance(ppt, bool):
             self.error(f"has pixels_per_tile {ppt}; only 64 and 32 are supported")
@@ -327,9 +338,11 @@ class Checker:
             if name not in spec.DIRECTIONS:
                 self.warn(f'animation "{name}" is not part of the format and is ignored')
         self.check_timing(d.get("timing"), animations)
+        icon_path = icon.get("filename") if isinstance(icon, dict) else None
+        icon_file = icon_path.split("__/", 1)[-1] if isinstance(icon_path, str) else None
         unused = sorted(n for n in self.files.names
                         if n.startswith("graphics/") and n.endswith(".png") and n not in self.sheets
-                        and n != (icon or {}).get("filename", "").split("__/", 1)[-1])
+                        and n != icon_file)
         for name in unused:
             self.warn(f"{name} is not used")
 
@@ -345,8 +358,20 @@ class Checker:
 
 
 def is_int(value, low, high=None):
-    return (isinstance(value, int) and not isinstance(value, bool) and value >= low
-            and (high is None or value <= high))
+    """An integer in [low, high]; Lua numbers like 8.0 count, as they do in the game."""
+    integral = (isinstance(value, int) and not isinstance(value, bool)) or (
+        isinstance(value, float) and value.is_integer())
+    return integral and value >= low and (high is None or value <= high)
+
+
+def lua_tables(value):
+    """lua_table turns an empty Lua table into []; Lua has no difference between {} as a list and
+    as a map, so empty lists become empty dicts here (a check that wants a list still fails)."""
+    if isinstance(value, list):
+        return [lua_tables(v) for v in value] if value else {}
+    if isinstance(value, dict):
+        return {k: lua_tables(v) for k, v in value.items()}
+    return value
 
 
 def is_number(value):

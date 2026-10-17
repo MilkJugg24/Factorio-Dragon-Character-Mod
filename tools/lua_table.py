@@ -194,6 +194,9 @@ class _Parser:
                 self.expect("=")
                 if key is None:
                     self.error("table key is nil")
+                if isinstance(key, bool):
+                    # Python would merge [true] with [1] and [false] with [0]; Lua keeps them apart
+                    self.error("boolean table keys are not supported")
                 if isinstance(key, float) and key.is_integer():
                     key = int(key)
                 keyed[key] = self.value()
