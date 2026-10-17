@@ -1,0 +1,203 @@
+using System;
+using System.Text;
+
+namespace MilkJugg24.FactorioAvatarExporter.Core
+{
+    /// <summary>
+    /// Names of a pack and its files (docs/avatar-pack-format.md, "Names"), and the checks of
+    /// tools/avatar_pack/spec.py on ids, titles and versions.
+    /// </summary>
+    public static class PackNaming
+    {
+        private const string FallbackId = "avatar";
+        private const string CorpsePrefix = "corpse-";
+        private const string InfoTitlePrefix = "Dragon Character avatar: ";
+        private const string Ellipsis = "…";
+
+        /// <summary>
+        /// A valid pack id made from a title: ASCII letters (lowercased) and digits are kept, every run
+        /// of other characters becomes one '-', and the result is trimmed of '-' and cut to
+        /// <see cref="PackFormat.MaxIdLength"/>. A title without ASCII letters or digits gives "avatar";
+        /// an id that would start with "corpse-" (reserved for corpse prototypes) gets "avatar-" in front.
+        /// </summary>
+        public static string DeriveId(string title)
+        {
+            if (title == null)
+            {
+                throw new ArgumentNullException(nameof(title));
+            }
+            var id = new StringBuilder();
+            bool separator = false;
+            foreach (char c in title)
+            {
+                bool lower = c >= 'a' && c <= 'z';
+                bool upper = c >= 'A' && c <= 'Z';
+                bool digit = c >= '0' && c <= '9';
+                if (!lower && !upper && !digit)
+                {
+                    separator = true;
+                    continue;
+                }
+                if (separator && id.Length > 0)
+                {
+                    id.Append('-');
+                }
+                separator = false;
+                id.Append(upper ? (char)(c - 'A' + 'a') : c);
+            }
+            string result = Shorten(id.ToString());
+            if (result.Length == 0)
+            {
+                return FallbackId;
+            }
+            if (result.StartsWith(CorpsePrefix, StringComparison.Ordinal))
+            {
+                result = Shorten(FallbackId + "-" + result);
+            }
+            return result;
+        }
+
+        private static string Shorten(string id) =>
+            (id.Length > PackFormat.MaxIdLength ? id.Substring(0, PackFormat.MaxIdLength) : id).Trim('-');
+
+        /// <summary>
+        /// True for 1 to <see cref="PackFormat.MaxIdLength"/> characters of lowercase ASCII letters,
+        /// digits and '-', starting with a letter or digit and not with "corpse-" (spec.valid_id).
+        /// </summary>
+        public static bool IsValidId(string id)
+        {
+            if (id == null || id.Length < 1 || id.Length > PackFormat.MaxIdLength)
+            {
+                return false;
+            }
+            for (int i = 0; i < id.Length; i++)
+            {
+                char c = id[i];
+                bool alphanumeric = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+                if (!alphanumeric && (c != '-' || i == 0))
+                {
+                    return false;
+                }
+            }
+            return !id.StartsWith(CorpsePrefix, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// True for a Factorio mod version "major.minor.patch": three ASCII numbers from 0 to 65535.
+        /// </summary>
+        public static bool IsValidVersion(string version)
+        {
+            if (version == null)
+            {
+                return false;
+            }
+            string[] parts = version.Split('.');
+            if (parts.Length != 3)
+            {
+                return false;
+            }
+            foreach (string part in parts)
+            {
+                if (part.Length < 1 || part.Length > 5)
+                {
+                    return false;
+                }
+                int value = 0;
+                foreach (char c in part)
+                {
+                    if (c < '0' || c > '9')
+                    {
+                        return false;
+                    }
+                    value = value * 10 + (c - '0');
+                }
+                if (value > ushort.MaxValue)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>The pack's mod name, mod-data and character prototype name: "dragon-avatar-&lt;id&gt;".</summary>
+        public static string ModName(string id)
+        {
+            if (!IsValidId(id))
+            {
+                throw new ArgumentException("\"" + id + "\" is not a valid pack id", nameof(id));
+            }
+            return PackFormat.ModPrefix + id;
+        }
+
+        /// <summary>The single folder in the pack's zip: "dragon-avatar-&lt;id&gt;_&lt;version&gt;".</summary>
+        public static string ZipRootFolder(string id, string version)
+        {
+            if (!IsValidVersion(version))
+            {
+                throw new ArgumentException("\"" + version + "\" is not a version like 1.0.0", nameof(version));
+            }
+            return ModName(id) + "_" + version;
+        }
+
+        /// <summary>The file name Factorio expects for the pack's zip: "dragon-avatar-&lt;id&gt;_&lt;version&gt;.zip".</summary>
+        public static string ZipFileName(string id, string version) => ZipRootFolder(id, version) + ".zip";
+
+        /// <summary>
+        /// Length of a title in characters as the format counts them: Unicode code points, so a
+        /// surrogate pair (an emoji, say) is one character.
+        /// </summary>
+        public static int TitleLength(string title)
+        {
+            if (title == null)
+            {
+                throw new ArgumentNullException(nameof(title));
+            }
+            return CodePoints.Count(title);
+        }
+
+        /// <summary>
+        /// The info.json title for a pack title (spec.info_title): "Dragon Character avatar: " + title,
+        /// cut at a character boundary and ended with "…" when it is longer than
+        /// <see cref="PackFormat.InfoTitleMaxBytes"/> bytes of UTF-8.
+        /// </summary>
+        public static string InfoTitle(string title)
+        {
+            if (title == null)
+            {
+                throw new ArgumentNullException(nameof(title));
+            }
+            string text = InfoTitlePrefix + title;
+            byte[] bytes = Encoding.UTF8.GetBytes(text);
+            if (bytes.Length <= PackFormat.InfoTitleMaxBytes)
+            {
+                return text;
+            }
+            int cut = PackFormat.InfoTitleMaxBytes - Encoding.UTF8.GetByteCount(Ellipsis);
+            // drop a character whose UTF-8 bytes would be cut apart: back up to its first byte
+            while (cut > 0 && (bytes[cut] & 0xC0) == 0x80)
+            {
+                cut--;
+            }
+            return Encoding.UTF8.GetString(bytes, 0, cut) + Ellipsis;
+        }
+    }
+
+    /// <summary>Unicode code point counting for .NET strings (UTF-16).</summary>
+    internal static class CodePoints
+    {
+        /// <summary>Characters counted as Python's len() does: a surrogate pair counts once.</summary>
+        public static int Count(string text)
+        {
+            int count = 0;
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+                {
+                    i++;
+                }
+                count++;
+            }
+            return count;
+        }
+    }
+}
