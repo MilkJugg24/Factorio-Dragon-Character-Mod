@@ -18,6 +18,30 @@ dotnet test unity/dotnet/Core.Tests          # needs the .NET 8 SDK
 | --- | --- |
 | `Core/` | The package's Core sources as a `netstandard2.1` library. |
 | `Core.Tests/` | NUnit tests (`net8.0`). `Goldens/` holds reference data written by Python tools. |
+| `PackHarness/` | Writes a real avatar pack from a synthetic rig drawn by the software stick-figure renderer: the whole exporter without Unity. |
+
+```sh
+dotnet run --project unity/dotnet/PackHarness -- --out build/harness --rig generic --zip
+tests/run_avatar_pipeline.sh /path/to/factorio [--space-age] [--rig generic|chibi|minimal|dragon]
+```
+
+The pipeline script builds a pack with the harness, checks it with `tools/validate_sprites.py --pack`,
+loads it in a headless Factorio (`tests/run_headless.sh --pack`) and writes preview GIFs to
+`build/pipeline-preview/`.
+
+How Core is organised:
+
+| Folder | What it does |
+| --- | --- |
+| `Math/`, `Spec/` | Vectors and rotations, the animation table, coordinate conventions. |
+| `Rig/` | Measures the avatar's humanoid rig; synthetic rigs for tests. |
+| `Pose/Humanoid/` | Turns joint targets into bone rotations (`HumanoidPoseBuilder`) and poses every animation (`HumanoidAnimations`). |
+| `Pose/Dragon/` | Literal port of the dragon's posing code, checked against goldens from `tools/dragon_render`. |
+| `Camera/` | The sprite camera, the ground shadow projection and canvas planning. |
+| `Render/` | A software stick-figure renderer standing in for Unity. |
+| `Imaging/` | Difference matting, downsampling, sRGB, PNG reading and writing. |
+| `Sheets/`, `Pack/` | Sprite sheets and the avatar pack files (`avatar-pack.lua`, `info.json`, zip). |
+| `Export/` | `AvatarExporter`: renders every frame of every animation and builds the sheets. |
 
 Rules for Core code, because Unity compiles it too:
 
