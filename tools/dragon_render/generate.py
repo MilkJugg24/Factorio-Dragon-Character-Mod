@@ -98,23 +98,46 @@ def mod_path(body, name, layer):
     return f"__{MOD_NAME}__/graphics/entity/dragon/{body}/{name}-{layer}.png"
 
 
+# Animations that also get a "shadow-flipped" layer (Factorio's flipped_shadow_running_with_gun):
+# the shadow drawn while the engine shows the sprite mirrored for a gun pointing west.
+FLIPPED_SHADOW_ANIMATIONS = ("run-gun",)
+
+
+def mirror_transform():
+    """Mirrors the model left/right, turning a pose aiming east into one aiming west."""
+    def f(v):
+        return V(-v[0], v[1], v[2])
+
+    return f, f
+
+
+def animation_layers(anim):
+    return LAYERS + (("shadow-flipped",) if anim in FLIPPED_SHADOW_ANIMATIONS else ())
+
+
 def render_animation(body_name, anim):
     body = model.BODIES[body_name]
     dirs, nframes, fn, _ = anims.ANIMATIONS[anim]
-    frames = {k: [] for k in LAYERS}
+    layers = animation_layers(anim)
+    frames = {k: [] for k in layers}
     t0 = time.time()
     for d in range(dirs):
-        o = d / dirs
+        o, kw = anims.direction(anim, d)
         for f in range(nframes):
-            pose = fn(body, anims.frame_phase(anim, f))
+            pose = fn(body, anims.frame_phase(anim, f), **kw)
             out = render.render_frame(body, pose, o)
             for k in ("base", "mask", "hoodie", "shorts"):
                 frames[k].append(to_u8(out[k]))
             frames["shadow"].append(shadow_rgba(out["shadow"]))
+            if "shadow-flipped" in layers:
+                # the shadow of the mirrored dragon, still cast to the east
+                out = render.render_frame(body, pose, (1.0 - o) % 1.0, want_clothes=False,
+                                          xf_extra=mirror_transform())
+                frames["shadow-flipped"].append(shadow_rgba(out["shadow"]))
         print(f"  {body_name}/{anim}: direction {d + 1}/{dirs} ({time.time() - t0:.0f}s)", flush=True)
     meta = {"direction_count": dirs, "frame_count": nframes, "layers": {}}
-    for k in LAYERS:
-        anchor = ((render.SHADOW_AX, render.SHADOW_AY) if k == "shadow"
+    for k in layers:
+        anchor = ((render.SHADOW_AX, render.SHADOW_AY) if k.startswith("shadow")
                   else (render.ANCHOR_X, render.ANCHOR_Y))
         info = write_sheet(frames[k], dirs, nframes, anchor, graphics_path(body_name, anim, k))
         info["filename"] = mod_path(body_name, anim, k)
@@ -147,7 +170,7 @@ def render_corpse(body_name):
     meta = {"direction_count": 1, "frame_count": 1, "layers": {}}
     for k in LAYERS:
         img = shadow_rgba(out["shadow"]) if k == "shadow" else to_u8(out[k])
-        anchor = ((render.SHADOW_AX, render.SHADOW_AY) if k == "shadow"
+        anchor = ((render.SHADOW_AX, render.SHADOW_AY) if k.startswith("shadow")
                   else (render.ANCHOR_X, render.ANCHOR_Y))
         info = write_sheet([img], 1, 1, anchor, graphics_path(body_name, "corpse", k))
         info["filename"] = mod_path(body_name, "corpse", k)
@@ -330,7 +353,7 @@ def main(argv=None):
         for b in bodies:
             meta.setdefault(b, {})
             for a in names:
-                done = all(os.path.exists(graphics_path(b, a, k)) for k in LAYERS)
+                done = all(os.path.exists(graphics_path(b, a, k)) for k in animation_layers(a))
                 if done and not args.force and a in meta[b]:
                     print(f"skip {b}/{a}")
                     continue

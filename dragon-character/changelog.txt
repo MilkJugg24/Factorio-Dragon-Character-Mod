@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.1.2
+Date: 2026-10-17
+  Bugfixes:
+    - Running or flying after shooting now keeps the gun pointed where you last shot, like the
+      engineer, instead of turning the dragon in unrelated directions.
+    - The dragon's shadow now falls the right way while running and aiming to the west.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.1
 Date: 2026-10-17
   Bugfixes:

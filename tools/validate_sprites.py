@@ -22,6 +22,8 @@ EXPECTED = {
     "hover": None, "hover-gun": None, "fly": None, "fly-gun": 18, "take-off": None, "corpse": 1,
 }
 LAYERS = ("base", "mask", "hoodie", "shorts", "shadow")
+# Layers only some animations have (run-gun feeds flipped_shadow_running_with_gun)
+EXTRA_LAYERS = {"run-gun": ("shadow-flipped",)}
 
 
 def parse(text):
@@ -74,7 +76,7 @@ def main():
                 continue
             if dirs and meta["direction_count"] != dirs:
                 errors.append(f"{body}/{anim}: direction_count {meta['direction_count']} != {dirs}")
-            for layer in LAYERS:
+            for layer in LAYERS + EXTRA_LAYERS.get(anim, ()):
                 info = meta["layers"].get(layer)
                 if not info:
                     errors.append(f"{body}/{anim}: missing layer {layer}")

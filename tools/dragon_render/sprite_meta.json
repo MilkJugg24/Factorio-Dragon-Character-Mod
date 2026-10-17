@@ -108,46 +108,46 @@
    "layers": {
     "base": {
      "filename": "__dragon-character__/graphics/entity/dragon/female/fly-gun-base.png",
-     "height": 187,
+     "height": 188,
      "shift": [
-      0.0,
-      -1.33594
+      -0.03125,
+      -1.34375
      ],
-     "width": 158
+     "width": 154
     },
     "hoodie": {
      "filename": "__dragon-character__/graphics/entity/dragon/female/fly-gun-hoodie.png",
-     "height": 64,
+     "height": 65,
      "shift": [
-      0.0,
-      -1.23438
+      -0.0625,
+      -1.19531
      ],
-     "width": 50
+     "width": 44
     },
     "mask": {
      "filename": "__dragon-character__/graphics/entity/dragon/female/fly-gun-mask.png",
-     "height": 187,
+     "height": 188,
      "shift": [
-      0.0,
-      -1.33594
+      -0.03125,
+      -1.34375
      ],
-     "width": 158
+     "width": 154
     },
     "shadow": {
      "filename": "__dragon-character__/graphics/entity/dragon/female/fly-gun-shadow.png",
-     "height": 157,
+     "height": 156,
      "shift": [
-      1.0,
-      0.11719
+      0.875,
+      0.10938
      ],
-     "width": 208
+     "width": 192
     },
     "shorts": {
      "filename": "__dragon-character__/graphics/entity/dragon/female/fly-gun-shorts.png",
-     "height": 45,
+     "height": 46,
      "shift": [
       0.0,
-      -0.91406
+      -0.90625
      ],
      "width": 38
     }
@@ -467,46 +467,55 @@
      "filename": "__dragon-character__/graphics/entity/dragon/female/run-gun-base.png",
      "height": 144,
      "shift": [
-      0.0,
+      -0.21875,
       -0.54688
      ],
-     "width": 128
+     "width": 102
     },
     "hoodie": {
      "filename": "__dragon-character__/graphics/entity/dragon/female/run-gun-hoodie.png",
-     "height": 59,
+     "height": 58,
      "shift": [
-      0.0,
-      -0.82031
+      0.01562,
+      -0.78125
      ],
-     "width": 42
+     "width": 40
     },
     "mask": {
      "filename": "__dragon-character__/graphics/entity/dragon/female/run-gun-mask.png",
      "height": 144,
      "shift": [
-      0.0,
+      -0.29688,
       -0.54688
      ],
-     "width": 128
+     "width": 92
     },
     "shadow": {
      "filename": "__dragon-character__/graphics/entity/dragon/female/run-gun-shadow.png",
      "height": 120,
      "shift": [
-      0.33594,
+      0.25781,
       0.03125
      ],
-     "width": 151
+     "width": 141
+    },
+    "shadow-flipped": {
+     "filename": "__dragon-character__/graphics/entity/dragon/female/run-gun-shadow-flipped.png",
+     "height": 120,
+     "shift": [
+      0.53906,
+      0.03125
+     ],
+     "width": 123
     },
     "shorts": {
      "filename": "__dragon-character__/graphics/entity/dragon/female/run-gun-shorts.png",
-     "height": 46,
+     "height": 47,
      "shift": [
-      0.0,
-      -0.51562
+      0.00781,
+      -0.52344
      ],
-     "width": 40
+     "width": 39
     }
    }
   },
@@ -671,48 +680,48 @@
    "layers": {
     "base": {
      "filename": "__dragon-character__/graphics/entity/dragon/male/fly-gun-base.png",
-     "height": 187,
+     "height": 188,
      "shift": [
-      0.0,
-      -1.33594
+      -0.03125,
+      -1.34375
      ],
-     "width": 158
+     "width": 154
     },
     "hoodie": {
      "filename": "__dragon-character__/graphics/entity/dragon/male/fly-gun-hoodie.png",
-     "height": 67,
+     "height": 68,
      "shift": [
-      0.0,
-      -1.27344
+      -0.04688,
+      -1.26562
      ],
-     "width": 56
+     "width": 50
     },
     "mask": {
      "filename": "__dragon-character__/graphics/entity/dragon/male/fly-gun-mask.png",
-     "height": 187,
+     "height": 188,
      "shift": [
-      0.0,
-      -1.33594
+      -0.03125,
+      -1.34375
      ],
-     "width": 158
+     "width": 154
     },
     "shadow": {
      "filename": "__dragon-character__/graphics/entity/dragon/male/fly-gun-shadow.png",
-     "height": 157,
+     "height": 156,
      "shift": [
-      1.0,
-      0.11719
+      0.875,
+      0.10938
      ],
-     "width": 208
+     "width": 192
     },
     "shorts": {
      "filename": "__dragon-character__/graphics/entity/dragon/male/fly-gun-shorts.png",
-     "height": 42,
+     "height": 43,
      "shift": [
-      0.0,
-      -0.89062
+      0.00781,
+      -0.88281
      ],
-     "width": 36
+     "width": 37
     }
    }
   },
@@ -1030,46 +1039,55 @@
      "filename": "__dragon-character__/graphics/entity/dragon/male/run-gun-base.png",
      "height": 144,
      "shift": [
-      0.0,
+      -0.21875,
       -0.54688
      ],
-     "width": 128
+     "width": 102
     },
     "hoodie": {
      "filename": "__dragon-character__/graphics/entity/dragon/male/run-gun-hoodie.png",
-     "height": 62,
+     "height": 63,
      "shift": [
       0.0,
-      -0.875
+      -0.86719
      ],
-     "width": 46
+     "width": 44
     },
     "mask": {
      "filename": "__dragon-character__/graphics/entity/dragon/male/run-gun-mask.png",
      "height": 144,
      "shift": [
-      0.0,
+      -0.29688,
       -0.54688
      ],
-     "width": 128
+     "width": 92
     },
     "shadow": {
      "filename": "__dragon-character__/graphics/entity/dragon/male/run-gun-shadow.png",
      "height": 120,
      "shift": [
-      0.33594,
+      0.25781,
       0.03125
      ],
-     "width": 151
+     "width": 141
+    },
+    "shadow-flipped": {
+     "filename": "__dragon-character__/graphics/entity/dragon/male/run-gun-shadow-flipped.png",
+     "height": 120,
+     "shift": [
+      0.53125,
+      0.03125
+     ],
+     "width": 124
     },
     "shorts": {
      "filename": "__dragon-character__/graphics/entity/dragon/male/run-gun-shorts.png",
      "height": 42,
      "shift": [
-      0.0,
+      0.00781,
       -0.5
      ],
-     "width": 40
+     "width": 37
     }
    }
   },

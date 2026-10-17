@@ -81,32 +81,32 @@ return {
       layers = {
         base = {
           filename = "__dragon-character__/graphics/entity/dragon/female/fly-gun-base.png",
-          height = 187,
-          shift = {0.0, -1.33594},
-          width = 158
+          height = 188,
+          shift = {-0.03125, -1.34375},
+          width = 154
         },
         hoodie = {
           filename = "__dragon-character__/graphics/entity/dragon/female/fly-gun-hoodie.png",
-          height = 64,
-          shift = {0.0, -1.23438},
-          width = 50
+          height = 65,
+          shift = {-0.0625, -1.19531},
+          width = 44
         },
         mask = {
           filename = "__dragon-character__/graphics/entity/dragon/female/fly-gun-mask.png",
-          height = 187,
-          shift = {0.0, -1.33594},
-          width = 158
+          height = 188,
+          shift = {-0.03125, -1.34375},
+          width = 154
         },
         shadow = {
           filename = "__dragon-character__/graphics/entity/dragon/female/fly-gun-shadow.png",
-          height = 157,
-          shift = {1.0, 0.11719},
-          width = 208
+          height = 156,
+          shift = {0.875, 0.10938},
+          width = 192
         },
         shorts = {
           filename = "__dragon-character__/graphics/entity/dragon/female/fly-gun-shorts.png",
-          height = 45,
-          shift = {0.0, -0.91406},
+          height = 46,
+          shift = {0.0, -0.90625},
           width = 38
         }
       }
@@ -334,32 +334,38 @@ return {
         base = {
           filename = "__dragon-character__/graphics/entity/dragon/female/run-gun-base.png",
           height = 144,
-          shift = {0.0, -0.54688},
-          width = 128
+          shift = {-0.21875, -0.54688},
+          width = 102
         },
         hoodie = {
           filename = "__dragon-character__/graphics/entity/dragon/female/run-gun-hoodie.png",
-          height = 59,
-          shift = {0.0, -0.82031},
-          width = 42
+          height = 58,
+          shift = {0.01562, -0.78125},
+          width = 40
         },
         mask = {
           filename = "__dragon-character__/graphics/entity/dragon/female/run-gun-mask.png",
           height = 144,
-          shift = {0.0, -0.54688},
-          width = 128
+          shift = {-0.29688, -0.54688},
+          width = 92
         },
         shadow = {
           filename = "__dragon-character__/graphics/entity/dragon/female/run-gun-shadow.png",
           height = 120,
-          shift = {0.33594, 0.03125},
-          width = 151
+          shift = {0.25781, 0.03125},
+          width = 141
+        },
+        ["shadow-flipped"] = {
+          filename = "__dragon-character__/graphics/entity/dragon/female/run-gun-shadow-flipped.png",
+          height = 120,
+          shift = {0.53906, 0.03125},
+          width = 123
         },
         shorts = {
           filename = "__dragon-character__/graphics/entity/dragon/female/run-gun-shorts.png",
-          height = 46,
-          shift = {0.0, -0.51562},
-          width = 40
+          height = 47,
+          shift = {0.00781, -0.52344},
+          width = 39
         }
       }
     },
@@ -479,33 +485,33 @@ return {
       layers = {
         base = {
           filename = "__dragon-character__/graphics/entity/dragon/male/fly-gun-base.png",
-          height = 187,
-          shift = {0.0, -1.33594},
-          width = 158
+          height = 188,
+          shift = {-0.03125, -1.34375},
+          width = 154
         },
         hoodie = {
           filename = "__dragon-character__/graphics/entity/dragon/male/fly-gun-hoodie.png",
-          height = 67,
-          shift = {0.0, -1.27344},
-          width = 56
+          height = 68,
+          shift = {-0.04688, -1.26562},
+          width = 50
         },
         mask = {
           filename = "__dragon-character__/graphics/entity/dragon/male/fly-gun-mask.png",
-          height = 187,
-          shift = {0.0, -1.33594},
-          width = 158
+          height = 188,
+          shift = {-0.03125, -1.34375},
+          width = 154
         },
         shadow = {
           filename = "__dragon-character__/graphics/entity/dragon/male/fly-gun-shadow.png",
-          height = 157,
-          shift = {1.0, 0.11719},
-          width = 208
+          height = 156,
+          shift = {0.875, 0.10938},
+          width = 192
         },
         shorts = {
           filename = "__dragon-character__/graphics/entity/dragon/male/fly-gun-shorts.png",
-          height = 42,
-          shift = {0.0, -0.89062},
-          width = 36
+          height = 43,
+          shift = {0.00781, -0.88281},
+          width = 37
         }
       }
     },
@@ -732,32 +738,38 @@ return {
         base = {
           filename = "__dragon-character__/graphics/entity/dragon/male/run-gun-base.png",
           height = 144,
-          shift = {0.0, -0.54688},
-          width = 128
+          shift = {-0.21875, -0.54688},
+          width = 102
         },
         hoodie = {
           filename = "__dragon-character__/graphics/entity/dragon/male/run-gun-hoodie.png",
-          height = 62,
-          shift = {0.0, -0.875},
-          width = 46
+          height = 63,
+          shift = {0.0, -0.86719},
+          width = 44
         },
         mask = {
           filename = "__dragon-character__/graphics/entity/dragon/male/run-gun-mask.png",
           height = 144,
-          shift = {0.0, -0.54688},
-          width = 128
+          shift = {-0.29688, -0.54688},
+          width = 92
         },
         shadow = {
           filename = "__dragon-character__/graphics/entity/dragon/male/run-gun-shadow.png",
           height = 120,
-          shift = {0.33594, 0.03125},
-          width = 151
+          shift = {0.25781, 0.03125},
+          width = 141
+        },
+        ["shadow-flipped"] = {
+          filename = "__dragon-character__/graphics/entity/dragon/male/run-gun-shadow-flipped.png",
+          height = 120,
+          shift = {0.53125, 0.03125},
+          width = 124
         },
         shorts = {
           filename = "__dragon-character__/graphics/entity/dragon/male/run-gun-shorts.png",
           height = 42,
-          shift = {0.0, -0.5},
-          width = 40
+          shift = {0.00781, -0.5},
+          width = 37
         }
       }
     },
