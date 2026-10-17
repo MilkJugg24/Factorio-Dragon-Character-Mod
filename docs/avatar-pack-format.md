@@ -57,6 +57,11 @@ dragon-avatar-<id>_<version>/
 }
 ```
 
+The `info.json` title must be at most **100 bytes** of UTF-8 (about 33 Japanese
+characters): Factorio 2.0 stops with a crash, without an error message, when a
+mod's title is longer. Shorten it there if needed; the pack's own `title` below
+can still be up to 80 characters.
+
 `data.lua` is always exactly:
 
 ```lua
@@ -86,7 +91,7 @@ return {
   pixels_per_tile = 64,          -- 64 (sprites drawn at scale 0.5) or 32 (scale 1)
   tintable = false,              -- true: every animation has a "mask" layer tinted with the player colour
   flight = true,                 -- true: the flight animations below are all present
-  timing = {                     -- optional, every field optional
+  timing = {                     -- optional, every field optional (defaults below)
     distance_per_frame = 0.119,
     mine_impact_frame = 9,
     left_foot_frames = { 1 },
@@ -149,13 +154,25 @@ return {
 - The flight animations are all present (`flight = true`) or all absent. A pack
   without them still works with flying armor: the ground animations are used
   in the air.
-- The frame count of each animation is up to the pack. Looping animations are
+- The frame count of each animation is up to the pack, from 1 to 255
+  (Factorio's limit). Looping animations are
   sampled at `t = frame / frame_count`; `take-off` at `t = frame / (frame_count - 1)`
   so that its last frame is the first hover frame.
 - `timing.mine_impact_frame` (1-based) is when the mining sound and particles
   play. `left_foot_frames` / `right_foot_frames` are the running frames where a
   foot lands. `distance_per_frame` is how far the character moves per running
   frame; it should match the stride so feet don't slide.
+- Timing fields a pack leaves out get these defaults, which scale with its own
+  frame counts (for 12-frame `run` and `mine` animations, like the dragon's,
+  they are 9, `{ 1 }` and `{ 7 }`):
+
+  | Field | Default |
+  | --- | --- |
+  | `distance_per_frame` | 0.119 |
+  | `mine_impact_frame` | `max(1, floor(mine frames x 9 / 12 + 0.5))` |
+  | `left_foot_frames` | `{ 1 }` |
+  | `right_foot_frames` | `{ floor(run frames / 2) + 1 }` |
+  | `animation_speed` | the "Default speed" column above |
 
 ### Gun animations (`run-gun`, `fly-gun`)
 
@@ -234,8 +251,9 @@ problem) when a pack:
 - is missing a required animation or layer, or has only some of the flight
   animations, or `tintable = true` without a `mask` everywhere;
 - has the wrong `direction_count` for an animation;
-- has a non-integer or out-of-range `frame_count`, `width` or `height`, or a
-  `shift` that is not two numbers;
+- has a non-integer or out-of-range `frame_count` (1 to 255), `width` or
+  `height`, or a `shift` that is not two numbers;
+- has a `title` that is empty or longer than 80 characters;
 - points `filename` / `filenames` outside its own mod, or has a `filenames`
   count that does not match `lines_per_file`;
 - has `timing` values out of range.

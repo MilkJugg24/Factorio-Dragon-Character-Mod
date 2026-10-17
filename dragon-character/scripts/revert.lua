@@ -8,6 +8,26 @@ local swap = require("scripts.swap")
 
 local revert = {}
 
+-- The pack id named by a /dragon-revert-all parameter: the id or the pack's mod
+-- name. Returns true and the id (nil for no parameter, meaning everything), or
+-- false when the parameter is not one word or names no pack `is_known(id)` accepts.
+function revert.parse_pack_argument(parameter, is_known)
+  if parameter == nil or not parameter:find("%S") then
+    return true, nil
+  end
+  local word = parameter:match("^%s*(%S+)%s*$")
+  if word then
+    if is_known(word) then
+      return true, word
+    end
+    local id = format.id_of_character(word)
+    if id and is_known(id) then
+      return true, id
+    end
+  end
+  return false, nil
+end
+
 -- pack_id: only revert what uses that avatar pack; nil: revert everything to
 -- the default dragon (the vanilla "character").
 -- prefs_of(player_index) -> prefs; apply(player) applies a player's prefs;

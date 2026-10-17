@@ -52,7 +52,8 @@ the dragon, and to packs that were made tintable.
 - **Multiplayer:** every player needs the same pack zips as the server. Factorio
   refuses to join otherwise, so there is no desync.
 - **Removing a pack:** the same warning as for the mod itself applies. Run
-  `/dragon-revert-all <id>` first (see below). If a pack goes missing anyway,
+  `/dragon-revert-all <id>` first (see below); `<id>` is the part of the mod
+  name after `dragon-avatar-`, and the mod name works too. If a pack goes missing anyway,
   players who chose it are shown as the dragon, and get their look back when it
   is installed again.
 - **Making a pack:** the files a pack needs are described in
@@ -89,7 +90,9 @@ everyone using that pack, and their corpses, back into the dragon.
   character.
 - Remote interface `dragon-character`: `get_appearance(player_index)`,
   `set_appearance(player_index, {body=, hoodie=, shorts=, avatar=})` (`avatar`
-  is a pack id, or `false` for the dragon), `is_dragon_character(name)`,
+  is a pack id, or `false` for the dragon; returns nil when applied,
+  `"avatar-missing"` when applied but the chosen pack is not installed, or why
+  the change has to wait), `is_dragon_character(name)`,
   `is_avatar_character(name)`, `get_avatar_packs()`, `revert_all(pack_id)` and
   `get_on_character_swapped_event()`. That event is raised whenever the mod
   replaces a player's character entity, with `old_character` and

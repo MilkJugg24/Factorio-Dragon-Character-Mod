@@ -15,7 +15,7 @@ format.ID_PATTERN = "^[a-z0-9][a-z0-9%-]*$"
 format.MAX_ID_LENGTH = 35
 format.MAX_TITLE_LENGTH = 80
 format.MAX_SHEET_SIZE = 4096
-format.MAX_FRAMES = 256
+format.MAX_FRAMES = 255 -- Factorio's limit for one animation
 
 -- animation name -> required direction count
 format.DIRECTIONS = {
@@ -38,7 +38,8 @@ format.FLIGHT = { "hover", "hover-gun", "fly", "fly-gun", "take-off" }
 -- Layers an animation may have besides base/shadow/mask.
 format.OPTIONAL_LAYERS = { ["run-gun"] = { "shadow-flipped" } }
 
--- Values used when a pack's `timing` leaves them out; they match the dragon.
+-- The dragon's timing, and the defaults for a pack's `timing` (see
+-- format.default_timing for the frame numbers).
 format.DEFAULT_TIMING = {
   distance_per_frame = 0.119,
   mine_impact_frame = 9,
@@ -58,6 +59,22 @@ format.DEFAULT_TIMING = {
     ["corpse"] = 1,
   },
 }
+
+-- Frame numbers a pack gets when its `timing` leaves them out. They scale
+-- with the pack's own frame counts; for the dragon's 12-frame run and mine
+-- animations they are the dragon's 1 / 7 / 9.
+function format.default_timing(run_frames, mine_frames)
+  return {
+    mine_impact_frame = math.max(1, math.floor(mine_frames * 9 / 12 + 0.5)),
+    left_foot_frames = { 1 },
+    right_foot_frames = { math.floor(run_frames / 2) + 1 },
+  }
+end
+
+-- Length of a UTF-8 string in characters (Lua's # counts bytes).
+function format.utf8_length(s)
+  return select(2, s:gsub("[^\128-\191]", ""))
+end
 
 function format.character_name(id)
   return format.MOD_PREFIX .. id

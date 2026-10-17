@@ -121,7 +121,8 @@ if mods["dragon-avatar-test"] then
   end
 end
 
--- --id small --ppt 32 --default-timing: no flight, no tint, 32 pixels per tile
+-- --id small --ppt 32 --default-timing --frames run=6,mine=8: no flight, no
+-- tint, 32 pixels per tile, timing defaults scaled to its frame counts
 if mods["dragon-avatar-small"] then
   local c = data.raw["character"]["dragon-avatar-small"]
   check(c ~= nil, "pack small: no character prototype")
@@ -130,7 +131,9 @@ if mods["dragon-avatar-small"] then
     check(layer_count(anim.idle) == 2, "pack small: idle should have base and shadow")
     check(anim.idle.layers[1].scale == 1, "pack small: scale should be 1 at 32 pixels per tile")
     check(c.distance_per_frame == 0.119, "pack small: default distance_per_frame")
-    check(c.mining_with_tool_particles_animation_positions[1] == 9, "pack small: default mine impact frame")
+    check(c.mining_with_tool_particles_animation_positions[1] == 6, "pack small: scaled mine impact frame")
+    check(diff({ 1 }, c.running_sound_animation_positions, "") == nil, "pack small: default left foot frames")
+    check(diff({ 4 }, c.moving_sound_animation_positions, "") == nil, "pack small: scaled right foot frames")
     if flight then
       -- no flight animations: the ground ones are shown in the air
       check(diff(anim.running, anim.flying, "") == nil, "pack small: flying should fall back to running")

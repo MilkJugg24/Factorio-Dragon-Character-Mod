@@ -26,6 +26,7 @@ _ESCAPES = {"a": "\a", "b": "\b", "f": "\f", "n": "\n", "r": "\r", "t": "\t", "v
 _NUMBER = re.compile(r"0[xX][0-9a-fA-F]+|(?:[0-9]+\.?[0-9]*|\.[0-9]+)(?:[eE][+-]?[0-9]+)?")
 _NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 _LONG_OPEN = re.compile(r"\[(=*)\[")
+_DECIMAL_ESCAPE = re.compile(r"[0-9]{1,3}")
 _ASSIGN = re.compile(r"[ \t\r\n]*=(?!=)")
 _KEYWORDS = {"and", "break", "do", "else", "elseif", "end", "false", "for", "function", "goto", "if",
              "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while"}
@@ -122,51 +123,50 @@ class _Parser:
         self.error(f"unexpected character {c!r}")
 
     def string(self):
+        # Lua strings are bytes: escapes add single bytes, other characters their UTF-8 encoding
         text = self.text
         quote = text[self.pos]
         self.pos += 1
-        out = []
+        out = bytearray()
         while True:
             if self.pos >= len(text):
                 self.error("unfinished string")
             c = text[self.pos]
             if c == quote:
                 self.pos += 1
-                return "".join(out)
+                try:
+                    return out.decode("utf-8")
+                except UnicodeDecodeError:
+                    self.error("string is not valid UTF-8")
             if c == "\n":
                 self.error("unfinished string")
             if c != "\\":
-                out.append(c)
+                out += c.encode("utf-8")
                 self.pos += 1
                 continue
             self.pos += 1
             e = text[self.pos:self.pos + 1]
             if e in _ESCAPES:
-                out.append(_ESCAPES[e])
+                out += _ESCAPES[e].encode("utf-8")
                 self.pos += 1
             elif e == "x":
                 digits = text[self.pos + 1:self.pos + 3]
                 if not re.fullmatch(r"[0-9a-fA-F]{2}", digits):
                     self.error("bad \\x escape")
-                out.append(chr(int(digits, 16)))
+                out.append(int(digits, 16))
                 self.pos += 3
             elif e == "z":
                 self.pos += 1
                 while self.pos < len(text) and text[self.pos] in " \t\r\n\f\v":
                     self.pos += 1
-            elif e.isdigit():
-                m = re.compile(r"[0-9]{1,3}").match(text, self.pos)
+            elif e and e in "0123456789":
+                m = _DECIMAL_ESCAPE.match(text, self.pos)
                 if int(m.group()) > 255:
                     self.error("decimal escape too large")
-                out.append(chr(int(m.group())))
-                self.pos = m.end()
-            elif e == "u":
-                m = re.compile(r"u\{([0-9a-fA-F]+)\}").match(text, self.pos)
-                if not m:
-                    self.error("bad \\u escape")
-                out.append(chr(int(m.group(1), 16)))
+                out.append(int(m.group()))
                 self.pos = m.end()
             else:
+                # includes \u{...}, which only exists from Lua 5.3 (Factorio uses 5.2)
                 self.error(f"invalid escape \\{e}")
 
     def long_string(self, m):

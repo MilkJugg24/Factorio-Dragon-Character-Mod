@@ -27,9 +27,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import lua_table  # noqa: E402
-from avatar_pack.spec import DATA_LUA, DIRECTIONS, FLIGHT, REQUIRED, valid_id  # noqa: E402
+from avatar_pack.spec import DATA_LUA, DIRECTIONS, FLIGHT, REQUIRED, info_title, valid_id  # noqa: E402
 
-# Enough frames for the default timing (foot frames 1 and 7, mine impact frame 9).
+# Frame counts per animation; --frames overrides them.
 FRAMES = {
     "idle": 4, "idle-gun": 4, "run": 8, "run-gun": 8, "mine": 10, "corpse": 1,
     "hover": 4, "hover-gun": 4, "fly": 6, "fly-gun": 6, "take-off": 5,
@@ -53,6 +53,8 @@ BROKEN = {
     "missing-mask": ("tintable without a mask on idle", 'animation "idle" is missing its "mask" layer'),
     "bad-split": ("run-gun base lists one file too few", 'animation "run-gun" layer "base" has'),
     "bad-timing": ("mine_impact_frame 99", "timing.mine_impact_frame must be a frame of the mine animation"),
+    "too-many-frames": ("idle claims 256 frames", 'animation "idle" needs an integer frame_count between 1 and 255'),
+    "title-too-long": ("an 81-character title", "needs a title of 1 to 80 characters"),
 }
 
 
@@ -274,7 +276,7 @@ def build(args):
     animations = {}
     names = list(REQUIRED) + (list(FLIGHT) if flight else [])
     for anim in names:
-        dirs, frames = DIRECTIONS[anim], FRAMES[anim]
+        dirs, frames = DIRECTIONS[anim], args.frames.get(anim, FRAMES[anim])
         cells = [[painter.frame(anim, row, f, frames) for f in range(frames)] for row in range(dirs)]
         layer_index = {"base": 0, "shadow": 2}
         if tint:
@@ -330,6 +332,10 @@ def build(args):
         del animations["idle"]["layers"]["mask"]
     elif args.broken == "bad-split":
         animations["run-gun"]["layers"]["base"]["filenames"].pop()
+    elif args.broken == "too-many-frames":
+        animations["idle"]["frame_count"] = 256
+    elif args.broken == "title-too-long":
+        pack["title"] = "x" * 81
     elif args.broken == "bad-timing":
         pack.setdefault("timing", {})["mine_impact_frame"] = 99
 
@@ -341,7 +347,7 @@ def build(args):
     info = {
         "name": mod_name,
         "version": args.version,
-        "title": f"Dragon Character avatar: {args.title}",
+        "title": info_title(args.title),
         "author": args.author,
         "factorio_version": "2.0",
         "description": "Synthetic avatar pack for testing Dragon Character.",
@@ -371,6 +377,16 @@ def build(args):
         print(f"EXPECTED-ERROR: {BROKEN[args.broken][1]}")
 
 
+def frame_counts(text):
+    counts = {}
+    for item in text.split(","):
+        name, _, count = item.partition("=")
+        if name not in DIRECTIONS or not count.isdigit() or not 1 <= int(count) <= 255:
+            raise argparse.ArgumentTypeError(f"bad frame count {item!r}")
+        counts[name] = int(count)
+    return counts
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--out", help="folder to write the pack into")
@@ -385,6 +401,8 @@ def main(argv=None):
     parser.add_argument("--max-sheet", type=int, default=4096,
                         help="largest sheet size in px; lower it to force split sheets")
     parser.add_argument("--default-timing", action="store_true", help="leave timing out of the pack")
+    parser.add_argument("--frames", type=frame_counts, default={}, metavar="ANIM=N,...",
+                        help="override frame counts, e.g. run=6,mine=8")
     parser.add_argument("--zip", action="store_true", help="also write the mod zip")
     parser.add_argument("--broken", choices=sorted(BROKEN), help="add one deliberate mistake: "
                         + "; ".join(f"{k}: {v[0]}" for k, v in sorted(BROKEN.items())))

@@ -9,6 +9,7 @@
 
 local swap = require("__dragon-character__/scripts/swap")
 local appearance = require("__dragon-character__/scripts/appearance")
+local revert = require("__dragon-character__/scripts/revert")
 
 local FIXTURE_CORPSE_POSITION = { 10, 10 }
 local FIXTURE_CHARACTER_POSITION = { -10, -10 }
@@ -153,6 +154,28 @@ local function test_transfer(surface, force)
   transfer_and_check(old, expected, "dragon-character-female-hoodie").destroy()
 end
 
+local function test_revert_argument()
+  local function known(id)
+    return id == "mika" or id == "dragon-avatar-x"
+  end
+  local cases = {
+    { nil, true, nil },
+    { "   ", true, nil },
+    { "mika", true, "mika" },
+    { "  mika ", true, "mika" },
+    { "dragon-avatar-mika", true, "mika" },
+    { "dragon-avatar-x", true, "dragon-avatar-x" },
+    { "dragon-avatar-corpse-mika", false, nil },
+    { "mika now", false, nil },
+    { "other", false, nil },
+  }
+  for _, case in ipairs(cases) do
+    local ok, id = revert.parse_pack_argument(case[1], known)
+    check(ok == case[2] and id == case[3], "parse_pack_argument(" .. tostring(case[1]) .. "): "
+      .. tostring(ok) .. ", " .. tostring(id))
+  end
+end
+
 local function test_corpse(surface, force)
   local corpse = surface.create_entity({
     name = "dragon-character-corpse-male-shorts",
@@ -224,8 +247,10 @@ local function test_generated_packs(surface, force, packs)
   if not (test and small) then
     return
   end
-  check(packs[1].id == "small" and packs[2].id == "test", "packs not sorted by title")
+  -- "small" has a non-ASCII title, which sorts after "Test Avatar"
+  check(packs[1].id == "test" and packs[2].id == "small", "packs not sorted by title")
   check(test.title == "Test Avatar" and test.author == "make_test_pack", "pack test: title/author")
+  check(small.title == string.rep("竜", 30), "pack small: UTF-8 title")
   check(test.tintable == true and small.tintable == false, "tintable flags")
   check(test.character == "dragon-avatar-test" and test.corpse == "dragon-avatar-corpse-test", "pack test: names")
 
@@ -304,6 +329,7 @@ script.on_event(defines.events.on_tick, function(event)
   local surface = game.surfaces[1]
   local force = game.forces.player
   test_prototypes()
+  test_revert_argument()
   test_transfer(surface, force)
   test_corpse(surface, force)
   local packs = test_any_packs(surface, force)

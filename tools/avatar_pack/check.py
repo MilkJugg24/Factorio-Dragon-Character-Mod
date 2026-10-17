@@ -81,6 +81,12 @@ class Checker:
         if not isinstance(name, str) or not name.startswith(spec.MOD_PREFIX):
             self.error(f'info.json: name must be "{spec.MOD_PREFIX}<id>", not {name!r}')
             return None
+        title = info.get("title")
+        if not isinstance(title, str) or not title:
+            self.error("info.json: title is missing")
+        elif len(title.encode("utf-8")) > spec.INFO_TITLE_MAX_BYTES:
+            self.error(f"info.json: title is {len(title.encode('utf-8'))} bytes; Factorio crashes on start when it"
+                       f" is longer than {spec.INFO_TITLE_MAX_BYTES} bytes")
         version = info.get("version")
         if not isinstance(version, str) or not re.fullmatch(r"\d+\.\d+\.\d+", version):
             self.error(f"info.json: version must look like 1.0.0, not {version!r}")
@@ -223,31 +229,32 @@ class Checker:
         d = timing.get("distance_per_frame")
         if d is not None and (not is_number(d) or d <= 0 or d > 2):
             self.error("timing.distance_per_frame must be a number above 0 and at most 2")
-        mine = animations.get("mine")
-        run = animations.get("run")
-        if isinstance(mine, dict) and is_int(mine.get("frame_count"), 1):
-            impact = timing.get("mine_impact_frame", spec.DEFAULT_TIMING["mine_impact_frame"])
-            if not is_int(impact, 1, mine["frame_count"]):
-                self.error(f"timing.mine_impact_frame must be a frame of the mine animation (1..{mine['frame_count']})")
-        if isinstance(run, dict) and is_int(run.get("frame_count"), 1):
-            for field in ("left_foot_frames", "right_foot_frames"):
-                frames = timing.get(field, spec.DEFAULT_TIMING[field])
-                if not isinstance(frames, list) or not frames:
-                    self.error(f"timing.{field} must be a non-empty list of frame numbers")
-                    continue
-                for frame in frames:
-                    if not is_int(frame, 1, run["frame_count"]):
-                        self.error(f"timing.{field} has frame {frame} outside 1..{run['frame_count']}")
         speeds = timing.get("animation_speed")
         if speeds is not None:
             if not isinstance(speeds, dict):
                 self.error("timing.animation_speed must be a table")
-                return
-            for name, speed in speeds.items():
-                if name not in spec.DIRECTIONS:
-                    self.error(f'timing.animation_speed names an unknown animation "{name}"')
-                elif not is_number(speed) or speed <= 0:
-                    self.error(f"timing.animation_speed.{name} must be a positive number")
+            else:
+                for name, speed in speeds.items():
+                    if name not in spec.DIRECTIONS:
+                        self.error(f'timing.animation_speed names an unknown animation "{name}"')
+                    elif not is_number(speed) or speed <= 0:
+                        self.error(f"timing.animation_speed.{name} must be a positive number")
+        mine, run = animations.get("mine"), animations.get("run")
+        if not all(isinstance(a, dict) and is_int(a.get("frame_count"), 1, spec.MAX_FRAMES) for a in (mine, run)):
+            return  # already reported by check_animation
+        mine_frames, run_frames = mine["frame_count"], run["frame_count"]
+        defaults = spec.default_timing(run_frames, mine_frames)
+        impact = timing.get("mine_impact_frame", defaults["mine_impact_frame"])
+        if not is_int(impact, 1, mine_frames):
+            self.error(f"timing.mine_impact_frame must be a frame of the mine animation (1..{mine_frames})")
+        for field in ("left_foot_frames", "right_foot_frames"):
+            frames = timing.get(field, defaults[field])
+            if not isinstance(frames, list) or not frames:
+                self.error(f"timing.{field} must be a non-empty list of frame numbers")
+                continue
+            for frame in frames:
+                if not is_int(frame, 1, run_frames):
+                    self.error(f"timing.{field} has frame {frame} outside 1..{run_frames}")
 
     def check_description(self, mod_name):
         self.mod_name = mod_name
@@ -290,8 +297,8 @@ class Checker:
             name = self.file(icon.get("filename"), "icon")
             if name:
                 w, h = self.files.image(name).size
-                if w < icon["size"] or h < icon["size"]:
-                    self.error(f"icon {name} is {w}x{h}, smaller than its size {icon['size']}")
+                if (w, h) != (icon["size"], icon["size"]):
+                    self.error(f"icon {name} is {w}x{h}, but its size is {icon['size']}")
         ppt = d.get("pixels_per_tile", 64)
         if ppt not in (64, 32) or isinstance(ppt, bool):
             self.error(f"has pixels_per_tile {ppt}; only 64 and 32 are supported")

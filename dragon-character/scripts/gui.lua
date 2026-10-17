@@ -157,9 +157,10 @@ function gui.open(player, prefs)
     return flow
   end
 
-  -- look: the dragon or one of the installed avatar packs
+  -- look: the dragon or one of the installed avatar packs (also shown when the
+  -- chosen pack is gone, so the dragon can be picked to clear that choice)
   local installed = packs.list()
-  if #installed > 0 then
+  if #installed > 0 or prefs.avatar then
     local look_section = section("dragon_look_section")
     section_label(look_section, { "dragon-character.look" })
     local pane = look_section.add({ type = "scroll-pane", horizontal_scroll_policy = "never" })

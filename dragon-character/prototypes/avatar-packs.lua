@@ -113,11 +113,12 @@ end
 
 local function merged_timing(pack_name, timing, animations)
   local defaults = format.DEFAULT_TIMING
+  local frames = format.default_timing(animations["run"].frame_count, animations["mine"].frame_count)
   local result = {
     distance_per_frame = defaults.distance_per_frame,
-    mine_impact_frame = defaults.mine_impact_frame,
-    left_foot_frames = defaults.left_foot_frames,
-    right_foot_frames = defaults.right_foot_frames,
+    mine_impact_frame = frames.mine_impact_frame,
+    left_foot_frames = frames.left_foot_frames,
+    right_foot_frames = frames.right_foot_frames,
     animation_speed = {},
   }
   for name, speed in pairs(defaults.animation_speed) do
@@ -194,7 +195,8 @@ local function validate(mod_data)
     fail(pack_name, "must come from a mod named \"" .. mod_name .. "\"")
   end
   local prefix = "__" .. mod_name .. "__/"
-  if type(d.title) ~= "string" or #d.title == 0 or #d.title > format.MAX_TITLE_LENGTH then
+  local title_length = type(d.title) == "string" and format.utf8_length(d.title) or 0
+  if title_length == 0 or title_length > format.MAX_TITLE_LENGTH then
     fail(pack_name, "needs a title of 1 to " .. format.MAX_TITLE_LENGTH .. " characters")
   end
   if d.author ~= nil and type(d.author) ~= "string" then

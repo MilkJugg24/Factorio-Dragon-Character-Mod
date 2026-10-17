@@ -8,8 +8,9 @@ local revert = require("scripts.revert")
 -- How often (in ticks) appearance changes that had to wait are retried.
 local RETRY_INTERVAL = 30
 
--- storage.players[player_index] = { body, hoodie, shorts, avatar, status, gui_location }
+-- storage.players[player_index] = { body, hoodie, shorts, avatar, status, gui_location, avatar_gone_notified }
 --   avatar: id of the chosen avatar pack, nil for the dragon
+--   avatar_gone_notified: the missing pack the player was told about
 -- storage.pending[player_index] = true while the player's character does not yet match
 -- storage.swap_tick[player_index] = tick of the player's last character swap
 local function init_storage()
@@ -30,7 +31,7 @@ end
 
 -- Statuses that do not clear up by themselves; everything else (leaving a
 -- vehicle, finishing crafting, ...) is retried.
-local PERMANENT = { missing = true, ["avatar-missing"] = true }
+local PERMANENT = { missing = true }
 
 local function prototype_exists(name)
   return prototypes.entity[name] ~= nil
@@ -126,8 +127,14 @@ script.on_configuration_changed(function()
     -- rebuild the window in case its layout changed between versions
     local prefs = prefs_of(player.index)
     if prefs.avatar and not packs.get(prefs.avatar) then
-      -- the preference is kept, so reinstalling the pack brings the look back
-      player.print({ "dragon-character.avatar-pack-gone", prefs.avatar })
+      -- the preference is kept, so reinstalling the pack brings the look back;
+      -- tell each player once (offline players see it in the window instead)
+      if player.connected and prefs.avatar_gone_notified ~= prefs.avatar then
+        player.print({ "dragon-character.avatar-pack-gone", prefs.avatar })
+        prefs.avatar_gone_notified = prefs.avatar
+      end
+    else
+      prefs.avatar_gone_notified = nil
     end
     local was_open = gui.get_frame(player) ~= nil
     gui.close(player, prefs)
@@ -418,7 +425,28 @@ commands.add_command("dragon-revert-all", { "dragon-character.command-revert-hel
     reply({ "dragon-character.admin-only" })
     return
   end
-  local pack_id = command.parameter and command.parameter:match("^%s*(%S+)%s*$")
+  -- a pack that is no longer installed is still accepted while players have it chosen
+  local function is_known(id)
+    if packs.get(id) then
+      return true
+    end
+    for _, prefs in pairs(storage.players) do
+      if prefs.avatar == id then
+        return true
+      end
+    end
+    return false
+  end
+  local ok, pack_id = revert.parse_pack_argument(command.parameter, is_known)
+  if not ok then
+    local ids = {}
+    for _, pack in ipairs(packs.list()) do
+      ids[#ids + 1] = pack.id
+    end
+    local installed = #ids > 0 and table.concat(ids, ", ") or { "dragon-character.no-packs" }
+    reply({ "dragon-character.revert-unknown-pack", command.parameter, installed })
+    return
+  end
   local result = revert_all(pack_id)
   if pack_id then
     reply({ "dragon-character.revert-pack-done", pack_id, result.corpses, result.remaining })
@@ -443,8 +471,10 @@ remote.add_interface("dragon-character", {
     return { body = prefs.body, hoodie = prefs.hoodie, shorts = prefs.shorts, avatar = prefs.avatar }
   end,
   -- Changes any of body/hoodie/shorts/avatar (a pack id, or false for the
-  -- dragon). Returns nil when applied, or a status string when the change has
-  -- to wait (e.g. "vehicle", "crafting") or failed ("unknown-avatar").
+  -- dragon). Returns nil when applied; "avatar-missing" when applied but the
+  -- chosen pack is not installed, so the dragon is shown; or a status string
+  -- when the change has to wait (e.g. "vehicle", "crafting") or failed
+  -- ("unknown-avatar", "no-player", "missing").
   set_appearance = function(player_index, new)
     local player = game.get_player(player_index)
     if not player then

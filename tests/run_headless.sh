@@ -107,7 +107,9 @@ new_mods_dir "$MODS"
 PACK_NAMES=()
 if [ "$TEST_PACKS" = true ]; then
   python3 "$MAKE_PACK" --out "$MODS" --id test --title "Test Avatar" --flight --tint --max-sheet 1024 > /dev/null
-  python3 "$MAKE_PACK" --out "$MODS" --id small --title "Small" --ppt 32 --default-timing > /dev/null
+  # a 30-character title of 90 bytes, and default timing scaled to 6 run / 8 mine frames
+  python3 "$MAKE_PACK" --out "$MODS" --id small --title "$(printf '竜%.0s' $(seq 30))" --ppt 32 \
+    --default-timing --frames run=6,mine=8 > /dev/null
   PACK_NAMES+=(dragon-avatar-test dragon-avatar-small)
 fi
 for pack in "${PACKS[@]+"${PACKS[@]}"}"; do
