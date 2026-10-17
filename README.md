@@ -114,6 +114,7 @@ everyone using that pack, and their corpses, back into the dragon.
 | `docs/avatar-pack-format.md` | The avatar pack format. |
 | `tools/avatar_pack/` | Writes synthetic avatar packs for testing. |
 | `tools/validate_sprites.py` | Checks the dragon sheets, or an avatar pack with `--pack`. |
+| `tools/avatar_pack/preview.py` | Animated GIF previews of an avatar pack, every direction side by side. |
 | `tools/build_mod.sh` | Packs the mod into a zip. |
 | `tests/` | Headless Factorio test of the character swap logic. |
 
