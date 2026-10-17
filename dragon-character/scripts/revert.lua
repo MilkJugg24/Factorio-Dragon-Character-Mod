@@ -4,6 +4,7 @@
 
 local appearance = require("scripts.appearance")
 local format = require("scripts.pack-format")
+local packs = require("scripts.packs")
 local swap = require("scripts.swap")
 
 local revert = {}
@@ -36,16 +37,18 @@ end
 -- a mod prototype (offline, dead or busy players) }.
 function revert.run(pack_id, prefs_of, apply, pending)
   local function is_target_character(name)
+    local id = packs.id_of_character(name)
     if pack_id then
-      return format.id_of_character(name) == pack_id
+      return id == pack_id
     end
-    return appearance.is_mod_variant(name)
+    return id ~= nil or appearance.is_mod_variant(name)
   end
   local function is_target_corpse(name)
+    local id = packs.id_of_corpse(name)
     if pack_id then
-      return format.id_of_corpse(name) == pack_id
+      return id == pack_id
     end
-    return appearance.is_mod_corpse(name)
+    return id ~= nil or appearance.is_mod_corpse(name)
   end
 
   local d = appearance.default

@@ -3,3 +3,4 @@ __pycache__/
 /build/
 unity/dotnet/**/bin/
 unity/dotnet/**/obj/
+.claude/worktrees/
