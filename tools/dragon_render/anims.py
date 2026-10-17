@@ -42,17 +42,24 @@ def idle(body, t, gun=False):
     return p
 
 
-def run(body, t, gun=False):
+def _turn(v, move):
+    """Turns a model-space vector clockwise (seen from above) by ``move`` radians."""
+    return rot_about(v, V(0, 0, 0), Z, -move) if move else v
+
+
+def run(body, t, gun=False, move=0.0):
+    """``move``: running direction relative to the facing (gun) direction, clockwise radians.
+    The hips, legs and tail run that way while the torso, head and gun keep facing forward."""
     ph = TAU * t
     pel = V(0, 0.0, 0.675 - 0.028 * math.cos(2 * ph))
     p = build_pose(body, pel, lean=0.27 if not gun else 0.18, twist=0.10 * math.sin(ph),
-                   hip_twist=-0.12 * math.sin(ph), head_pitch=-0.12 if not gun else -0.06)
+                   hip_twist=-0.12 * math.sin(ph) - move, head_pitch=-0.12 if not gun else -0.06)
     for side, phi in ((-1, t), (1, t + 0.5)):
         phi = phi % 1.0
         y = 0.05 + 0.25 * math.cos(TAU * phi)
         swing = math.sin(TAU * (phi - 0.5)) if phi > 0.5 else 0.0
         z = 0.035 + 0.16 * swing
-        ball = V(side * (body.hip_w + 0.012), y, z)
+        ball = _turn(V(side * (body.hip_w + 0.012), y, z), move)
         set_leg(p, body, side, ball, heel_lift=0.13 + 0.05 * swing, toe_pitch=0.5 * swing)
     if gun:
         hold_gun(p, body)
@@ -90,10 +97,10 @@ def mine(body, t):
     return p
 
 
-def _dangling_legs(p, body, back=0.0):
+def _dangling_legs(p, body, back=0.0, move=0.0):
     for side in (1, -1):
         hip = hip_joint(p, body, side)
-        ball = hip + V(side * 0.025, 0.05 - back, -0.52 + back * 0.25)
+        ball = hip + _turn(V(side * 0.025, 0.05 - back, -0.52 + back * 0.25), move)
         set_leg(p, body, side, ball, heel_lift=0.16, heel_back=0.03 + back * 0.1,
                 toe_pitch=0.9 + back)
 
@@ -114,17 +121,18 @@ def hover(body, t, gun=False, elevation=FLY_HEIGHT, phase_shift=0.0):
     return p
 
 
-def fly(body, t, gun=False):
+def fly(body, t, gun=False, move=0.0):
+    """``move``: as in run(); the hips, legs and tail point along the flight direction."""
     ph = TAU * t
     flap = 0.75 * math.cos(ph)
     fold = 0.4 * max(0.0, -math.sin(ph))
     pel = V(0, 0, 0.70 + FLY_HEIGHT + 0.03 * math.sin(ph))
-    p = build_pose(body, pel, lean=0.55, head_pitch=-0.35)
+    p = build_pose(body, pel, lean=0.55, hip_twist=-move, head_pitch=-0.35)
     if gun:
         hold_gun(p, body)
     else:
         _relaxed_arms(p, body, swing=0.0, spread=0.02)
-    _dangling_legs(p, body, back=0.28)
+    _dangling_legs(p, body, back=0.28, move=move)
     set_tail(p, lift=1.0, sway=0.05, sway_phase=ph)
     set_wings(p, spread=1.0, flap=flap, fold_in=fold)
     return p
@@ -176,18 +184,41 @@ def corpse_pose(body):
     return p
 
 
-# name -> (direction_count, frame_count, pose function(body, t), looping)
+# Direction layout Factorio expects for 18-direction running_with_gun / flying_with_gun
+# (taken from the vanilla engineer's sheet). Each row is (gun direction, moving direction)
+# in eighths of a turn clockwise from north. Only gun directions north..south (the east
+# half) exist: for a gun pointing west the engine mirrors the sprite horizontally, and for
+# the remaining moving directions it plays a row backwards (running backwards).
+GUN_MOVE_DIRECTIONS = [
+    (0, 0), (0, 1), (0, 2),
+    (1, 0), (1, 1), (1, 2), (1, 3),
+    (2, 0), (2, 1), (2, 2), (2, 3),
+    (3, 1), (3, 2), (3, 3), (3, 4),
+    (4, 2), (4, 3), (4, 4),
+]
+GUN_MOVE_ANIMATIONS = ("run-gun", "fly-gun")
+
+
+def direction(anim, d):
+    """Sheet row d of an animation -> (facing orientation, extra pose arguments)."""
+    if anim in GUN_MOVE_ANIMATIONS:
+        gun, move = GUN_MOVE_DIRECTIONS[d]
+        return gun / 8.0, {"move": (move - gun) * TAU / 8.0}
+    return d / ANIMATIONS[anim][0], {}
+
+
+# name -> (direction_count, frame_count, pose function(body, t, **direction args), looping)
 # Looping animations sample t in [0, 1); one-shot animations sample t in [0, 1].
 ANIMATIONS = {
     "idle": (8, 8, lambda b, t: idle(b, t, False), True),
     "idle-gun": (8, 8, lambda b, t: idle(b, t, True), True),
     "run": (8, 12, lambda b, t: run(b, t, False), True),
-    "run-gun": (18, 12, lambda b, t: run(b, t, True), True),
+    "run-gun": (18, 12, lambda b, t, move=0.0: run(b, t, True, move), True),
     "mine": (8, MINE_FRAMES, mine, True),
     "hover": (8, 8, lambda b, t: hover(b, t, False), True),
     "hover-gun": (8, 8, lambda b, t: hover(b, t, True), True),
     "fly": (8, 8, lambda b, t: fly(b, t, False), True),
-    "fly-gun": (18, 8, lambda b, t: fly(b, t, True), True),
+    "fly-gun": (18, 8, lambda b, t, move=0.0: fly(b, t, True, move), True),
     "take-off": (8, 8, take_off, False),
 }
 

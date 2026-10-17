@@ -88,6 +88,13 @@ local function rotated(body, name, outfit, extra)
   return layers(body, name, outfit, true, extra)
 end
 
+-- Shadow drawn instead of the regular one while the engine mirrors running_with_gun
+-- (gun pointing west): the mirrored dragon's shadow, still falling to the east.
+local function flipped_shadow(body, name)
+  local extra = { animation_speed = speeds[name], draw_as_shadow = true }
+  return { layers = { layer(get_meta(body, name), "shadow-flipped", extra, true) } }
+end
+
 local function reversed_sequence(n)
   local seq = {}
   for i = n, 1, -1 do
@@ -104,6 +111,7 @@ function animations.armor_animation(body, outfit, flight)
     idle_with_gun = rotated(body, "idle-gun", outfit),
     running = rotated(body, "run", outfit),
     running_with_gun = rotated(body, "run-gun", outfit),
+    flipped_shadow_running_with_gun = flipped_shadow(body, "run-gun"),
     mining_with_tool = rotated(body, "mine", outfit),
     mining_with_tool_particles_animation_positions = { animations.mine_impact_frame },
   }

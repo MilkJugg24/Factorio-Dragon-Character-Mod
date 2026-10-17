@@ -48,6 +48,10 @@ ROWS = [
 # start facing the viewer and turn clockwise.
 FACINGS = [4, 5, 6, 7, 0, 1, 2, 3]
 
+# 18-direction gun sheets (anims.GUN_MOVE_DIRECTIONS): the row aiming and running the
+# same way, for gun directions north..south. West-facing rows are mirrored, as in Factorio.
+GUN_FORWARD_ROWS = {0: 0, 1: 4, 2: 9, 3: 13, 4: 17}
+
 CELL_W = 180          # sheet pixels per column
 CELL_H = 276          # sheet pixels per row
 FEET_X = 0.44         # ground position across a cell; shadows fall to the right
@@ -79,15 +83,26 @@ class Animation:
         self.frames = meta["frame_count"]
         self.speed = SPEEDS[name]
         self.layers = {}
-        for k in ("base", "mask", "hoodie", "shorts", "shadow"):
-            info = meta["layers"][k]
-            self.layers[k] = (load_sheet(body, name, k), info["width"], info["height"], info["shift"])
+        for k in ("base", "mask", "hoodie", "shorts", "shadow", "shadow-flipped"):
+            info = meta["layers"].get(k)
+            if info:
+                self.layers[k] = (load_sheet(body, name, k), info["width"], info["height"], info["shift"])
 
     def frame(self, layer, facing8, t):
+        mirror = False
+        if self.dirs == 18:
+            mirror = facing8 > 4
+            d = GUN_FORWARD_ROWS[8 - facing8 if mirror else facing8]
+            if mirror and layer == "shadow" and "shadow-flipped" in self.layers:
+                layer, mirror = "shadow-flipped", False
+        else:
+            d = round(facing8 * self.dirs / 8) % self.dirs
         sheet, w, h, shift = self.layers[layer]
-        d = round(facing8 * self.dirs / 8) % self.dirs
         f = int(t * self.speed * 60) % self.frames
-        return sheet[d * h:(d + 1) * h, f * w:(f + 1) * w], shift
+        img = sheet[d * h:(d + 1) * h, f * w:(f + 1) * w]
+        if mirror:
+            return img[:, ::-1], (-shift[0], shift[1])
+        return img, shift
 
 
 def paste(dst, img, cx, cy, mode, tint=None):
