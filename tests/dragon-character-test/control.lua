@@ -1,8 +1,18 @@
--- Headless test for dragon-character's character swap logic.
+-- Headless test for dragon-character's character swap logic and avatar packs.
 -- Run with tests/run_headless.sh; prints "DRAGON-TEST: PASS" or errors.
+--
+-- With the synthetic packs of tests/run_headless.sh --test-packs, the save is
+-- made in three phases: on_init (during --create) leaves a pack corpse and an
+-- unowned pack character and reverts the "test" pack; the first run checks
+-- everything with the packs installed; the second run, after the packs were
+-- removed, checks that the reverted corpse survived with its items.
 
 local swap = require("__dragon-character__/scripts/swap")
 local appearance = require("__dragon-character__/scripts/appearance")
+local revert = require("__dragon-character__/scripts/revert")
+
+local FIXTURE_CORPSE_POSITION = { 10, 10 }
+local FIXTURE_CHARACTER_POSITION = { -10, -10 }
 
 local failures = {}
 
@@ -46,11 +56,13 @@ local function test_prototypes()
   end
 end
 
-local function test_transfer(surface, force)
+-- Creates a character carrying a bit of everything a swap has to keep.
+-- Returns it and what to compare after the swap.
+local function equipped_character(surface, force, name)
   force.character_logistic_requests = true
   force.character_trash_slot_count = 10
 
-  local old = surface.create_entity({ name = "character", position = { 0, 0 }, force = force })
+  local old = surface.create_entity({ name = name, position = { 0, 0 }, force = force })
   old.character_inventory_slots_bonus = 5
   old.character_running_speed_modifier = 0.25
   old.character_health_bonus = 50
@@ -89,39 +101,79 @@ local function test_transfer(surface, force)
   local sections_before = point.sections_count
 
   old.health = 120
-  local before = count_items(old)
+  return old, {
+    items = count_items(old),
+    equipment = equipment_before,
+    main_size = main_size,
+    sections = sections_before,
+  }
+end
 
-  local new = surface.create_entity({ name = "dragon-character-female-hoodie", position = { 0, 0 }, force = force })
+-- Moves everything from `old` into a new `name` character and checks it all arrived.
+-- Destroys `old` and returns the new character.
+local function transfer_and_check(old, expected, name)
+  local surface = old.surface
+  local new = surface.create_entity({ name = name, position = old.position, force = old.force })
   swap.transfer(old, new)
-
-  local ok, diff = same_counts(before, count_items(new))
-  check(ok, "item counts differ after transfer: " .. tostring(diff))
-  check(next(count_items(old)) == nil, "old character still holds items")
-  check(#surface.find_entities_filtered({ type = "item-entity" }) == 0, "items were spilled on the ground")
+  local label = old.name .. " -> " .. name .. ": "
+  local ok, diff = same_counts(expected.items, count_items(new))
+  check(ok, label .. "item counts differ after transfer: " .. tostring(diff))
+  check(next(count_items(old)) == nil, label .. "old character still holds items")
+  check(#surface.find_entities_filtered({ type = "item-entity" }) == 0, label .. "items were spilled on the ground")
   local new_armor = new.get_inventory(defines.inventory.character_armor)[1]
-  check(new_armor.valid_for_read and new_armor.name == "power-armor-mk2", "armor not moved")
-  check(new_armor.valid_for_read and #new_armor.grid.equipment == equipment_before, "equipment grid not kept")
-  check(#new.get_main_inventory() == main_size, "main inventory size changed: " .. #new.get_main_inventory() .. " vs " .. main_size)
+  check(new_armor.valid_for_read and new_armor.name == "power-armor-mk2", label .. "armor not moved")
+  check(new_armor.valid_for_read and #new_armor.grid.equipment == expected.equipment, label .. "equipment grid not kept")
+  check(#new.get_main_inventory() == expected.main_size,
+    label .. "main inventory size changed: " .. #new.get_main_inventory() .. " vs " .. expected.main_size)
   local filter = new.get_main_inventory().get_filter(3)
-  check(filter and filter.name == "copper-plate", "inventory filter not copied")
-  check(new.character_inventory_slots_bonus == 5, "inventory slot bonus not copied")
-  check(math.abs(new.character_running_speed_modifier - 0.25) < 1e-6, "running speed bonus not copied")
-  check(new.character_health_bonus == 50, "health bonus not copied")
-  check(math.abs(new.health - 120) < 1e-6, "health not copied: " .. new.health)
-  check(new.selected_gun_index == 2, "selected gun not copied")
+  check(filter and filter.name == "copper-plate", label .. "inventory filter not copied")
+  check(new.character_inventory_slots_bonus == 5, label .. "inventory slot bonus not copied")
+  check(math.abs(new.character_running_speed_modifier - 0.25) < 1e-6, label .. "running speed bonus not copied")
+  check(new.character_health_bonus == 50, label .. "health bonus not copied")
+  check(math.abs(new.health - 120) < 1e-6, label .. "health not copied: " .. new.health)
+  check(new.selected_gun_index == 2, label .. "selected gun not copied")
   local new_point = new.get_requester_point()
-  check(new_point.sections_count == sections_before, "logistic sections: " .. new_point.sections_count .. " vs " .. sections_before)
+  check(new_point.sections_count == expected.sections,
+    label .. "logistic sections: " .. new_point.sections_count .. " vs " .. expected.sections)
   local slot = new_point.get_section(1).get_slot(1)
-  check(slot and slot.value and slot.value.name == "iron-gear-wheel" and slot.min == 50, "logistic request not copied")
+  check(slot and slot.value and slot.value.name == "iron-gear-wheel" and slot.min == 50,
+    label .. "logistic request not copied")
   local group_found = false
   for i = 1, new_point.sections_count do
     if new_point.get_section(i).group == "dragon-test-group" then
       group_found = true
     end
   end
-  check(group_found, "logistic group section not copied")
+  check(group_found, label .. "logistic group section not copied")
   old.destroy()
-  new.destroy()
+  return new
+end
+
+local function test_transfer(surface, force)
+  local old, expected = equipped_character(surface, force, "character")
+  transfer_and_check(old, expected, "dragon-character-female-hoodie").destroy()
+end
+
+local function test_revert_argument()
+  local function known(id)
+    return id == "mika" or id == "dragon-avatar-x"
+  end
+  local cases = {
+    { nil, true, nil },
+    { "   ", true, nil },
+    { "mika", true, "mika" },
+    { "  mika ", true, "mika" },
+    { "dragon-avatar-mika", true, "mika" },
+    { "dragon-avatar-x", true, "dragon-avatar-x" },
+    { "dragon-avatar-corpse-mika", false, nil },
+    { "mika now", false, nil },
+    { "other", false, nil },
+  }
+  for _, case in ipairs(cases) do
+    local ok, id = revert.parse_pack_argument(case[1], known)
+    check(ok == case[2] and id == case[3], "parse_pack_argument(" .. tostring(case[1]) .. "): "
+      .. tostring(ok) .. ", " .. tostring(id))
+  end
 end
 
 local function test_corpse(surface, force)
@@ -139,6 +191,137 @@ local function test_corpse(surface, force)
     "corpse items not kept")
 end
 
+local function call(name, ...)
+  return remote.call("dragon-character", name, ...)
+end
+
+local function corpse_at(surface, position)
+  return surface.find_entities_filtered({ type = "character-corpse", position = position, radius = 0.5 })[1]
+end
+
+local function create_corpse(surface, name, position, items)
+  local corpse = surface.create_entity({ name = name, position = position, force = "player", inventory_size = 5 })
+  corpse.get_inventory(defines.inventory.character_corpse).insert({ name = "iron-plate", count = items })
+  return corpse
+end
+
+-- Every installed pack, whatever made it.
+local function test_any_packs(surface, force)
+  local packs = call("get_avatar_packs")
+  for _, pack in ipairs(packs) do
+    local label = "pack " .. pack.id .. ": "
+    local character = prototypes.entity[pack.character]
+    check(character and character.type == "character", label .. "no character prototype")
+    local corpse = prototypes.entity[pack.corpse]
+    check(corpse and corpse.type == "character-corpse", label .. "no corpse prototype")
+    check(helpers.is_valid_sprite_path("dragon-character-avatar-" .. pack.id), label .. "no GUI sprite")
+    check(call("is_avatar_character", pack.character) == pack.id, label .. "is_avatar_character")
+    check(call("is_avatar_character", pack.corpse) == nil, label .. "a corpse is not a character")
+    check(call("is_dragon_character", pack.character) == false, label .. "is not a dragon")
+    check(appearance.is_own_character(pack.character), label .. "is_own_character")
+    check(appearance.is_mod_variant(pack.character), label .. "is_mod_variant")
+    check(appearance.is_mod_corpse(pack.corpse), label .. "is_mod_corpse")
+    local resolved, note = appearance.resolve({ avatar = pack.id, body = "female", hoodie = true, shorts = false },
+      function(name) return prototypes.entity[name] ~= nil end)
+    check(resolved == pack.character and note == nil, label .. "resolve")
+  end
+  -- dragon -> every pack in turn -> dragon, keeping everything
+  if #packs > 0 then
+    local character, expected = equipped_character(surface, force, "character")
+    for _, pack in ipairs(packs) do
+      character = transfer_and_check(character, expected, pack.character)
+    end
+    transfer_and_check(character, expected, "character").destroy()
+  end
+  return packs
+end
+
+-- The packs written by tests/run_headless.sh --test-packs.
+local function test_generated_packs(surface, force, packs)
+  local by_id = {}
+  for _, pack in ipairs(packs) do
+    by_id[pack.id] = pack
+  end
+  local test, small = by_id["test"], by_id["small"]
+  check(test and small, "the test packs are not both listed")
+  if not (test and small) then
+    return
+  end
+  -- "small" has a non-ASCII title, which sorts after "Test Avatar"
+  check(packs[1].id == "test" and packs[2].id == "small", "packs not sorted by title")
+  check(test.title == "Test Avatar" and test.author == "make_test_pack", "pack test: title/author")
+  check(small.title == string.rep("竜", 30), "pack small: UTF-8 title")
+  check(test.tintable == true and small.tintable == false, "tintable flags")
+  check(test.character == "dragon-avatar-test" and test.corpse == "dragon-avatar-corpse-test", "pack test: names")
+
+  -- a missing pack falls back to the dragon
+  local resolved, note = appearance.resolve({ avatar = "gone", body = "female", hoodie = true, shorts = false },
+    function(name) return prototypes.entity[name] ~= nil end)
+  check(resolved == "dragon-character-female-hoodie" and note == "avatar-missing", "resolve of a missing pack")
+  check(not appearance.is_own_character("some-other-mod-character"), "foreign character is not ours")
+  check(not appearance.is_mod_variant("character") and not appearance.is_mod_corpse("character-corpse"),
+    "vanilla prototypes are not mod variants")
+
+  -- reverting one pack converts only its corpses and counts its remaining characters
+  local test_corpse = create_corpse(surface, "dragon-avatar-corpse-test", { 20, 20 }, 7)
+  local small_corpse = create_corpse(surface, "dragon-avatar-corpse-small", { 22, 20 }, 9)
+  local dragon_corpse = create_corpse(surface, "dragon-character-corpse-female-plain", { 24, 20 }, 11)
+  local unowned = surface.create_entity({ name = "dragon-avatar-small", position = { 26, 20 }, force = force })
+  local result = call("revert_all", "small")
+  check(result.corpses == 1 and result.remaining == 1,
+    "revert_all(small): " .. result.corpses .. " corpses, " .. result.remaining .. " remaining")
+  check(test_corpse.valid and dragon_corpse.valid and not small_corpse.valid, "revert_all(small) touched other corpses")
+  local converted = corpse_at(surface, { 22, 20 })
+  check(converted and converted.name == "character-corpse"
+    and converted.get_inventory(defines.inventory.character_corpse).get_item_count("iron-plate") == 9,
+    "revert_all(small): corpse items not kept")
+  result = call("revert_all")
+  check(result.corpses == 2, "revert_all(): converted " .. result.corpses .. " corpses, expected 2")
+  check(not test_corpse.valid and not dragon_corpse.valid, "revert_all() left mod corpses")
+  for _, entity in pairs(surface.find_entities_filtered({ type = "character-corpse" })) do
+    check(not appearance.is_mod_corpse(entity.name), "corpse left after revert_all(): " .. entity.name)
+  end
+  for _, entity in pairs(surface.find_entities_filtered({ type = "character-corpse", area = { { 18, 18 }, { 28, 22 } } })) do
+    entity.destroy()
+  end
+  unowned.destroy()
+
+  -- what on_init left: one pack corpse converted, one unowned pack character counted
+  local fixture = storage.fixture
+  check(fixture ~= nil, "no fixture from on_init (did --create run it?)")
+  if fixture then
+    check(fixture.corpses == 1 and fixture.remaining == 1,
+      "revert_all(test) in on_init: " .. fixture.corpses .. " corpses, " .. fixture.remaining .. " remaining")
+    local corpse = corpse_at(surface, FIXTURE_CORPSE_POSITION)
+    check(corpse and corpse.name == "character-corpse", "fixture corpse not reverted")
+  end
+end
+
+-- After the packs were removed from the save.
+local function test_packs_removed(surface)
+  check(#call("get_avatar_packs") == 0, "packs still listed after removing them")
+  local corpse = corpse_at(surface, FIXTURE_CORPSE_POSITION)
+  check(corpse and corpse.name == "character-corpse", "reverted corpse lost when its pack was removed")
+  check(corpse and corpse.get_inventory(defines.inventory.character_corpse).get_item_count("iron-plate") == 42,
+    "reverted corpse lost its items when its pack was removed")
+  -- the unowned pack character could not be reverted, so the game deleted it
+  local left = surface.find_entities_filtered({ type = "character", position = FIXTURE_CHARACTER_POSITION, radius = 1 })
+  check(#left == 0, "the unowned pack character should be gone")
+end
+
+script.on_init(function()
+  if not script.active_mods["dragon-avatar-test"] then
+    return
+  end
+  local surface = game.surfaces[1]
+  surface.request_to_generate_chunks({ 0, 0 }, 2)
+  surface.force_generate_chunk_requests()
+  create_corpse(surface, "dragon-avatar-corpse-test", FIXTURE_CORPSE_POSITION, 42)
+  surface.create_entity({ name = "dragon-avatar-test", position = FIXTURE_CHARACTER_POSITION, force = "player" })
+  local result = call("revert_all", "test")
+  storage.fixture = { corpses = result.corpses, remaining = result.remaining }
+end)
+
 script.on_event(defines.events.on_tick, function(event)
   if event.tick ~= 2 then
     return
@@ -146,11 +329,21 @@ script.on_event(defines.events.on_tick, function(event)
   local surface = game.surfaces[1]
   local force = game.forces.player
   test_prototypes()
+  test_revert_argument()
   test_transfer(surface, force)
   test_corpse(surface, force)
+  local packs = test_any_packs(surface, force)
+  local phase = ""
+  if script.active_mods["dragon-avatar-test"] then
+    test_generated_packs(surface, force, packs)
+    phase = " (with avatar packs)"
+  elseif storage.fixture then
+    test_packs_removed(surface)
+    phase = " (avatar packs removed)"
+  end
   if #failures > 0 then
     error("DRAGON-TEST: FAIL\n" .. table.concat(failures, "\n"))
   end
-  log("DRAGON-TEST: PASS")
-  print("DRAGON-TEST: PASS")
+  log("DRAGON-TEST: PASS" .. phase)
+  print("DRAGON-TEST: PASS" .. phase)
 end)

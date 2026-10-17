@@ -2,6 +2,7 @@
 
 local mod_gui = require("mod-gui")
 local swatches = require("scripts.swatches")
+local packs = require("scripts.packs")
 
 local gui = {}
 
@@ -150,9 +151,52 @@ function gui.open(player, prefs)
   options.style.vertical_spacing = 6
   options.style.width = 330
 
+  local function section(name)
+    local flow = options.add({ type = "flow", name = name, direction = "vertical" })
+    flow.style.vertical_spacing = 6
+    return flow
+  end
+
+  -- look: the dragon or one of the installed avatar packs (also shown when the
+  -- chosen pack is gone, so the dragon can be picked to clear that choice)
+  local installed = packs.list()
+  if #installed > 0 or prefs.avatar then
+    local look_section = section("dragon_look_section")
+    section_label(look_section, { "dragon-character.look" })
+    local pane = look_section.add({ type = "scroll-pane", horizontal_scroll_policy = "never" })
+    pane.style.maximal_height = 168
+    local looks = pane.add({ type = "table", name = "dragon_looks", column_count = 4 })
+    looks.style.horizontal_spacing = 4
+    looks.style.vertical_spacing = 4
+    looks.add({
+      type = "sprite-button",
+      name = "dragon_look_",
+      style = "dragon_character_body_button",
+      sprite = "dragon-character-icon",
+      tooltip = { "dragon-character.look-dragon" },
+      tags = { dragon_action = "look", avatar = "" },
+    })
+    for _, pack in ipairs(installed) do
+      local tooltip = pack.title
+      if pack.author and pack.author ~= "" then
+        tooltip = { "dragon-character.look-author", pack.title, pack.author }
+      end
+      looks.add({
+        type = "sprite-button",
+        name = "dragon_look_" .. pack.id,
+        style = "dragon_character_body_button",
+        sprite = pack.sprite,
+        tooltip = tooltip,
+        tags = { dragon_action = "look", avatar = pack.id },
+      })
+    end
+    look_section.add({ type = "line" })
+  end
+
   -- scale color
-  section_label(options, { "dragon-character.color" })
-  local grid = options.add({ type = "table", name = "dragon_swatches", column_count = 9 })
+  local color_section = section("dragon_color_section")
+  section_label(color_section, { "dragon-character.color" })
+  local grid = color_section.add({ type = "table", name = "dragon_swatches", column_count = 9 })
   grid.style.horizontal_spacing = 2
   grid.style.vertical_spacing = 2
   for _, swatch in ipairs(swatches) do
@@ -165,7 +209,7 @@ function gui.open(player, prefs)
       tags = { dragon_action = "swatch", swatch = swatch.name },
     })
   end
-  local rgb = options.add({ type = "table", column_count = 3 })
+  local rgb = color_section.add({ type = "table", column_count = 3 })
   rgb.style.horizontal_spacing = 8
   rgb.style.vertical_spacing = 4
   for _, channel in ipairs(CHANNELS) do
@@ -192,7 +236,7 @@ function gui.open(player, prefs)
       tags = { dragon_action = "channel_text", channel = channel },
     })
   end
-  local hex_flow = options.add({ type = "flow", direction = "horizontal" })
+  local hex_flow = color_section.add({ type = "flow", direction = "horizontal" })
   hex_flow.style.vertical_align = "center"
   hex_flow.style.horizontal_spacing = 8
   hex_flow.add({ type = "label", caption = { "dragon-character.hex" } })
@@ -205,11 +249,11 @@ function gui.open(player, prefs)
   })
   hex.style.width = 90
 
-  options.add({ type = "line" })
-
   -- body shape
-  section_label(options, { "dragon-character.body" })
-  local bodies = options.add({ type = "flow", direction = "horizontal" })
+  local body_section = section("dragon_body_section")
+  body_section.add({ type = "line" })
+  section_label(body_section, { "dragon-character.body" })
+  local bodies = body_section.add({ type = "flow", direction = "horizontal" })
   bodies.style.horizontal_spacing = 24
   for _, body in ipairs({ "male", "female" }) do
     local column = bodies.add({ type = "flow", direction = "vertical" })
@@ -231,11 +275,11 @@ function gui.open(player, prefs)
     })
   end
 
-  options.add({ type = "line" })
-
   -- outfits
-  section_label(options, { "dragon-character.outfits" })
-  local outfits = options.add({ type = "flow", direction = "horizontal" })
+  local outfit_section = section("dragon_outfit_section")
+  outfit_section.add({ type = "line" })
+  section_label(outfit_section, { "dragon-character.outfits" })
+  local outfits = outfit_section.add({ type = "flow", direction = "horizontal" })
   outfits.style.horizontal_spacing = 24
   for _, outfit in ipairs({ "hoodie", "shorts" }) do
     outfits.add({
@@ -330,6 +374,27 @@ function gui.refresh(player, prefs)
       camera.surface_index = player.surface.index
     end
   end
+  -- an avatar pack that is no longer installed shows (and counts as) the dragon
+  local pack = packs.get(prefs.avatar)
+  local is_dragon = pack == nil
+  local looks = find(frame, "dragon_looks")
+  if looks then
+    for _, button in pairs(looks.children) do
+      local id = button.tags.avatar
+      button.toggled = (is_dragon and id == "") or (pack ~= nil and id == pack.id)
+    end
+  end
+  local sections = {
+    dragon_color_section = is_dragon or pack.tintable,
+    dragon_body_section = is_dragon,
+    dragon_outfit_section = is_dragon,
+  }
+  for name, visible in pairs(sections) do
+    local flow = find(frame, name)
+    if flow then
+      flow.visible = visible
+    end
+  end
   for _, body in ipairs({ "male", "female" }) do
     local button = find(frame, "dragon_body_button_" .. body)
     if button then
@@ -348,7 +413,9 @@ function gui.refresh(player, prefs)
   end
   local status = find(frame, "dragon_status")
   if status then
-    if prefs.status then
+    if prefs.status == "avatar-missing" then
+      status.caption = { "dragon-character.status-avatar-missing", prefs.avatar or "" }
+    elseif prefs.status then
       status.caption = { "dragon-character.status-" .. prefs.status }
     else
       status.caption = ""

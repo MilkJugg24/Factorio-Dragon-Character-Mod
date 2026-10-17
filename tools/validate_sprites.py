@@ -1,16 +1,23 @@
 """Checks that every sprite sheet referenced by dragon-character/prototypes/sprite-data.lua
-exists and has exactly the size Factorio will expect from the metadata.
+exists and has exactly the size Factorio will expect from the metadata. With --pack, checks
+avatar packs (docs/avatar-pack-format.md) instead: folders or mod zips.
 
 The headless server does not load graphics, so it can not catch these mistakes.
 
     python3 tools/validate_sprites.py
+    python3 tools/validate_sprites.py --pack path/to/dragon-avatar-mika_1.0.0.zip [more packs...]
 """
 
+import argparse
 import os
 import re
 import sys
 
 from PIL import Image
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import lua_table  # noqa: E402
+import avatar_pack.check as pack_check  # noqa: E402
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 MOD = os.path.join(REPO, "dragon-character")
@@ -26,43 +33,9 @@ LAYERS = ("base", "mask", "hoodie", "shorts", "shadow")
 EXTRA_LAYERS = {"run-gun": ("shadow-flipped",)}
 
 
-def parse(text):
-    """Tiny parser for the generated Lua table (nested tables, strings, numbers)."""
-    tokens = re.findall(r'\[\"[^\"]*\"\]|[A-Za-z_][A-Za-z0-9_]*|"[^"]*"|-?[0-9.]+(?:e-?[0-9]+)?|[{}=,]', text)
-    pos = 0
-
-    def value():
-        nonlocal pos
-        tok = tokens[pos]
-        if tok == "{":
-            pos += 1
-            items = {}
-            arr = []
-            while tokens[pos] != "}":
-                if pos + 1 < len(tokens) and tokens[pos + 1] == "=":
-                    key = tokens[pos]
-                    key = key[2:-2] if key.startswith('["') else key
-                    pos += 2
-                    items[key] = value()
-                else:
-                    arr.append(value())
-                if tokens[pos] == ",":
-                    pos += 1
-            pos += 1
-            return items if items else arr
-        pos += 1
-        if tok.startswith('"'):
-            return tok[1:-1]
-        return float(tok) if "." in tok or "e" in tok else int(tok)
-
-    start = tokens.index("return") + 1
-    pos = start
-    return value()
-
-
-def main():
+def check_dragon():
     with open(LUA) as fh:
-        data = parse(re.sub(r"--[^\n]*", "", fh.read()))
+        data = lua_table.loads(fh.read())
     errors = []
     checked = 0
     for body in ("male", "female"):
@@ -109,6 +82,18 @@ def main():
         return 1
     print(f"OK: {checked} sprite sheets match their metadata")
     return 0
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--pack", nargs="+", metavar="PATH", help="avatar pack folders or zips to check")
+    args = parser.parse_args(argv)
+    if args.pack:
+        failed = 0
+        for path in args.pack:
+            failed += 0 if pack_check.report(path) else 1
+        return 1 if failed else 0
+    return check_dragon()
 
 
 if __name__ == "__main__":

@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.0
+Date: 2026-10-17
+  Features:
+    - Avatar packs: separate mods (dragon-avatar-<id>) that add more looks, shown in a new "Look"
+      section of the customization window. See docs/avatar-pack-format.md in the source repository.
+    - /dragon-revert-all <pack id> turns everyone using one avatar pack back into the dragon, so that
+      pack can be removed safely.
+    - Remote interface: get_avatar_packs, is_avatar_character, revert_all, and an avatar field in
+      get_appearance / set_appearance.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.2
 Date: 2026-10-17
   Bugfixes:
