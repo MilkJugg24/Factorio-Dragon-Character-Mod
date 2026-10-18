@@ -11,14 +11,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
     public class AvatarExporterTests
     {
         /// <summary>
-        /// Draws an opaque red square around the anchor (and a black one on the shadow pass) and records
-        /// every request.
+        /// Draws an opaque red square around the anchor (and a black one on the shadow pass, plus its top left
+        /// pixel with <see cref="ShadowInCorner"/>) and records every request.
         /// </summary>
         private sealed class RecordingRenderer : IFrameRenderer
         {
             public readonly List<FrameRequest> Requests = new List<FrameRequest>();
             public int WrongSizeAfter = int.MaxValue;
             public float ShadowValue;
+            public bool ShadowInCorner;
             public bool Linear;
 
             public Bounds3 MeasureWorldBounds(PoseResult pose, double orientation, bool mirrored) =>
@@ -34,6 +35,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
                     var silhouette = new ImageF(w, c.RenderHeight);
                     silhouette.Fill(1, 1, 1, 1);
                     Square(silhouette, c, ShadowValue, ShadowValue, ShadowValue);
+                    if (ShadowInCorner)
+                    {
+                        silhouette[0, 0, 0] = 0;
+                        silhouette[0, 0, 1] = 0;
+                        silhouette[0, 0, 2] = 0;
+                    }
                     return new RenderResult { Silhouette = silhouette, Linear = Linear };
                 }
                 var black = new ImageF(w, c.RenderHeight);
@@ -61,8 +68,22 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
             }
         }
 
+        /// <summary>The stick figure renderer, but its bounds leave out everything within 0.15 tiles of their sides.</summary>
+        private sealed class ShrunkBoundsRenderer : IFrameRenderer
+        {
+            private readonly StickFigureRenderer inner = new StickFigureRenderer();
+
+            public Bounds3 MeasureWorldBounds(PoseResult pose, double orientation, bool mirrored) =>
+                inner.MeasureWorldBounds(pose, orientation, mirrored).Expanded(-0.15);
+
+            public RenderResult Render(FrameRequest request) => inner.Render(request);
+        }
+
         private static ExportSettings Small(bool flight = false) =>
             new ExportSettings { PixelsPerTile = 32, Supersampling = 1, Flight = flight };
+
+        private static HumanoidAnimations GenericRig() =>
+            new HumanoidAnimations(HumanoidRig.Measure(SyntheticRigs.Generic(1.6)));
 
         [Test]
         public void RendersEveryPassOfEveryFrame()
@@ -145,6 +166,30 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
             var e = Assert.Throws<InvalidOperationException>(() => exporter.Render());
             Assert.That(e.Message, Does.Contain("idle direction"));
             Assert.That(e.Message, Does.Contain("expected"));
+        }
+
+        [Test]
+        public void DrawingOutsideTheMeasuredBoundsIsReported()
+        {
+            var exporter = new AvatarExporter(GenericRig(), new ShrunkBoundsRenderer(), Small());
+            var e = Assert.Throws<InvalidOperationException>(() => exporter.Render());
+            Assert.That(e.Message, Does.Contain("outside the bounds MeasureWorldBounds reported"));
+            Assert.That(e.Message, Does.Contain("idle direction 1 frame 1 color pass"));
+            Assert.That(e.Message, Does.Contain("CanvasMarginPixels"));
+
+            exporter = new AvatarExporter(GenericRig(), new RecordingRenderer { ShadowInCorner = true }, Small());
+            e = Assert.Throws<InvalidOperationException>(() => exporter.Render());
+            Assert.That(e.Message, Does.Contain("idle direction 1 frame 1 shadow pass has a drawn pixel at 0,0"));
+        }
+
+        [Test]
+        public void WithoutAMarginFramesMayReachTheCanvasEdge()
+        {
+            // some of the stick figure's frames touch the edge of canvases without a margin
+            ExportSettings settings = Small();
+            settings.CanvasMarginPixels = 0;
+            ExportedArt art = new AvatarExporter(GenericRig(), new StickFigureRenderer(), settings).Render();
+            Assert.That(art.Animations[AnimationSpec.Idle][PackLayers.Base].FrameWidth, Is.GreaterThan(4));
         }
 
         [Test]

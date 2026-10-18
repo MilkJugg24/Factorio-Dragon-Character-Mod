@@ -103,7 +103,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>
         /// World space bounds (tiles) of everything the color pass would draw for this pose, placed with
         /// <paramref name="orientation"/> and <paramref name="mirrored"/>. Used to size canvases before
-        /// rendering; it may be generous, but must not be too small.
+        /// rendering; it may be generous, but must not be too small (the exporter throws when a render
+        /// reaches the edge of a canvas with a margin).
         /// </summary>
         Bounds3 MeasureWorldBounds(PoseResult pose, double orientation, bool mirrored);
 

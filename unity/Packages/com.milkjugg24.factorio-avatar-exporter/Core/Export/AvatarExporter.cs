@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using static System.FormattableString;
 
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
@@ -20,7 +21,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>Largest sheet file, px; larger sheets are split by rows.</summary>
         public int MaxSheetSize { get; set; } = PackFormat.MaxSheetSize;
 
-        /// <summary>Empty pixels kept around everything drawn when planning canvases.</summary>
+        /// <summary>
+        /// Empty pixels kept around everything drawn when planning canvases. With at least 1, a render that
+        /// reaches the edge of its canvas stops the export (the renderer's bounds were too small).
+        /// </summary>
         public int CanvasMarginPixels { get; set; } = CanvasPlanner.DefaultMarginPixels;
 
         public void Validate()
@@ -305,14 +309,19 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 CheckSize(result?.OnBlack, canvas, what + " on black");
                 CheckSize(result.OnWhite, canvas, what + " on white");
                 ImageF premultiplied = Matting.FromBlackAndWhite(result.OnBlack, result.OnWhite, result.Linear);
-                return ImageConvert.ToImage8(Downsample.Box(premultiplied, canvas.Supersampling));
+                Image8 image = ImageConvert.ToImage8(Downsample.Box(premultiplied, canvas.Supersampling));
+                CheckInsideCanvas(image, what);
+                return image;
             }
 
             private Image8 RenderShadow(int direction, int frame, double orientation, bool mirrored, CanvasSpec canvas)
             {
                 RenderResult result = owner.renderer.Render(Request(direction, frame, orientation, mirrored, RenderPass.Shadow, canvas));
-                CheckSize(result?.Silhouette, canvas, Describe(direction, frame, mirrored ? "flipped shadow pass" : "shadow pass"));
-                return ImageConvert.ShadowFromSilhouette(result.Silhouette, canvas.Supersampling, result.Linear);
+                string what = Describe(direction, frame, mirrored ? "flipped shadow pass" : "shadow pass");
+                CheckSize(result?.Silhouette, canvas, what);
+                Image8 image = ImageConvert.ShadowFromSilhouette(result.Silhouette, canvas.Supersampling, result.Linear);
+                CheckInsideCanvas(image, what);
+                return image;
             }
 
             private string Describe(int direction, int frame, string pass) =>
@@ -328,6 +337,41 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 {
                     throw new InvalidOperationException(
                         $"the renderer returned a {image.Width}x{image.Height} image for {what}; expected {canvas.RenderWidth}x{canvas.RenderHeight}");
+                }
+            }
+
+            /// <summary>
+            /// Throws when a pixel on the outermost ring of a frame is drawn (alpha &gt; 0). The canvas keeps
+            /// <see cref="ExportSettings.CanvasMarginPixels"/> empty pixels around the bounds the renderer
+            /// measured, so a drawn edge pixel means the renderer drew outside them and the frame is cut off.
+            /// Not checked without a margin, where drawing up to the edge is expected.
+            /// </summary>
+            private void CheckInsideCanvas(Image8 image, string what)
+            {
+                if (owner.settings.CanvasMarginPixels < 1)
+                {
+                    return;
+                }
+                for (int x = 0; x < image.Width; x++)
+                {
+                    CheckEmpty(image, x, 0, what);
+                    CheckEmpty(image, x, image.Height - 1, what);
+                }
+                for (int y = 1; y < image.Height - 1; y++)
+                {
+                    CheckEmpty(image, 0, y, what);
+                    CheckEmpty(image, image.Width - 1, y, what);
+                }
+            }
+
+            private static void CheckEmpty(Image8 image, int x, int y, string what)
+            {
+                if (image.Alpha(x, y) != 0)
+                {
+                    throw new InvalidOperationException(Invariant(
+                        $"the renderer drew outside the bounds MeasureWorldBounds reported: {what} has a drawn pixel at {x},{y} ") +
+                        "on the canvas edge, so the frame would be cut off. The bounds must cover everything drawn, outlines, " +
+                        "hair and props included; a larger CanvasMarginPixels works around it.");
                 }
             }
 
