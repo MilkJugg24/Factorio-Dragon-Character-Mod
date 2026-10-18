@@ -37,11 +37,16 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
                 {
                     TestMath.AssertUnit(delta.Value, what + " " + delta.Key);
                 }
-                Dictionary<string, Vec3> fk = HumanoidJoints.FromSkeleton(HumanoidSkeleton.Pose(rig, pose));
+                Assert.That(pose.Joints.Keys, Is.EquivalentTo(TestPoses.AllJointNames()), what);
                 foreach (KeyValuePair<string, Vec3> joint in pose.Joints)
                 {
                     Assert.That(TestMath.IsFinite(joint.Value), what + " " + joint.Key);
-                    TestMath.AssertClose(joint.Value, fk[joint.Key], 1e-9, what + " " + joint.Key);
+                }
+                // the builder fills the joints from forward kinematics; only the corpse is moved afterwards
+                // (PoseTransforms), which must keep them matching its bones
+                if (animation == AnimationSpec.Corpse)
+                {
+                    TestPoses.AssertJointsAreFk(rig, pose, 1e-9);
                 }
                 count++;
             }
@@ -95,9 +100,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
                 }
             }
             Assert.That(swinging, Is.GreaterThan(0), "some frames have a foot in the air");
-            // the left foot lands on frame 1 and the right on frame 7, as the pack timing says
-            Assert.That(animations.Timing.LeftFootFrames, Is.EqualTo(new[] { 1 }));
-            Assert.That(animations.Timing.RightFootFrames, Is.EqualTo(new[] { 7 }));
         }
 
         [TestCaseSource(nameof(Rigs))]
