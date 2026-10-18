@@ -263,12 +263,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
                 var layers = new Dictionary<string, SheetSet>(StringComparer.Ordinal)
                 {
-                    [PackLayers.Base] = Sheets(baseFrames, colorCanvas),
-                    [PackLayers.Shadow] = Sheets(shadowFrames, shadowCanvas),
+                    [PackLayers.Base] = Sheets(baseFrames, colorCanvas, PackLayers.Base),
+                    [PackLayers.Shadow] = Sheets(shadowFrames, shadowCanvas, PackLayers.Shadow),
                 };
                 if (flippedShadow)
                 {
-                    layers[PackLayers.ShadowFlipped] = Sheets(flippedFrames, flippedCanvas);
+                    layers[PackLayers.ShadowFlipped] = Sheets(flippedFrames, flippedCanvas, PackLayers.ShadowFlipped);
                 }
                 return layers;
             }
@@ -375,8 +375,24 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 }
             }
 
-            private SheetSet Sheets(Image8[][] frames, CanvasSpec canvas) =>
-                SheetBuilder.Build(frames, canvas.AnchorX, canvas.AnchorY, canvas.PixelsPerTile, owner.settings.MaxSheetSize);
+            private SheetSet Sheets(Image8[][] frames, CanvasSpec canvas, string layer)
+            {
+                ExportSettings s = owner.settings;
+                try
+                {
+                    return SheetBuilder.Build(frames, canvas.AnchorX, canvas.AnchorY, canvas.PixelsPerTile, s.MaxSheetSize);
+                }
+                catch (InvalidOperationException e)
+                {
+                    // SheetBuilder knows neither the animation nor the settings that would make the frames fit
+                    string fixes = (s.PixelsPerTile == 64 ? "export at 32 pixels per tile, " : "")
+                        + (s.MaxSheetSize < PackFormat.MaxSheetSize ? Invariant($"raise MaxSheetSize (at most {PackFormat.MaxSheetSize}), ") : "");
+                    throw new InvalidOperationException(Invariant(
+                        $"the {animation.Name} {layer} frames do not fit in a {s.MaxSheetSize} px sprite sheet: a row of {animation.FrameCount} ") +
+                        Invariant($"frames fits only when each frame is at most {s.MaxSheetSize / animation.FrameCount} px wide (and {s.MaxSheetSize} px high). ") +
+                        $"To make them fit, {fixes}{(fixes.Length > 0 ? "or " : "")}keep the character from reaching out so far.", e);
+                }
+            }
         }
     }
 }

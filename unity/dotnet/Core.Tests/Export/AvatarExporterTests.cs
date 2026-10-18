@@ -79,6 +79,43 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
             public RenderResult Render(FrameRequest request) => inner.Render(request);
         }
 
+        /// <summary>
+        /// Fills the whole color pass with a half transparent grey (0.2 on black, 0.7 on white) and blackens every
+        /// other column of the shadow pass. Its bounds reach <see cref="HalfWidth"/> tiles east and west.
+        /// </summary>
+        private sealed class GreyRenderer : IFrameRenderer
+        {
+            public double HalfWidth = 0.3;
+
+            public Bounds3 MeasureWorldBounds(PoseResult pose, double orientation, bool mirrored) =>
+                new Bounds3(new Vec3(-HalfWidth, -0.3, 0), new Vec3(HalfWidth, 0.3, 1.5));
+
+            public RenderResult Render(FrameRequest request)
+            {
+                CanvasSpec c = request.Canvas;
+                if (request.Pass == RenderPass.Shadow)
+                {
+                    var silhouette = new ImageF(c.RenderWidth, c.RenderHeight);
+                    silhouette.Fill(1, 1, 1, 1);
+                    for (int y = 0; y < silhouette.Height; y++)
+                    {
+                        for (int x = 0; x < silhouette.Width; x += 2)
+                        {
+                            silhouette[x, y, 0] = 0;
+                            silhouette[x, y, 1] = 0;
+                            silhouette[x, y, 2] = 0;
+                        }
+                    }
+                    return new RenderResult { Silhouette = silhouette };
+                }
+                var black = new ImageF(c.RenderWidth, c.RenderHeight);
+                black.Fill(0.2f, 0.2f, 0.2f, 1);
+                var white = new ImageF(c.RenderWidth, c.RenderHeight);
+                white.Fill(0.7f, 0.7f, 0.7f, 1);
+                return new RenderResult { OnBlack = black, OnWhite = white };
+            }
+        }
+
         private static ExportSettings Small(bool flight = false) =>
             new ExportSettings { PixelsPerTile = 32, Supersampling = 1, Flight = flight };
 
@@ -190,6 +227,32 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
             settings.CanvasMarginPixels = 0;
             ExportedArt art = new AvatarExporter(GenericRig(), new StickFigureRenderer(), settings).Render();
             Assert.That(art.Animations[AnimationSpec.Idle][PackLayers.Base].FrameWidth, Is.GreaterThan(4));
+        }
+
+        [TestCase(64, 1024, false, "run shadow")]
+        [TestCase(32, 512, false, "run shadow")]
+        [TestCase(32, 4096, true, "run base")]
+        public void SheetsThatDoNotFitNameTheAnimationAndLayer(int pixelsPerTile, int maxSheetSize, bool wide, string layer)
+        {
+            // The stick figure's run shadow is about 100 px wide at 64 pixels per tile and 50 at 32; the grey
+            // renderer fills canvases 12 tiles wide, so it needs no margin.
+            var settings = new ExportSettings
+            {
+                PixelsPerTile = pixelsPerTile,
+                Supersampling = 1,
+                Flight = false,
+                MaxSheetSize = maxSheetSize,
+                CanvasMarginPixels = wide ? 0 : CanvasPlanner.DefaultMarginPixels,
+            };
+            IFrameRenderer renderer = wide ? new GreyRenderer { HalfWidth = 6 } : (IFrameRenderer)new StickFigureRenderer();
+            var exporter = new AvatarExporter(GenericRig(), renderer, settings);
+            var e = Assert.Throws<InvalidOperationException>(() => exporter.Render());
+            Assert.That(e.Message, Does.StartWith($"the {layer} frames do not fit"));
+            Assert.That(e.Message, Does.Contain($"at most {maxSheetSize / 12} px wide"));
+            Assert.That(e.Message.Contains("32 pixels per tile"), Is.EqualTo(pixelsPerTile == 64), "halving");
+            Assert.That(e.Message.Contains("raise MaxSheetSize"), Is.EqualTo(maxSheetSize < 4096), "larger sheets");
+            Assert.That(e.Message, Does.Not.Contain("fewer frames"));
+            Assert.That(e.InnerException, Is.InstanceOf<InvalidOperationException>());
         }
 
         [Test]
