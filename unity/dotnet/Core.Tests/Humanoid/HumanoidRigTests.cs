@@ -324,6 +324,21 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
             TestMath.AssertClose(rig.FootForward(1), new Vec3(0.06, 0.17, 0).Normalized, Eps, "forward");
         }
 
+        [TestCase(0.0, -0.05)]
+        [TestCase(0.05, 0.01)]
+        public void ToesBehindOrBesideTheAnkleGiveNoFootDirection(double toesOutward, double toesForward)
+        {
+            RigInput input = SyntheticRigs.Generic(1.7);
+            Vec3 ankle = input.Bones[HumanBone.RightFoot];
+            input.Bones[HumanBone.RightToes] = ankle + new Vec3(toesOutward, toesForward, -0.04);
+            input.RightToeTip = ankle + new Vec3(0.06, 0.17, -ankle.Z);
+            HumanoidRig rig = HumanoidRig.Measure(input);
+            TestMath.AssertClose(rig.FootForward(1), new Vec3(0.06, 0.17, 0).Normalized, Eps, "the measured toe tip's direction");
+            TestMath.AssertClose(rig.Ball(1), rig.Rest(HumanBone.RightToes), Eps, "ball = Toes");
+            input.RightToeTip = null;
+            TestMath.AssertClose(HumanoidRig.Measure(input).FootForward(1), Vec3.UnitY, Eps, "without one, forward");
+        }
+
         [Test]
         public void DetectsDigitigradeLegs()
         {

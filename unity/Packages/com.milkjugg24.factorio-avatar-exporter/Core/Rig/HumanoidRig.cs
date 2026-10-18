@@ -50,6 +50,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         // Shorter segments (tiles) are degenerate.
         private const double MinSegment = 1e-6;
 
+        // A Toes bone or toe tip gives the foot's direction only when the horizontal part of its offset from the
+        // ankle is at least this fraction of the offset, and within 60 degrees of forward (cosine of the angle).
+        private const double MinFootHorizontal = 0.25;
+        private const double MinFootForward = 0.5;
+
         private static readonly int[] Sides = { 1, -1 };
 
         private readonly Dictionary<HumanBone, Vec3> rest;
@@ -290,7 +295,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         /// <summary>
         /// Horizontal unit vector the rest foot points along: ankle to Toes, else ankle to the measured toe
-        /// tip, else forward (+y).
+        /// tip, else forward (+y). Each direction counts only when it is clearly away from vertical and within
+        /// 60 degrees of forward, so Toes under a digitigrade ankle leave the foot pointing forward.
         /// </summary>
         public Vec3 FootForward(int side) => feet[Index(side)].Forward;
 
@@ -338,15 +344,31 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         {
             Vec3 ankle = Rest(HumanBoneHierarchy.Foot(side));
             bool hasToes = rest.TryGetValue(HumanBoneHierarchy.Toes(side), out Vec3 toes);
-            Vec3 hint = hasToes ? toes - ankle : measuredToeTip.HasValue ? measuredToeTip.Value - ankle : Vec3.UnitY;
-            // a foot pointing straight down gives no direction: assume it points forward
-            Vec3 forward = hint.Horizontal.Length > MinSegment ? hint.Horizontal.Normalized : Vec3.UnitY;
+            // Toes under, behind or beside the ankle (a vertical digitigrade foot) give no direction: then the toe
+            // tip does, or else the foot is assumed to point forward
+            Vec3 forward = Vec3.UnitY;
+            if (hasToes && IsFootDirection(toes - ankle))
+            {
+                forward = (toes - ankle).Horizontal.Normalized;
+            }
+            else if (measuredToeTip.HasValue && IsFootDirection(measuredToeTip.Value - ankle))
+            {
+                forward = (measuredToeTip.Value - ankle).Horizontal.Normalized;
+            }
             Vec3 toeTip = measuredToeTip ?? (hasToes
                 ? (ankle + (toes - ankle) / BallFraction).WithZ(0)
                 : (ankle + forward * (ToeReachPerLegLength * legLength)).WithZ(0));
             Vec3 ball = hasToes ? toes : ankle + (toeTip - ankle) * BallFraction;
             Vec3 heel = measuredHeel ?? (ankle - forward * (HeelFraction * (toeTip - ankle).Horizontal.Length)).WithZ(0);
             return new FootRest(ball, toeTip, heel, forward);
+        }
+
+        // an offset from the ankle a foot can point along: far enough from vertical to tell, and forward
+        private static bool IsFootDirection(Vec3 offset)
+        {
+            Vec3 horizontal = offset.Horizontal;
+            return horizontal.Length > MinSegment && horizontal.Length >= MinFootHorizontal * offset.Length &&
+                   horizontal.Normalized.Y >= MinFootForward;
         }
 
         private static void CheckInput(RigInput input)
