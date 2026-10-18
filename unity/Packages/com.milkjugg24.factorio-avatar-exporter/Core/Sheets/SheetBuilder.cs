@@ -6,12 +6,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     /// <summary>
     /// Crops the frames of one animation layer and lays them out as sprite sheets, a port of
-    /// <c>bbox_union()</c> and <c>write_sheet()</c> in tools/dragon_render/generate.py, plus the row
+    /// <c>bbox_union()</c> and <c>write_sheet()</c> in tools/dragon_render/sheets.py, plus the row
     /// split of docs/avatar-pack-format.md.
     /// </summary>
     public static class SheetBuilder
     {
-        /// <summary>Decimal places of the shift, as in generate.py.</summary>
+        /// <summary>Decimal places of the shift, as in sheets.py.</summary>
         public const int ShiftDigits = 5;
 
         /// <summary>

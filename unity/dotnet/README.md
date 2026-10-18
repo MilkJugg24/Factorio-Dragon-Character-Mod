@@ -14,6 +14,9 @@ and test them with NUnit.
 dotnet test unity/dotnet/Core.Tests          # needs the .NET 8 SDK
 ```
 
+Cross-checks against the Python tools are skipped unless `python3` has numpy and Pillow; the dragon
+goldens also need numba.
+
 | Project | What it is |
 | --- | --- |
 | `Core/` | The package's Core sources as a `netstandard2.1` library. |

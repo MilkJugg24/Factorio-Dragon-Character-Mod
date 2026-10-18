@@ -332,7 +332,7 @@ import hashlib, json, os
 import numpy as np
 from PIL import Image
 sys.path.insert(0, os.getcwd())
-from tools.dragon_render.generate import write_sheet
+from tools.dragon_render.sheets import write_sheet
 folder = sys.argv[1]
 cases = json.load(open(os.path.join(folder, 'cases.json')))
 raw = open(os.path.join(folder, 'frames.bin'), 'rb').read()

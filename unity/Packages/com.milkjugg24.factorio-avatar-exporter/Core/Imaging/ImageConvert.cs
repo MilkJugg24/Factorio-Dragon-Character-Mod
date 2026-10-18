@@ -6,7 +6,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     public static class ImageConvert
     {
         /// <summary>
-        /// Quantizes a channel value in [0, 1] to 8 bits the way tools/dragon_render/generate.py's
+        /// Quantizes a channel value in [0, 1] to 8 bits the way tools/dragon_render/sheets.py's
         /// <c>to_u8</c> does: <c>floor(clamp(v, 0, 1) * 255 + 0.5)</c>, computed in double precision
         /// (NaN gives 0).
         /// </summary>

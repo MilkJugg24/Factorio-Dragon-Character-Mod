@@ -41,7 +41,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
             string output = PythonTools.Run(
                 "import sys; sys.path.insert(0, sys.argv[1])\n" +
                 "import numpy as np\n" +
-                "from tools.dragon_render.generate import to_u8\n" +
+                "from tools.dragon_render.sheets import to_u8\n" +
                 "print(' '.join(str(b) for b in to_u8(np.array([float(v) for v in sys.argv[2].split()]))))",
                 PythonTools.RepoRoot, text);
             byte[] expected = output.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(byte.Parse).ToArray();
