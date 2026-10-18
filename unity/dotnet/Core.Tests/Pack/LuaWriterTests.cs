@@ -100,6 +100,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         [TestCase(5e-324, "5e-324")]
         [TestCase(double.MaxValue, "1.7976931348623157e+308")]
         [TestCase(123.456, "123.456")]
+        // Mono's double.ToString("R") writes 17 digits for the first and too few to read back for the others
+        [TestCase(0.08658892128279881, "0.08658892128279881")]
+        [TestCase(0.057055269068598403, "0.057055269068598403")]
+        [TestCase(20.153200000000002, "20.153200000000002")]
+        // a power of two where repr picks the decimal on the other side of the nearest one
+        [TestCase(7.120236347223045e-307, "7.120236347223045e-307")]
         public void FormatsNumbersLikePythonRepr(double value, string expected)
         {
             Assert.That(LuaWriter.FormatNumber(value), Is.EqualTo(expected));
@@ -183,6 +189,26 @@ print(json.dumps([{'dumps': lua_table.dumps(c['value']), 'loaded': lua_table.loa
                 // and "nice" numbers, where repr chooses between notations
                 bits.Add(BitConverter.DoubleToInt64Bits(Math.Round(rng.NextDouble() * 1000, rng.Next(0, 6)) * Math.Pow(10, rng.Next(-8, 20))));
             }
+            AssertMatchesPythonRepr(bits);
+        }
+
+        [Test]
+        public void NumbersMatchPythonReprForPowersOfTwo()
+        {
+            // the gap to the double below a power of two is half the gap above it; random bits hardly
+            // ever hit one, so test them all (2^-1074 is 5e-324), their neighbours and the largest double
+            var bits = new List<long> { BitConverter.DoubleToInt64Bits(double.MaxValue) };
+            for (int k = -1074; k <= 1023; k++)
+            {
+                long power = k < -1022 ? 1L << (k + 1074) : (long)(k + 1023) << 52;
+                bits.AddRange(new[] { power - 1, power, power + 1 });
+            }
+            bits.AddRange(bits.Select(b => b | long.MinValue).ToList());
+            AssertMatchesPythonRepr(bits);
+        }
+
+        private static void AssertMatchesPythonRepr(List<long> bits)
+        {
             const string script = @"
 import json, struct
 print(json.dumps([repr(struct.unpack('<d', struct.pack('<q', b))[0]) for b in json.load(sys.stdin)]))

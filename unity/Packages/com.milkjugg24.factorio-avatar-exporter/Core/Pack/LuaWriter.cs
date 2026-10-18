@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Numerics;
 using System.Text;
 
 namespace MilkJugg24.FactorioAvatarExporter.Core
@@ -109,27 +110,70 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             return output.ToString();
         }
 
-        /// <summary>The significant digits ("12345", no leading or trailing zeros) of a positive double
-        /// and the position of the decimal point: value = 0.digits x 10^point.</summary>
+        /// <summary>
+        /// The significant digits ("12345", no leading or trailing zeros) of a positive finite double and
+        /// the position of the decimal point: value = 0.digits x 10^point. These are Python's repr()
+        /// digits: the fewest that read back as the value, and of those the decimal nearest to it, ties to
+        /// an even last digit. They are worked out exactly with BigInteger, because double.ToString("R")
+        /// is the shortest round trip only on .NET Core 3.0 and later; Mono, which Unity runs, writes 15
+        /// or 17 digits checked with its own inexact parser.
+        /// </summary>
         private static (string digits, int point) ShortestDigits(double value)
         {
-            string text = value.ToString("R", CultureInfo.InvariantCulture);
-            int exponent = 0;
-            int e = text.IndexOfAny(new[] { 'E', 'e' });
-            if (e >= 0)
+            long bits = BitConverter.DoubleToInt64Bits(value);
+            int exponentBits = (int)((bits >> 52) & 0x7FF);
+            long mantissa = bits & 0xFFFFFFFFFFFFFL;
+            int exponent;
+            if (exponentBits == 0)
             {
-                exponent = int.Parse(text.Substring(e + 1), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture);
-                text = text.Substring(0, e);
+                exponent = -1074; // subnormal
             }
-            int dot = text.IndexOf('.');
-            string digits = dot >= 0 ? text.Remove(dot, 1) : text;
-            int point = (dot >= 0 ? dot : text.Length) + exponent;
-            int leadingZeros = 0;
-            while (digits[leadingZeros] == '0')
+            else
             {
-                leadingZeros++;
+                mantissa |= 1L << 52;
+                exponent = exponentBits - 1075;
             }
-            return (digits.Substring(leadingZeros).TrimEnd('0'), point - leadingZeros);
+            // In units of 2^(exponent - 2), value is 4 * mantissa. The decimals that read back as value
+            // lie between low and high, the midpoints to its neighbours, or on them when the mantissa is
+            // even (ties round to even). The neighbour below a power of two is half as far away as the
+            // one above.
+            BigInteger center = (BigInteger)mantissa << 2;
+            BigInteger high = center + 2;
+            BigInteger low = center - (mantissa == 1L << 52 && exponentBits > 1 ? 1 : 2);
+            bool inclusive = (mantissa & 1) == 0;
+            // one unit is unit / unitDenominator
+            BigInteger unit =exponent >= 2 ? BigInteger.One << (exponent - 2) : BigInteger.One;
+            BigInteger unitDenominator = exponent >= 2 ? BigInteger.One : BigInteger.One << (2 - exponent);
+            // Try ever finer decimal places 10^q, starting above value (Math.Log10 may be one off near
+            // powers of ten). The first place with a multiple n * 10^q inside the interval gives the
+            // fewest digits (17 always do); of the two multiples around value, the nearer wins, ties to
+            // an even n.
+            for (int q = (int)Math.Floor(Math.Log10(value)) + 2; ; q--)
+            {
+                // t units and n * 10^q compare as t * binaryScale and n * decimalScale, both integers
+                BigInteger binaryScale = q >= 0 ? unit : unit * BigInteger.Pow(10, -q);
+                BigInteger decimalScale = q >= 0 ? unitDenominator * BigInteger.Pow(10, q) : unitDenominator;
+                BigInteger target = center * binaryScale;
+                BigInteger n = BigInteger.Divide(target, decimalScale);
+                BigInteger down = n * decimalScale;
+                BigInteger up = down + decimalScale;
+                bool downInside = inclusive ? down >= low * binaryScale : down > low * binaryScale;
+                bool upInside = inclusive ? up <= high * binaryScale : up < high * binaryScale;
+                if (!downInside && !upInside)
+                {
+                    continue;
+                }
+                if (upInside)
+                {
+                    int nearer = (up - target).CompareTo(target - down);
+                    if (!downInside || nearer < 0 || (nearer == 0 && !n.IsEven))
+                    {
+                        n += 1;
+                    }
+                }
+                string digits = n.ToString(CultureInfo.InvariantCulture);
+                return (digits.TrimEnd('0'), digits.Length + q);
+            }
         }
 
         private static void Write(object value, int level, StringBuilder output)
