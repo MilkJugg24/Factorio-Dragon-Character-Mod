@@ -159,7 +159,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         /// <summary>
         /// Legs hanging from the hips while flying (anims._dangling_legs): nearly straight, tilted back by
-        /// <paramref name="backAngle"/> radians from straight down in the moving direction, toes pointed.
+        /// <paramref name="backAngle"/> radians from straight down in the moving direction, toes pointed (a
+        /// digitigrade foot already points down, so it only tilts back with the leg).
         /// <paramref name="blend"/> moves them there from standing (take-off).
         /// </summary>
         private void DanglingLegs(HumanoidPoseBuilder b, double backAngle, double move = 0, double blend = 1)
@@ -170,7 +171,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 Vec3 forward = Turn(rig.FootForward(side), move);
                 Vec3 down = Turn(new Vec3(side * 0.05, -Math.Sin(backAngle), -Math.Cos(backAngle)), move).Normalized;
                 Vec3 ankle = hip + down * ((rig.ThighLength(side) + rig.ShinLength(side)) * 0.95);
-                double pointed = 1.0 + backAngle;
+                double pointed = (rig.LegStyle == LegStyle.Digitigrade ? 0 : 1.0) + backAngle;
                 Vec3 ball = Vec3.Lerp(rig.Ball(side), BallForAnkle(side, ankle, forward, pointed), blend);
                 double heelLift = pointed * blend;
                 b.SetFoot(side, ball, forward, heelLift, forward, heelLift);
@@ -267,12 +268,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 double y = 0.02 * legScale + RunStride * legScale * Math.Cos(MathUtil.Tau * phi);
                 double swing = phi > 0.5 ? Math.Sin(MathUtil.Tau * (phi - 0.5)) : 0.0;
                 double z = 0.16 * legScale * swing;
-                // the heel comes up as the foot pushes off behind the body, toes trail while it swings
+                // the heel comes up as the foot pushes off behind the body, the toes flat on the ground; in the
+                // air the toes stay in line with the foot, which trails while it swings
                 double heelLift = phi <= 0.5 ? 0.7 * MathUtil.Smoothstep(0.3, 0.5, phi) : 0.7 * (1 - MathUtil.Smoothstep(0.5, 0.9, phi)) + 0.4 * swing;
                 Vec3 rest = rig.Ball(side);
                 Vec3 ball = Turn(new Vec3(rest.X - side * 0.01 * legScale, rest.Y + y, rest.Z + z), move);
                 Vec3 forward = Turn(rig.FootForward(side), move);
-                b.SetFoot(side, ball, forward, heelLift, forward + Vec3.UnitZ * 0.2);
+                b.SetFoot(side, ball, forward, heelLift, forward + Vec3.UnitZ * 0.2, phi > 0.5 ? heelLift : 0);
             }
             Quat chest = ChestFrame(lean, twist);
             if (gun)

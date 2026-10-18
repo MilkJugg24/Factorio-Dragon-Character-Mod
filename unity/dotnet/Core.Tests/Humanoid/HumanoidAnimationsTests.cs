@@ -64,23 +64,37 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
         }
 
         [TestCaseSource(nameof(Rigs))]
-        public void RunningFeetAreOnTheGroundDuringTheirStance(RigInput input)
+        public void RunningFeetArePlantedInTheirStanceWithTheToesInLineInTheAir(RigInput input)
         {
             HumanoidAnimations animations = Animations(input, out HumanoidRig rig);
             int frames = AnimationSpec.Get(AnimationSpec.Run).FrameCount;
+            int swinging = 0;
             for (int f = 0; f < frames; f++)
             {
                 double t = AnimationSpec.FramePhase(AnimationSpec.Run, f);
                 PoseResult pose = Frame(animations, AnimationSpec.Run, f);
                 foreach ((int side, double phase) in new[] { (-1, t), (1, t + 0.5) })
                 {
+                    string what = $"run frame {f + 1}: the {(side > 0 ? "right" : "left")} foot";
                     if (MathUtil.PositiveModulo(phase, 1) < 0.5)
                     {
                         Assert.That(pose.Joints[JointNames.Ball(side)].Z, Is.EqualTo(rig.Ball(side).Z).Within(1e-6),
-                            $"run frame {f + 1}: the {(side > 0 ? "right" : "left")} foot should be planted");
+                            what + " should be planted");
+                    }
+                    else if (pose.Joints[JointNames.Ball(side)].Z > rig.Ball(side).Z + 1e-3)
+                    {
+                        Assert.That(pose.Joints[JointNames.Toe(side)].Z, Is.GreaterThan(0), what + ": the toe tip clears the ground");
+                        if (rig.Has(HumanBoneHierarchy.Toes(side)))
+                        {
+                            double bend = TestMath.RotationAngle(pose.WorldDeltas[HumanBoneHierarchy.Toes(side)],
+                                pose.WorldDeltas[HumanBoneHierarchy.Foot(side)]);
+                            Assert.That(bend, Is.LessThan(MathUtil.Radians(3)), what + ": the toes stay in line with the foot");
+                        }
+                        swinging++;
                     }
                 }
             }
+            Assert.That(swinging, Is.GreaterThan(0), "some frames have a foot in the air");
             // the left foot lands on frame 1 and the right on frame 7, as the pack timing says
             Assert.That(animations.Timing.LeftFootFrames, Is.EqualTo(new[] { 1 }));
             Assert.That(animations.Timing.RightFootFrames, Is.EqualTo(new[] { 7 }));

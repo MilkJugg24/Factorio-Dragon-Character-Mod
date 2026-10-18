@@ -58,5 +58,31 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
                 }
             }
         }
+
+        [Test]
+        public void DanglingFeetKeepTheHockBentTheRestWay()
+        {
+            HumanoidRig rig = HumanoidRig.Measure(Digitigrade(0, 0));
+            var animations = new HumanoidAnimations(rig);
+            // which way the foot turns from the line of the shin, about the knee's bend axis: a foot pointed too far
+            // folds back past the shin and the sign flips
+            double Bend(Vec3 knee, Vec3 ankle, Vec3 ball, Vec3 axis) => Vec3.Dot(Vec3.Cross(ankle - knee, ball - ankle), axis);
+            foreach (int side in TestMath.Sides)
+            {
+                double rest = Bend(rig.Rest(HumanBoneHierarchy.LowerLeg(side)), rig.Rest(HumanBoneHierarchy.Foot(side)),
+                    rig.Ball(side), rig.KneeBendAxis(side));
+                foreach (string animation in new[] { AnimationSpec.Hover, AnimationSpec.Fly })
+                {
+                    for (int f = 0; f < AnimationSpec.Get(animation).FrameCount; f++)
+                    {
+                        PoseResult pose = animations.Pose(animation, AnimationSpec.FramePhase(animation, f), 0);
+                        Vec3 axis = pose.WorldDeltas[HumanBoneHierarchy.LowerLeg(side)].Rotate(rig.KneeBendAxis(side));
+                        double bend = Bend(pose.Joints[JointNames.Knee(side)], pose.Joints[JointNames.Ankle(side)],
+                            pose.Joints[JointNames.Ball(side)], axis);
+                        Assert.That(Math.Sign(bend), Is.EqualTo(Math.Sign(rest)), $"{animation} frame {f + 1} side {side}");
+                    }
+                }
+            }
+        }
     }
 }
