@@ -57,6 +57,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
         }
 
         [Test]
+        public void CompressesEmptyInputToAnEmptyFinalBlock()
+        {
+            // Mono's DeflateStream writes no block at all for empty input; .NET writes this one
+            byte[] z = Zlib.Compress(Array.Empty<byte>());
+            Assert.That(BitConverter.ToString(z), Is.EqualTo("78-9C-03-00-00-00-00-01"));
+            Assert.That(Zlib.Decompress(z, 0), Is.Empty);
+        }
+
+        [Test]
         public void InteroperatesWithPythonZlib()
         {
             var rng = new Random(64);

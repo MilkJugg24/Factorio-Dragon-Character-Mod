@@ -37,6 +37,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 {
                     deflate.Write(data, 0, data.Length);
                 }
+                if (output.Length == HeaderLength)
+                {
+                    // Mono's DeflateStream (and so Unity's) writes nothing at all for empty input; an
+                    // empty final fixed-Huffman block, as .NET writes, keeps the stream valid
+                    output.WriteByte(0x03);
+                    output.WriteByte(0x00);
+                }
                 uint adler = Checksums.Adler32(data);
                 output.WriteByte((byte)(adler >> 24));
                 output.WriteByte((byte)(adler >> 16));
