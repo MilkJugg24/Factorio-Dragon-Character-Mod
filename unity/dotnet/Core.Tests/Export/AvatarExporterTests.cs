@@ -14,7 +14,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
         /// Draws an opaque red square around the anchor (and a black one on the shadow pass, plus its top left
         /// pixel with <see cref="ShadowInCorner"/>) and records every request.
         /// </summary>
-        private sealed class RecordingRenderer : IFrameRenderer
+        internal sealed class RecordingRenderer : IFrameRenderer
         {
             public readonly List<FrameRequest> Requests = new List<FrameRequest>();
             public int WrongSizeAfter = int.MaxValue;
@@ -80,11 +80,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
         }
 
         /// <summary>
-        /// Fills the whole color pass with a half transparent grey (0.2 on black, 0.7 on white) and blackens every
-        /// other column of the shadow pass. Its bounds reach <see cref="HalfWidth"/> tiles east and west.
+        /// Fills the whole color pass with a half transparent grey (0.2 on black, 0.7 on white), blackens every
+        /// other column of the shadow pass, and records every request. Its bounds reach
+        /// <see cref="HalfWidth"/> tiles east and west.
         /// </summary>
         private sealed class GreyRenderer : IFrameRenderer
         {
+            public readonly List<FrameRequest> Requests = new List<FrameRequest>();
+            public bool Linear;
             public double HalfWidth = 0.3;
 
             public Bounds3 MeasureWorldBounds(PoseResult pose, double orientation, bool mirrored) =>
@@ -92,6 +95,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
 
             public RenderResult Render(FrameRequest request)
             {
+                Requests.Add(request);
                 CanvasSpec c = request.Canvas;
                 if (request.Pass == RenderPass.Shadow)
                 {
@@ -106,13 +110,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
                             silhouette[x, y, 2] = 0;
                         }
                     }
-                    return new RenderResult { Silhouette = silhouette };
+                    return new RenderResult { Silhouette = silhouette, Linear = Linear };
                 }
                 var black = new ImageF(c.RenderWidth, c.RenderHeight);
                 black.Fill(0.2f, 0.2f, 0.2f, 1);
                 var white = new ImageF(c.RenderWidth, c.RenderHeight);
                 white.Fill(0.7f, 0.7f, 0.7f, 1);
-                return new RenderResult { OnBlack = black, OnWhite = white };
+                return new RenderResult { OnBlack = black, OnWhite = white, Linear = Linear };
             }
         }
 
@@ -163,6 +167,28 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
                 darkest = Math.Max(darkest, sheet.Pixels[i]);
             }
             Assert.That(darkest, Is.EqualTo(153));
+        }
+
+        [TestCase(false, 67, 149)]
+        [TestCase(true, 170, 128)]
+        public void SupersampledRendersAreMattedAndReducedToTheCanvas(bool linear, int grey, int alpha)
+        {
+            // Linear: alpha = 1 - (0.7 - 0.2) = 0.5 and color 0.2 / 0.5 = 0.4, sRGB 170. sRGB: 0.2 and 0.7
+            // decode to 0.0331 and 0.4479, so alpha = 0.585 (149) and color 0.0566, sRGB 67. The renders fill
+            // their canvases, so frames are cut to the whole canvas, and there is no margin to keep empty.
+            var settings = new ExportSettings { PixelsPerTile = 32, Supersampling = 2, Flight = false, CanvasMarginPixels = 0 };
+            var renderer = new GreyRenderer { Linear = linear };
+            ExportedArt art = new AvatarExporter(new DragonPoseSource(BodyShape.Male), renderer, settings).Render();
+            CanvasSpec color = renderer.Requests.First(r => r.Animation == AnimationSpec.Idle && r.Pass == RenderPass.Color).Canvas;
+            CanvasSpec shadow = renderer.Requests.First(r => r.Animation == AnimationSpec.Idle && r.Pass == RenderPass.Shadow).Canvas;
+            SheetSet baseSheets = art.Animations[AnimationSpec.Idle][PackLayers.Base];
+            SheetSet shadowSheets = art.Animations[AnimationSpec.Idle][PackLayers.Shadow];
+            Assert.That((baseSheets.FrameWidth, baseSheets.FrameHeight), Is.EqualTo((color.Width, color.Height)), "base frame size");
+            Assert.That((shadowSheets.FrameWidth, shadowSheets.FrameHeight), Is.EqualTo((shadow.Width, shadow.Height)), "shadow frame size");
+            Image8 frame = baseSheets.Files[0];
+            Assert.That(new[] { frame[3, 3, 0], frame[3, 3, 1], frame[3, 3, 2], frame[3, 3, 3] },
+                Is.EqualTo(new[] { (byte)grey, (byte)grey, (byte)grey, (byte)alpha }));
+            Assert.That(shadowSheets.Files[0].Alpha(3, 3), Is.EqualTo(128), "every 2x2 block is half covered");
         }
 
         [Test]
