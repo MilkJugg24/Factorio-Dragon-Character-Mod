@@ -380,6 +380,78 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
             Assert.That(icon[32, 5, 3], Is.EqualTo(255));
         }
 
+        private static readonly (byte, byte, byte) Skin = (240, 200, 160);
+        private static readonly (byte, byte, byte) Shoulders = (60, 200, 60);
+        private static readonly (byte, byte, byte) ShoulderTips = (230, 230, 40);
+        private static readonly (byte, byte, byte) Torso = (128, 128, 128);
+        private static readonly (byte, byte, byte) Legs = (40, 40, 220);
+
+        private static void Paint(Image8 image, int x0, int y0, int x1, int y1, (byte r, byte g, byte b) color)
+        {
+            for (int y = y0; y < y1; y++)
+            {
+                for (int x = x0; x < x1; x++)
+                {
+                    image[x, y, 0] = color.r;
+                    image[x, y, 1] = color.g;
+                    image[x, y, 2] = color.b;
+                    image[x, y, 3] = 255;
+                }
+            }
+        }
+
+        /// <summary>The columns of the opaque pixels that have exactly this color.</summary>
+        private static List<int> ColumnsOf(Image8 image, (byte r, byte g, byte b) color)
+        {
+            var columns = new List<int>();
+            for (int y = 0; y < image.Height; y++)
+            {
+                for (int x = 0; x < image.Width; x++)
+                {
+                    if (image.Alpha(x, y) == 255 && (image[x, y, 0], image[x, y, 1], image[x, y, 2]) == color)
+                    {
+                        columns.Add(x);
+                    }
+                }
+            }
+            return columns;
+        }
+
+        [Test]
+        public void IconOfARealisticFigureEndsBelowTheShoulders()
+        {
+            // 170 px tall, shoulders 52 px wide down to row 48, legs from row 100
+            var figure = new Image8(60, 200);
+            Paint(figure, 22, 10, 38, 34, Skin);
+            Paint(figure, 4, 34, 56, 48, Shoulders);
+            Paint(figure, 4, 34, 8, 48, ShoulderTips);
+            Paint(figure, 52, 34, 56, 48, ShoulderTips);
+            Paint(figure, 18, 48, 42, 100, Torso);
+            Paint(figure, 20, 100, 40, 180, Legs);
+            Image8 icon = PackArt.Icon(figure, 50);
+            Assert.That(ColumnsOf(icon, Skin), Is.Not.Empty, "head");
+            Assert.That(ColumnsOf(icon, Shoulders), Is.Not.Empty, "shoulders");
+            List<int> tips = ColumnsOf(icon, ShoulderTips);
+            Assert.That(tips.Count > 0 && tips.Min() < 8 && tips.Max() >= 56, "both shoulder tips, at the sides");
+            Assert.That(ColumnsOf(icon, Legs), Is.Empty, "no legs");
+        }
+
+        [Test]
+        public void IconOfABigHeadedFigureShowsItsShoulders()
+        {
+            // the head is half of the 120 px figure, and wider than the shoulders
+            var figure = new Image8(60, 140);
+            Paint(figure, 5, 10, 55, 70, Skin);
+            Paint(figure, 15, 70, 45, 80, Shoulders);
+            Paint(figure, 20, 80, 40, 100, Torso);
+            Paint(figure, 22, 100, 38, 130, Legs);
+            Image8 icon = PackArt.Icon(figure, 82);
+            Assert.That(ColumnsOf(icon, Skin), Is.Not.Empty, "head");
+            Assert.That(ColumnsOf(icon, Shoulders), Is.Not.Empty, "shoulders");
+            Assert.That(ColumnsOf(icon, Legs), Is.Empty, "no legs");
+            Assert.That(ColumnsOf(PackArt.Icon(figure, 130), Legs), Is.Empty, "at most 60% of the figure");
+        }
+
         [Test]
         public void ThumbnailFitsTheWholeFigureOnADarkSquare()
         {

@@ -139,20 +139,23 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             int total = TotalRenders;
             int done = 0;
             Image8 portrait = null;
+            int? iconBottom = null;
             foreach (AnimationInfo animation in Animations)
             {
                 var job = new AnimationJob(this, animation);
                 sheets[animation.Name] = job.Render(progress, cancel, ref done, total);
                 if (animation.Name == AnimationSpec.Idle)
                 {
-                    portrait = job.BaseFrame(Math.Min(SouthRow, animation.DirectionCount - 1), 0);
+                    int row = Math.Min(SouthRow, animation.DirectionCount - 1);
+                    portrait = job.BaseFrame(row, 0);
+                    iconBottom = job.BelowShoulders(row, 0);
                 }
             }
             if (portrait == null)
             {
                 throw new InvalidOperationException("the idle animation was not rendered");
             }
-            return new ExportedArt(sheets, PackArt.Icon(portrait), PackArt.Thumbnail(portrait));
+            return new ExportedArt(sheets, PackArt.Icon(portrait, iconBottom), PackArt.Thumbnail(portrait));
         }
 
         /// <summary>Copies rendered art and the pose source's timing into a pack.</summary>
@@ -189,6 +192,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             private readonly bool flippedShadow;
             private readonly PoseResult[,] framePoses;
             private readonly DirectionInfo[] directions;
+            private CanvasSpec colorCanvas;
             private Image8[][] baseFrames;
 
             public AnimationJob(AvatarExporter owner, AnimationInfo animation)
@@ -213,6 +217,27 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
             public Image8 BaseFrame(int direction, int frame) => baseFrames[direction][frame];
 
+            /// <summary>
+            /// The first pixel row of a base frame below the shoulders, where the icon ends
+            /// (<see cref="PackArt.Icon"/>): the chest joint's position on the color canvas, or the lower
+            /// shoulder joint's when the chest is not below it, rounded up to a whole row. Null when the pose
+            /// lacks those joints.
+            /// </summary>
+            public int? BelowShoulders(int direction, int frame)
+            {
+                Dictionary<string, Vec3> joints = framePoses[direction, frame].Joints;
+                if (!joints.TryGetValue(JointNames.Shoulder(-1), out Vec3 left)
+                    || !joints.TryGetValue(JointNames.Shoulder(1), out Vec3 right)
+                    || !joints.TryGetValue(JointNames.Chest, out Vec3 chest))
+                {
+                    return null;
+                }
+                double orientation = directions[direction].Orientation;
+                double Row(Vec3 joint) =>
+                    FactorioCamera.Project(Conventions.ModelPointToWorld(joint, orientation, false), colorCanvas).y;
+                return (int)Math.Ceiling(Math.Max(Math.Max(Row(left), Row(right)), Row(chest)));
+            }
+
             /// <summary>The orientation of the mirrored character whose shadow is "shadow-flipped".</summary>
             private static double MirroredOrientation(double orientation) => MathUtil.PositiveModulo(1.0 - orientation, 1.0);
 
@@ -234,7 +259,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                         }
                     }
                 }
-                CanvasSpec colorCanvas = CanvasPlanner.PlanColor(colorBounds, s.PixelsPerTile, s.Supersampling, s.CanvasMarginPixels);
+                colorCanvas = CanvasPlanner.PlanColor(colorBounds, s.PixelsPerTile, s.Supersampling, s.CanvasMarginPixels);
                 CanvasSpec shadowCanvas = CanvasPlanner.PlanShadow(colorBounds, s.PixelsPerTile, s.Supersampling, s.CanvasMarginPixels);
                 CanvasSpec flippedCanvas = flippedShadow
                     ? CanvasPlanner.PlanShadow(mirroredBounds, s.PixelsPerTile, s.Supersampling, s.CanvasMarginPixels)
