@@ -18,6 +18,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
         {
             public readonly List<FrameRequest> Requests = new List<FrameRequest>();
             public int WrongSizeAfter = int.MaxValue;
+            public float ShadowValue;
+            public bool Linear;
 
             public Bounds3 MeasureWorldBounds(PoseResult pose, double orientation, bool mirrored) =>
                 new Bounds3(new Vec3(-0.3, -0.3, 0), new Vec3(0.3, 0.3, 1.5));
@@ -31,8 +33,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
                 {
                     var silhouette = new ImageF(w, c.RenderHeight);
                     silhouette.Fill(1, 1, 1, 1);
-                    Square(silhouette, c, 0, 0, 0);
-                    return new RenderResult { Silhouette = silhouette };
+                    Square(silhouette, c, ShadowValue, ShadowValue, ShadowValue);
+                    return new RenderResult { Silhouette = silhouette, Linear = Linear };
                 }
                 var black = new ImageF(w, c.RenderHeight);
                 black.Fill(0, 0, 0, 1);
@@ -40,7 +42,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
                 white.Fill(1, 1, 1, 1);
                 Square(black, c, 1, 0, 0);
                 Square(white, c, 1, 0, 0);
-                return new RenderResult { OnBlack = black, OnWhite = white, Linear = false };
+                return new RenderResult { OnBlack = black, OnWhite = white, Linear = Linear };
             }
 
             private static void Square(ImageF image, CanvasSpec c, float r, float g, float b)
@@ -86,6 +88,23 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
             }
             Assert.That(art.Icon.Width, Is.EqualTo(PackArt.IconSize));
             Assert.That(art.Thumbnail.Width, Is.EqualTo(PackFormat.ThumbnailSize));
+        }
+
+        [TestCase(false)]
+        [TestCase(true)]
+        public void ShadowPassesFollowTheRenderersColorSpace(bool linear)
+        {
+            // a 60% shadow: linear 0.4, or the same grey stored as sRGB
+            float grey = linear ? 0.4f : (float)ColorSpace.LinearToSrgb(0.4);
+            var renderer = new RecordingRenderer { ShadowValue = grey, Linear = linear };
+            ExportedArt art = new AvatarExporter(new DragonPoseSource(BodyShape.Male), renderer, Small()).Render();
+            Image8 sheet = art.Animations[AnimationSpec.Idle][PackLayers.Shadow].Files[0];
+            byte darkest = 0;
+            for (int i = 3; i < sheet.Pixels.Length; i += 4)
+            {
+                darkest = Math.Max(darkest, sheet.Pixels[i]);
+            }
+            Assert.That(darkest, Is.EqualTo(153));
         }
 
         [Test]

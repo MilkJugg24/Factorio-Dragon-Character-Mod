@@ -146,7 +146,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
                 }
                 Paint(2, y, 0, 0, 0);
             }
-            Image8 shadow = ImageConvert.ShadowFromSilhouette(silhouette, 2);
+            Image8 shadow = ImageConvert.ShadowFromSilhouette(silhouette, 2, true);
             Assert.That(shadow.Width, Is.EqualTo(2));
             Assert.That(shadow.Height, Is.EqualTo(2));
             Assert.That(shadow.Pixels, Is.EqualTo(new byte[]
@@ -163,8 +163,22 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
             silhouette.Fill(1, 0, 0.5f, 0);
             silhouette[1, 0, 0] = silhouette[1, 0, 1] = silhouette[1, 0, 2] = -1f; // coverage 2 -> 1
             silhouette[2, 0, 0] = silhouette[2, 0, 1] = silhouette[2, 0, 2] = 3f; // coverage -2 -> 0
-            Image8 shadow = ImageConvert.ShadowFromSilhouette(silhouette, 1);
+            Image8 shadow = ImageConvert.ShadowFromSilhouette(silhouette, 1, true);
             Assert.That(shadow.Pixels, Is.EqualTo(new byte[] { 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 0, 0 }));
+        }
+
+        [Test]
+        public void SrgbShadowsAreDecodedBeforeCountingCoverage()
+        {
+            // an antialiased edge pixel 60% covered by the silhouette: linear 0.4, stored as sRGB 0.6654
+            var silhouette = new ImageF(2, 1);
+            silhouette.Fill(0.4f, 0.4f, 0.4f, 1);
+            float srgb = (float)ColorSpace.LinearToSrgb(0.4);
+            silhouette[1, 0, 0] = silhouette[1, 0, 1] = silhouette[1, 0, 2] = srgb;
+            Assert.That(ImageConvert.ShadowFromSilhouette(silhouette, 1, true).Pixels[3], Is.EqualTo(153));
+            Image8 decoded = ImageConvert.ShadowFromSilhouette(silhouette, 1, false);
+            Assert.That(decoded.Pixels[7], Is.EqualTo(153), "sRGB 0.6654 is 60% covered");
+            Assert.That(decoded.Pixels[3], Is.EqualTo(ImageConvert.Quantize(1 - ColorSpace.SrgbToLinear(0.4))));
         }
 
         [Test]
@@ -175,7 +189,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
             {
                 int ss = rng.Next(1, 5);
                 ImageF silhouette = TestImages.RandomF(rng, rng.Next(1, 8) * ss, rng.Next(1, 8) * ss);
-                Image8 shadow = ImageConvert.ShadowFromSilhouette(silhouette, ss);
+                Image8 shadow = ImageConvert.ShadowFromSilhouette(silhouette, ss, true);
                 for (int y = 0; y < shadow.Height; y++)
                 {
                     for (int x = 0; x < shadow.Width; x++)
@@ -199,9 +213,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
         [Test]
         public void ShadowRejectsBadSupersampling()
         {
-            Assert.That(() => ImageConvert.ShadowFromSilhouette(new ImageF(6, 6), 4), Throws.ArgumentException);
-            Assert.That(() => ImageConvert.ShadowFromSilhouette(new ImageF(6, 6), 0), Throws.InstanceOf<ArgumentOutOfRangeException>());
-            Assert.That(() => ImageConvert.ShadowFromSilhouette(null, 2), Throws.ArgumentNullException);
+            Assert.That(() => ImageConvert.ShadowFromSilhouette(new ImageF(6, 6), 4, true), Throws.ArgumentException);
+            Assert.That(() => ImageConvert.ShadowFromSilhouette(new ImageF(6, 6), 0, true), Throws.InstanceOf<ArgumentOutOfRangeException>());
+            Assert.That(() => ImageConvert.ShadowFromSilhouette(null, 2, true), Throws.ArgumentNullException);
         }
     }
 }

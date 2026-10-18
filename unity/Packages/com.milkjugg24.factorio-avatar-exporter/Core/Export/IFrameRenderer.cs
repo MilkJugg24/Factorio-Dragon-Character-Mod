@@ -87,7 +87,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>Shadow pass: black silhouette on white (alpha ignored).</summary>
         public ImageF Silhouette { get; set; }
 
-        /// <summary>True when color values are linear (Unity's linear color space), false for sRGB.</summary>
+        /// <summary>
+        /// True when the values of the images (color and shadow pass alike) are linear, as in a float render
+        /// target in Unity's linear color space; false when they are sRGB encoded.
+        /// </summary>
         public bool Linear { get; set; }
     }
 

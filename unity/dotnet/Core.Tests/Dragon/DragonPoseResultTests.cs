@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid;
 
 namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
 {
@@ -158,6 +159,26 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
             Assert.That(source.Timing.RightFootFrames, Is.EqualTo(new[] { 7 }));
             Assert.Throws<ArgumentException>(() => source.Pose("walk", 0, 0));
             Assert.Throws<ArgumentNullException>(() => new DragonPoseSource(null));
+        }
+
+        [Test]
+        public void TheCorpseLiesDownAsGenerateRendersIt()
+        {
+            PoseResult standing = DragonPoses.Pose(AnimationSpec.Corpse, BodyShape.Male, 0, 0).ToPoseResult();
+            PoseResult corpse = new DragonPoseSource(BodyShape.Male).Pose(AnimationSpec.Corpse, 0, 0);
+            double a = MathUtil.Tau * 0.30;
+            foreach (KeyValuePair<string, Vec3> joint in standing.Joints)
+            {
+                // generate.py: rot(v, Y, -pi/2) + (0.75, 0, 0.2), then turned clockwise to orientation 0.30
+                Vec3 v = joint.Value;
+                var lying = new Vec3(-v.Z + 0.75, v.Y, v.X + 0.2);
+                var expected = new Vec3(lying.X * Math.Cos(a) + lying.Y * Math.Sin(a),
+                    -lying.X * Math.Sin(a) + lying.Y * Math.Cos(a), lying.Z);
+                TestMath.AssertClose(corpse.Joints[joint.Key], expected, 1e-12, joint.Key);
+            }
+            double height = corpse.Joints.Values.Max(p => p.Z) - corpse.Joints.Values.Min(p => p.Z);
+            Assert.That(height, Is.LessThan(0.6), "lying down");
+            Assert.That(corpse.GroundToLowestPoint, Is.False);
         }
 
         [Test]

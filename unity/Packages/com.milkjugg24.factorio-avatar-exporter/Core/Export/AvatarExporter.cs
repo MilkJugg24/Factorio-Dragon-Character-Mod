@@ -312,7 +312,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             {
                 RenderResult result = owner.renderer.Render(Request(direction, frame, orientation, mirrored, RenderPass.Shadow, canvas));
                 CheckSize(result?.Silhouette, canvas, Describe(direction, frame, mirrored ? "flipped shadow pass" : "shadow pass"));
-                return ImageConvert.ShadowFromSilhouette(result.Silhouette, canvas.Supersampling);
+                return ImageConvert.ShadowFromSilhouette(result.Silhouette, canvas.Supersampling, result.Linear);
             }
 
             private string Describe(int direction, int frame, string pass) =>

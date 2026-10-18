@@ -83,7 +83,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Camera
                 Assert.That(touchesMargin, Is.False, where + ": the figure stays inside the margin");
 
                 RenderResult silhouette = Renderer.Render(Request(animation, frame, RenderPass.Shadow, shadow, mirrored));
-                Image8 layer = ImageConvert.ShadowFromSilhouette(silhouette.Silhouette, Supersampling);
+                Image8 layer = ImageConvert.ShadowFromSilhouette(silhouette.Silhouette, Supersampling, silhouette.Linear);
                 Assert.That(layer.Width, Is.EqualTo(shadow.Width));
                 (int shaded, bool shadowTouchesMargin) = Pixels.Coverage(layer, CanvasPlanner.DefaultMarginPixels);
                 Assert.That(shaded, Is.GreaterThan(300), where + ": the shadow is drawn");

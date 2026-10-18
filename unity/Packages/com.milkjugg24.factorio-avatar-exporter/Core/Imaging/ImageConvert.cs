@@ -48,11 +48,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// Converts a shadow pass (<see cref="RenderPass.Shadow"/>: a black silhouette on white, rendered at
         /// <paramref name="supersampling"/> times the final size) to a shadow layer: black, with alpha =
         /// the coverage of each final pixel. The coverage of a rendered pixel is clamp(1 - mean(r, g, b), 0,
-        /// 1) (the input alpha is ignored); the final alpha is the average over each block, quantized like
-        /// <see cref="Quantize"/>.
+        /// 1) with the channels in linear light (the input alpha is ignored), so an antialiased edge pixel
+        /// half covered by the silhouette counts as half; the final alpha is the average over each block,
+        /// quantized like <see cref="Quantize"/>.
         /// </summary>
+        /// <param name="linear">True when the values are linear, false when they are sRGB encoded
+        /// (<see cref="RenderResult.Linear"/>).</param>
         /// <exception cref="ArgumentException">The image size is not a multiple of the supersampling.</exception>
-        public static Image8 ShadowFromSilhouette(ImageF silhouette, int supersampling)
+        public static Image8 ShadowFromSilhouette(ImageF silhouette, int supersampling, bool linear)
         {
             Downsample.CheckFactor(silhouette, supersampling);
             int width = silhouette.Width / supersampling;
@@ -71,7 +74,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                         int end = i + supersampling * 4;
                         for (; i < end; i += 4)
                         {
-                            coverage += ColorSpace.Clamp01(1.0 - ((double)source[i] + source[i + 1] + source[i + 2]) / 3.0);
+                            double sum = linear
+                                ? (double)source[i] + source[i + 1] + source[i + 2]
+                                : ColorSpace.SrgbToLinear(source[i]) + ColorSpace.SrgbToLinear(source[i + 1])
+                                    + ColorSpace.SrgbToLinear(source[i + 2]);
+                            coverage += ColorSpace.Clamp01(1.0 - sum / 3.0);
                         }
                     }
                     result[x, y, 3] = Quantize(coverage * weight);
