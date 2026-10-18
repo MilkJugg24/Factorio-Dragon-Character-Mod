@@ -11,8 +11,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     /// <c>rendered = color * alpha + background * (1 - alpha)</c> on screen. Over black that is
     /// <c>B = color * alpha</c>, the premultiplied color; over white it is <c>W = B + (1 - alpha)</c>. So
     /// <c>alpha = 1 - (W - B)</c>, and no shader has to write a meaningful alpha channel (many avatar
-    /// shaders don't). Light a shader only adds (alpha 0 but some color, like additive glow) cannot be
-    /// shown with straight alpha and is dropped.
+    /// shaders don't).
+    ///
+    /// Light a shader only adds over the background (alpha 0 but some color, like additive glow or
+    /// particles) cannot be shown with straight alpha. It is dropped only when both renders keep values
+    /// above 1 (a half or float render target, HDR, no tonemapping or other post-processing): then
+    /// <c>W - B = 1</c> and alpha is 0. A clamped (8-bit) target saturates white plus glow at 1, so the
+    /// glow becomes color with alpha about the mean of the glow, its hue shifted where a channel is clamped
+    /// to alpha: a colored, half transparent fog. Partly transparent pixels whose render on white would go
+    /// above 1 get too much alpha the same way. <see cref="RenderResult"/> says what renderers should do.
     /// </summary>
     public static class Matting
     {

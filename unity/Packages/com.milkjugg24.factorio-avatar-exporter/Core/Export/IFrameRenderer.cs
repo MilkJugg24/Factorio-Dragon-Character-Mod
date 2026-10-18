@@ -4,7 +4,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     public enum RenderPass
     {
-        /// <summary>The character itself: rendered twice, on black and on white, for difference matting.</summary>
+        /// <summary>
+        /// The character itself: rendered twice, on black and on white, for difference matting
+        /// (<see cref="Matting"/>), preferably into a half or float target (see <see cref="RenderResult"/>).
+        /// </summary>
         Color,
 
         /// <summary>
@@ -75,7 +78,16 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public CanvasSpec Canvas { get; set; }
     }
 
-    /// <summary>What a renderer returns for a <see cref="FrameRequest"/>.</summary>
+    /// <summary>
+    /// What a renderer returns for a <see cref="FrameRequest"/>.
+    ///
+    /// The color pass should render into an ARGBHalf or ARGBFloat target with HDR on and no
+    /// post-processing, read back as linear floats (<see cref="Linear"/> = true): only values above 1 in
+    /// the render on white let difference matting drop the light shaders add over the background (additive
+    /// glow, particles; see <see cref="Matting"/>). sRGB values (<see cref="Linear"/> = false) and 8-bit
+    /// targets are accepted, but an 8-bit target clamps at 1 and turns that light into colored, half
+    /// transparent fog, so with one the Unity layer must hide additive and particle renderers.
+    /// </summary>
     public sealed class RenderResult
     {
         /// <summary>Color pass: the frame rendered over opaque black. Size = canvas render size.</summary>
@@ -89,7 +101,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         /// <summary>
         /// True when the values of the images (color and shadow pass alike) are linear, as in a float render
-        /// target in Unity's linear color space; false when they are sRGB encoded.
+        /// target in Unity's linear color space; false when they are sRGB encoded. It says how values are
+        /// encoded, not whether they were clamped: an 8-bit linear target clamps like an sRGB one.
         /// </summary>
         public bool Linear { get; set; }
     }
