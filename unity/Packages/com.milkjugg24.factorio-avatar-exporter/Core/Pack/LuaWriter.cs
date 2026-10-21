@@ -135,14 +135,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             }
             // In units of 2^(exponent - 2), value is 4 * mantissa. The decimals that read back as value
             // lie between low and high, the midpoints to its neighbours, or on them when the mantissa is
-            // even (ties round to even). The neighbour below a power of two is half as far away as the
-            // one above.
+            // even (ties round to even). Below a normal power of two (other than the smallest normal)
+            // the neighbour is half as far away as the one above.
             BigInteger center = (BigInteger)mantissa << 2;
             BigInteger high = center + 2;
             BigInteger low = center - (mantissa == 1L << 52 && exponentBits > 1 ? 1 : 2);
             bool inclusive = (mantissa & 1) == 0;
             // one unit is unit / unitDenominator
-            BigInteger unit =exponent >= 2 ? BigInteger.One << (exponent - 2) : BigInteger.One;
+            BigInteger unit = exponent >= 2 ? BigInteger.One << (exponent - 2) : BigInteger.One;
             BigInteger unitDenominator = exponent >= 2 ? BigInteger.One : BigInteger.One << (2 - exponent);
             // Try ever finer decimal places 10^q, starting above value (Math.Log10 may be one off near
             // powers of ten). The first place with a multiple n * 10^q inside the interval gives the
