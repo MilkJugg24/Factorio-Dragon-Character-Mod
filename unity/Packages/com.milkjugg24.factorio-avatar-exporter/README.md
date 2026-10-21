@@ -12,10 +12,13 @@ render cleanly for sprites before the full exporter window is built.
 
 You need Unity 2022.3 (the VRChat version) and a project with an avatar in it.
 
-1. Add the package. In Unity, open **Window ▸ Package Manager**, click **+ ▸ Add package from disk...**
-   and pick `unity/Packages/com.milkjugg24.factorio-avatar-exporter/package.json` from this repository.
-   You can also copy the `com.milkjugg24.factorio-avatar-exporter` folder into your project's `Packages/`
-   folder.
+1. Download `FactorioAvatarExporter_<version>.unitypackage` from the newest **Avatar Exporter** release on
+   the repository's Releases page. In Unity choose **Assets ▸ Import Package ▸ Custom Package...**, pick the
+   file and click **Import**. It is installed in `Assets/FactorioAvatarExporter`; importing a newer version
+   updates it in place.
+
+   (Developers can instead use **Window ▸ Package Manager ▸ + ▸ Add package from disk...** on this folder's
+   `package.json`. Use one way or the other, not both, or Unity reports the assemblies twice.)
 2. Select your avatar in the Hierarchy (the object with the VRChat avatar descriptor), or its prefab.
 3. Choose **Tools ▸ Factorio Avatar Exporter ▸ Spike: Render Selected Avatar**.
 

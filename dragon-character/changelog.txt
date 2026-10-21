@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
-Date: 2026-10-17
+Date: 2026-10-21
   Features:
     - Avatar packs: separate mods (dragon-avatar-<id>) that add more looks, shown in a new "Look"
       section of the customization window. See docs/avatar-pack-format.md in the source repository.
