@@ -85,6 +85,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
                     {
                         Assert.That(pose.Joints[JointNames.Ball(side)].Z, Is.EqualTo(rig.Ball(side).Z).Within(1e-6),
                             what + " should be planted");
+                        if (rig.Has(HumanBoneHierarchy.Toes(side)))
+                        {
+                            // without a Toes bone the whole foot pivots on the ball and its tip dips a little
+                            Assert.That(pose.Joints[JointNames.Toe(side)].Z, Is.GreaterThan(-1e-3),
+                                what + ": the toes stay flat at push-off instead of pitching into the ground");
+                        }
                     }
                     else if (pose.Joints[JointNames.Ball(side)].Z > rig.Ball(side).Z + 1e-3)
                     {
