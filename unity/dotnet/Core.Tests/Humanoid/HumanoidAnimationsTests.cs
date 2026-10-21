@@ -137,25 +137,31 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
             TestMath.AssertClose(start.Joints[JointNames.Ball(1)], idle.Joints[JointNames.Ball(1)], 1e-9, "take-off starts standing");
         }
 
-        [TestCaseSource(nameof(Rigs))]
+        [TestCaseSource(typeof(HumanoidArmTests), nameof(HumanoidArmTests.GunRigs))]
         public void BothHandsHoldTheGun(RigInput input)
         {
             HumanoidAnimations animations = Animations(input, out HumanoidRig rig);
+            double size = rig.HeadTopHeight / 1.5;
             foreach (string animation in new[] { AnimationSpec.IdleGun, AnimationSpec.RunGun, AnimationSpec.HoverGun, AnimationSpec.FlyGun })
             {
                 AnimationInfo info = AnimationSpec.Get(animation);
                 for (int row = 0; row < info.DirectionCount; row++)
                 {
-                    PoseResult pose = Frame(animations, animation, 0, row);
-                    Assert.That(pose.Prop, Is.Not.Null);
-                    Assert.That(pose.Prop.Kind, Is.EqualTo(PropKind.Gun));
-                    Assert.That(pose.LeftGrip, Is.EqualTo(1));
-                    Assert.That(pose.RightGrip, Is.EqualTo(1));
-                    foreach (int side in TestMath.Sides)
+                    for (int frame = 0; frame < info.FrameCount; frame++)
                     {
-                        double gap = DistanceToSegment(pose.Joints[JointNames.Hand(side)], pose.Prop.Base, pose.Prop.Tip);
-                        Assert.That(gap, Is.LessThan(0.06 * rig.HeadTopHeight / 1.5),
-                            $"{animation} row {row + 1}: the {(side > 0 ? "right" : "left")} hand is {gap:0.000} tiles from the gun");
+                        PoseResult pose = Frame(animations, animation, frame, row);
+                        string what = $"{animation} row {row + 1} frame {frame + 1}";
+                        Assert.That(pose.Prop, Is.Not.Null);
+                        Assert.That(pose.Prop.Kind, Is.EqualTo(PropKind.Gun));
+                        Assert.That(pose.LeftGrip, Is.EqualTo(1));
+                        Assert.That(pose.RightGrip, Is.EqualTo(1));
+                        double gap = DistanceToSegment(pose.Joints[JointNames.Hand(1)], pose.Prop.Base, pose.Prop.Tip);
+                        Assert.That(gap, Is.LessThan(0.06 * size), $"{what}: the right hand is {gap:0.000} tiles from the gun");
+                        // the support hand closes round the gun just under its axis, however short the arm
+                        Vec3 under = pose.Prop.Up * (0.02 * size);
+                        double miss = DistanceToSegment(HumanoidArmTests.Fist(rig, animations, pose, -1), pose.Prop.Base - under,
+                            pose.Prop.Tip - under);
+                        Assert.That(miss, Is.LessThan(0.002 * size), $"{what}: the left fist is {miss:0.000} tiles from the gun");
                     }
                 }
             }
@@ -166,11 +172,16 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
         {
             HumanoidAnimations animations = Animations(input, out HumanoidRig rig);
             PoseResult impact = Frame(animations, AnimationSpec.Mine, AnimationSpec.MineImpactFrame - 1);
-            PoseResult raised = Frame(animations, AnimationSpec.Mine, 5);
             Assert.That(impact.Prop.Kind, Is.EqualTo(PropKind.Pickaxe));
             Assert.That(impact.Prop.Tip.Z, Is.LessThan(rig.HipsHeight * 0.6), "the pick head comes down");
             Assert.That(impact.Prop.Tip.Y, Is.GreaterThan(0), "in front of the body");
-            Assert.That(raised.Prop.Tip.Z, Is.GreaterThan(raised.Joints[JointNames.NeckBase].Z), "raised above the shoulders");
+            // the wind-up, frames 4 to 8
+            for (int f = 3; f < 8; f++)
+            {
+                PoseResult raised = Frame(animations, AnimationSpec.Mine, f);
+                Assert.That(raised.Prop.Tip.Z, Is.GreaterThan(raised.Joints[JointNames.NeckBase].Z),
+                    $"frame {f + 1}: raised above the shoulders");
+            }
         }
 
         [TestCaseSource(nameof(Rigs))]

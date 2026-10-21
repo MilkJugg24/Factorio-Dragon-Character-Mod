@@ -85,7 +85,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         public PropPose Prop { get; set; }
 
-        /// <summary>Finger curl, 0 = relaxed open hand, 1 = closed around a handle.</summary>
+        /// <summary>
+        /// Finger curl, 0 = relaxed open hand, 1 = closed around a handle. Fingers curl about the width of the
+        /// palm (the Hand bone's rest +y, model space, in the palms-down T-pose), so a pose that closes a hand round
+        /// a handle turns that axis along the handle.
+        /// </summary>
         public double LeftGrip { get; set; }
         public double RightGrip { get; set; }
 

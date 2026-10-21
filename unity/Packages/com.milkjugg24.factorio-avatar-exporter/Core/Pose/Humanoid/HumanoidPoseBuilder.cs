@@ -21,6 +21,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         // a ball target this close to where the ankle ended up gives the foot no direction to aim along
         private const double MinFootAim = 1e-9;
 
+        // a grip axis must be at least this far (sine of the angle) from the hand direction to give the hand a roll
+        private const double MinGripAxis = 1e-6;
+
         private static readonly int[] Sides = { 1, -1 };
         private static readonly HumanBone[] TorsoBones = { HumanBone.Spine, HumanBone.Chest, HumanBone.UpperChest };
 
@@ -111,9 +114,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// bent towards <paramref name="pole"/> (a direction; when it is along the arm, the elbow bends the way it
         /// does in the T-pose). The hand continues the forearm, or points along <paramref name="handDirection"/>
         /// (wrist towards fingers) when given; <paramref name="grip"/> curls the fingers, from 0 (open) to 1
-        /// (closed).
+        /// (closed). The hand turns from the forearm without rolling, or, when <paramref name="gripAxis"/> is given
+        /// (it needs <paramref name="handDirection"/>), rolls about its direction so that the width of its palm,
+        /// from the little finger to the thumb (+y in the palms-down T-pose, both hands), lies along the part of
+        /// <paramref name="gripAxis"/> perpendicular to the fingers: closed fingers curl about that axis, so a
+        /// handle along it runs through the fist.
         /// </summary>
-        public HumanoidPoseBuilder SetArm(int side, Vec3 handTarget, Vec3 pole, Vec3? handDirection = null, double grip = 0)
+        public HumanoidPoseBuilder SetArm(int side, Vec3 handTarget, Vec3 pole, Vec3? handDirection = null, double grip = 0,
+            Vec3? gripAxis = null)
         {
             HumanoidArgs.CheckSide(side);
             HumanoidArgs.CheckFinite(handTarget, nameof(handTarget));
@@ -130,7 +138,19 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             {
                 throw new ArgumentOutOfRangeException(nameof(grip), grip, "grip must be between 0 and 1");
             }
-            armTargets[Index(side)] = new ArmTarget(handTarget, pole, handDirection, grip);
+            if (gripAxis.HasValue)
+            {
+                HumanoidArgs.CheckFinite(gripAxis.Value, nameof(gripAxis));
+                if (!handDirection.HasValue)
+                {
+                    throw new ArgumentException("gripAxis needs a handDirection", nameof(gripAxis));
+                }
+                if (Vec3.Cross(handDirection.Value.Normalized, gripAxis.Value.Normalized).Length < MinGripAxis)
+                {
+                    throw new ArgumentException("gripAxis must not be zero or along handDirection", nameof(gripAxis));
+                }
+            }
+            armTargets[Index(side)] = new ArmTarget(handTarget, pole, handDirection, grip, gripAxis);
             return this;
         }
 
@@ -243,7 +263,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             LimbChain chain = arms[Index(side)];
             LimbPose limb = chain.Solve(torso.Position(HumanBoneHierarchy.UpperArm(side)), target.Hand, target.Pole);
             Quat hand = limb.Lower;
-            if (target.Direction.HasValue)
+            if (target.GripAxis.HasValue)
+            {
+                // the rest hand continues the rest forearm with the width of its palm along +y
+                hand = HumanoidFrames.Map(chain.RestLower, Vec3.UnitY, target.Direction.Value, target.GripAxis.Value);
+            }
+            else if (target.Direction.HasValue)
             {
                 // the rest hand continues the rest forearm: turn it from there to the wanted direction
                 hand = (Quat.FromTo(limb.Lower.Rotate(chain.RestLower), target.Direction.Value) * hand).Normalized;
@@ -295,13 +320,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             public readonly Vec3 Pole;
             public readonly Vec3? Direction;
             public readonly double Grip;
+            public readonly Vec3? GripAxis;
 
-            public ArmTarget(Vec3 hand, Vec3 pole, Vec3? direction, double grip)
+            public ArmTarget(Vec3 hand, Vec3 pole, Vec3? direction, double grip, Vec3? gripAxis)
             {
                 Hand = hand;
                 Pole = pole;
                 Direction = direction;
                 Grip = grip;
+                GripAxis = gripAxis;
             }
         }
 

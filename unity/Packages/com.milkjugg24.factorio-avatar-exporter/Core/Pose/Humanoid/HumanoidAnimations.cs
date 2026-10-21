@@ -178,9 +178,39 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             }
         }
 
+        /// <summary>Distance from the wrist to the middle of a closed fist, as a fraction of the arm length.</summary>
+        private const double FistPerArmLength = 0.14;
+
+        /// <summary>
+        /// How far from the wrist, along the fingers, a closed hand holds a handle (the middle of the fist), tiles:
+        /// <see cref="FistPerArmLength"/> of the arm length.
+        /// </summary>
+        public double GripOffset => FistPerArmLength * rig.ArmLength;
+
+        /// <summary>
+        /// Closes the hand of <paramref name="side"/> round a handle running through <paramref name="point"/>
+        /// along <paramref name="axis"/> (unit, towards the pick's head or the muzzle), the elbow bent towards
+        /// <paramref name="pole"/>. The fingers point across the handle away from the elbow, the wrist
+        /// <see cref="GripOffset"/> short of the handle, and the thumb side of the fist faces back along the
+        /// handle: the handle goes on from the hands away from the body, and turning the thumbs towards its far
+        /// end would roll the wrists further than forearms turn.
+        /// </summary>
+        private void HoldHandle(HumanoidPoseBuilder b, int side, Vec3 point, Vec3 axis, Vec3 pole)
+        {
+            Vec3 fingers = GripFingers(axis, pole);
+            b.SetArm(side, point - fingers * GripOffset, pole, fingers, 1, -axis);
+        }
+
+        /// <summary>
+        /// The direction across a handle along <paramref name="axis"/> (unit) away from <paramref name="pole"/>: where a
+        /// hand reaching for the handle with its elbow bent towards the pole points its fingers.
+        /// </summary>
+        private static Vec3 GripFingers(Vec3 axis, Vec3 pole) => -(pole - axis * Vec3.Dot(pole, axis)).Normalized;
+
         /// <summary>
         /// The gun held at the chest with both hands, aiming horizontally ahead of the torso
-        /// (model.hold_gun, with the support hand kept within the arm's reach).
+        /// (model.hold_gun, with the support hand kept within the arm's reach). The trigger hand points along
+        /// the gun as on a pistol grip; the support hand closes round the gun (<see cref="HoldHandle"/>).
         /// </summary>
         private void HoldGun(HumanoidPoseBuilder b, Quat chest)
         {
@@ -190,38 +220,69 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             Vec3 leftShoulder = Shoulder(b, -1);
             // the stock against the right side of the chest, a little below the shoulder
             Vec3 stock = rightShoulder - right * (0.04 * sizeScale) + aim * (0.05 * sizeScale) - Vec3.UnitZ * (0.07 * sizeScale);
-            double length = 0.52 * sizeScale;
-            Vec3 muzzle = stock + aim * length;
             Vec3 trigger = stock + aim * (0.13 * sizeScale) - Vec3.UnitZ * (0.035 * sizeScale);
             // the support hand holds the gun as far forward as its arm reaches (short-armed avatars hold it
             // nearer the trigger)
+            Vec3 supportPole = -chest.Forward * 0.2 - chest.Right * 0.7 - Vec3.UnitZ * 0.8;
+            Vec3 toWrist = -GripFingers(aim, supportPole) * GripOffset;
             double reach = 0.95 * (rig.UpperArmLength(-1) + rig.ForearmLength(-1));
             Vec3 support = stock + aim * (0.31 * sizeScale) - Vec3.UnitZ * (0.02 * sizeScale);
-            for (double along = 0.31; along > 0.13 && Vec3.Distance(support, leftShoulder) > reach; along -= 0.01)
+            for (double along = 0.31; along > 0.13 && Vec3.Distance(support + toWrist, leftShoulder) > reach; along -= 0.01)
             {
                 support = stock + aim * (along * sizeScale) - Vec3.UnitZ * (0.02 * sizeScale);
             }
+            // still out of reach (short arms, wide shoulders): the whole gun moves towards the left shoulder,
+            // sideways and then towards the middle of the shoulders, as long as that brings the support hand
+            // nearer and the trigger stays within the right arm's reach (or gets no further out of it)
+            double triggerReach = 0.95 * (rig.UpperArmLength(1) + rig.ForearmLength(1));
+            void Shift(Vec3 direction)
+            {
+                Vec3 step = direction.Normalized * (0.002 * sizeScale);
+                while (Vec3.Distance(support + toWrist, leftShoulder) > reach
+                       && Vec3.Distance(support + toWrist + step, leftShoulder) < Vec3.Distance(support + toWrist, leftShoulder)
+                       && Vec3.Distance(trigger + step, rightShoulder)
+                       <= Math.Max(triggerReach, Vec3.Distance(trigger, rightShoulder)))
+                {
+                    stock += step;
+                    trigger += step;
+                    support += step;
+                }
+            }
+            Shift(-right);
+            Shift((rightShoulder + leftShoulder) * 0.5 - support);
             b.SetArm(1, trigger, -chest.Forward * 0.4 + chest.Right * 0.6 - Vec3.UnitZ * 0.8, aim, 1);
-            b.SetArm(-1, support, -chest.Forward * 0.2 - chest.Right * 0.7 - Vec3.UnitZ * 0.8, aim, 1);
+            HoldHandle(b, -1, support, aim, supportPole);
             Vec3 up = Vec3.Cross(right, aim).Normalized;
-            b.SetProp(new PropPose(PropKind.Gun, stock, muzzle, up));
+            b.SetProp(new PropPose(PropKind.Gun, stock, stock + aim * (0.52 * sizeScale), up));
         }
 
         /// <summary>
-        /// The pickaxe with its handle at <paramref name="alpha"/> radians from forward-horizontal, up
-        /// positive (model.hold_pick).
+        /// How much of the hands' reach behind the head goes over it instead when the pick is raised all the way
+        /// (they also rise by 0.12 arm lengths times this).
         /// </summary>
-        private void HoldPick(HumanoidPoseBuilder b, Quat chest, double alpha)
+        private const double PickWindUp = 0.6;
+
+        /// <summary>
+        /// The pickaxe with its handle at <paramref name="alpha"/> radians from forward-horizontal, up
+        /// positive (model.hold_pick), both hands closed round it (<see cref="HoldHandle"/>). As the pick is
+        /// raised (<paramref name="raise"/> from 0 to 1), the hands, which model.hold_pick moves along the
+        /// handle to behind the shoulders, stay over the head (<see cref="PickWindUp"/>), and the elbows turn
+        /// from out, back and down to out, up and a little forward: shoulders do not reach further back.
+        /// </summary>
+        private void HoldPick(HumanoidPoseBuilder b, Quat chest, double alpha, double raise)
         {
             Vec3 forward = chest.Forward.Horizontal.Normalized;
             Vec3 handle = forward * Math.Cos(alpha) + Vec3.UnitZ * Math.Sin(alpha);
             Vec3 head = -forward * Math.Sin(alpha) + Vec3.UnitZ * Math.Cos(alpha);
             Vec3 side = Vec3.Cross(forward, Vec3.UnitZ).Normalized;
             Vec3 pivot = (Shoulder(b, 1) + Shoulder(b, -1)) * 0.5 + forward * (0.03 * sizeScale) - chest.Up * (0.015 * sizeScale);
-            Vec3 grip = pivot + handle * (0.73 * rig.ArmLength);
-            b.SetArm(1, grip + side * (0.035 * sizeScale), -forward * 0.3 + side * 0.8 - Vec3.UnitZ * 0.5, handle, 1);
-            b.SetArm(-1, grip - side * (0.035 * sizeScale) - handle * (0.07 * sizeScale), -forward * 0.3 - side * 0.8 - Vec3.UnitZ * 0.5,
-                handle, 1);
+            Vec3 reach = handle * (0.73 * rig.ArmLength);
+            double back = Math.Min(0, Vec3.Dot(reach, forward));
+            Vec3 grip = pivot + reach - forward * (back * PickWindUp * raise)
+                        + Vec3.UnitZ * (0.12 * rig.ArmLength * PickWindUp * raise);
+            Vec3 bend = Vec3.Lerp(-forward * 0.3 - Vec3.UnitZ * 0.5, forward * 0.2 + Vec3.UnitZ * 0.6, raise);
+            HoldHandle(b, 1, grip, handle, side * 0.8 + bend);
+            HoldHandle(b, -1, grip - handle * (0.07 * sizeScale), handle, -side * 0.8 + bend);
             b.SetProp(new PropPose(PropKind.Pickaxe, grip - handle * (0.10 * sizeScale), grip + handle * (0.46 * sizeScale), head));
         }
 
@@ -315,7 +376,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             var pelvis = new Vec3(0, -0.02 * legScale - 0.08 * legScale * crouch,
                 rig.HipsHeight - 0.06 * rig.LegLength - 0.1 * rig.LegLength * crouch + 0.03 * legScale * raise);
             HumanoidPoseBuilder b = Torso(pelvis, lean, headPitch: 0.15 - 0.25 * (lean - 0.1));
-            HoldPick(b, ChestFrame(lean), alpha);
+            HoldPick(b, ChestFrame(lean), alpha, raise);
             foreach (int side in Sides)
             {
                 Vec3 rest = rig.Ball(side);

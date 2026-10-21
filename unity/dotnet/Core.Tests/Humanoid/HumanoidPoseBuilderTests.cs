@@ -308,6 +308,51 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
         }
 
         [Test]
+        public void GripAxesRollTheHandAboutItsDirection()
+        {
+            var rng = new Random(63);
+            for (int i = 0; i < 300; i++)
+            {
+                HumanoidRig rig = TestRigs.Random(rng);
+                PoseTargets targets = PoseTargets.RandomReachable(rig, rng, rng.Next(2) == 0);
+                HumanoidPoseBuilder builder = targets.ApplyLimbs(targets.ApplyTorso(new HumanoidPoseBuilder(rig)));
+                PoseResult withoutAxes = builder.Build();
+                var directions = new Vec3[2];
+                var axes = new Vec3[2];
+                foreach (int side in TestMath.Sides)
+                {
+                    ArmTargets arm = targets.Arm(side);
+                    Vec3 direction = TestMath.RandomUnit(rng) * TestMath.Uniform(rng, 0.5, 2);
+                    Vec3 axis = direction + TestMath.RandomUnit(rng) * TestMath.Uniform(rng, 0.2, 3);
+                    builder.SetArm(side, arm.Hand, arm.Pole, direction, arm.Grip, axis);
+                    directions[PoseTargets.Index(side)] = direction;
+                    axes[PoseTargets.Index(side)] = axis;
+                }
+                PoseResult pose = builder.Build();
+                foreach (int side in TestMath.Sides)
+                {
+                    Quat hand = pose.WorldDeltas[HumanBoneHierarchy.Hand(side)];
+                    Vec3 direction = directions[PoseTargets.Index(side)];
+                    Vec3 restHand = rig.Rest(HumanBoneHierarchy.Hand(side)) - rig.Rest(HumanBoneHierarchy.LowerArm(side));
+                    TestMath.AssertClose(hand.Rotate(restHand.Normalized), direction.Normalized, Eps, "hand direction");
+                    // the width of the rest palm, +y (its part across the rest hand), turns along the grip axis
+                    TestMath.AssertClose(hand.Rotate(TestMath.Perpendicular(Vec3.UnitY, restHand)),
+                        TestMath.Perpendicular(axes[PoseTargets.Index(side)], direction), Eps, "palm width");
+                    // the arm itself is posed as without the axis
+                    foreach (HumanBone bone in new[] { HumanBoneHierarchy.UpperArm(side), HumanBoneHierarchy.LowerArm(side) })
+                    {
+                        Assert.That(pose.WorldDeltas[bone], Is.EqualTo(withoutAxes.WorldDeltas[bone]), bone.ToString());
+                    }
+                }
+            }
+            var b = new HumanoidPoseBuilder(HumanoidRig.Measure(SyntheticRigs.Generic(1.7)));
+            Assert.Throws<ArgumentException>(() => b.SetArm(1, Vec3.Zero, Vec3.UnitY, null, 1, Vec3.UnitZ), "no hand direction");
+            Assert.Throws<ArgumentException>(() => b.SetArm(1, Vec3.Zero, Vec3.UnitY, Vec3.UnitX, 1, Vec3.Zero), "zero");
+            Assert.Throws<ArgumentException>(() => b.SetArm(1, Vec3.Zero, Vec3.UnitY, Vec3.UnitX, 1, Vec3.UnitX * -3), "along the hand");
+            Assert.Throws<ArgumentException>(() => b.SetArm(-1, Vec3.Zero, Vec3.UnitY, Vec3.UnitX, 1, new Vec3(0, double.NaN, 0)), "NaN");
+        }
+
+        [Test]
         public void DeltasAreUnitQuaternionsOfBonesTheRigHas()
         {
             foreach (Case c in RandomCases(59, 300))
