@@ -48,3 +48,6 @@ The most useful set is one avatar using Poiyomi, one using lilToon, and any plai
 
 Outfits added with Modular Avatar or VRCFury are only merged into the avatar in Play mode, so they may be
 missing from the spike's renders. That is expected for now.
+
+The spike can also run without opening the Editor, for testing several avatars in one go:
+`tests/run_unity_spike.ps1` in the repository does that (see `tests/UNITY-SPIKE.md` there).

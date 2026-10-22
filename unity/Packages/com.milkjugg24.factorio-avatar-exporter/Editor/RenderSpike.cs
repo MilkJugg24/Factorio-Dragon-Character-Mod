@@ -62,6 +62,90 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
         }
 
+        /// <summary>
+        /// Command-line entry point, for tests/run_unity_spike.ps1:
+        /// <c>Unity -batchmode -projectPath &lt;project&gt; -executeMethod
+        /// MilkJugg24.FactorioAvatarExporter.Editor.RenderSpike.RenderFromCommandLine [-spikeScene &lt;scene&gt;]
+        /// [-spikeAvatar &lt;prefab or object name&gt;] [-spikeOut &lt;folder&gt;]</c>. Renders a prefab
+        /// (Assets/....prefab), the top-level object of that name in the scene, or with only a scene every
+        /// active humanoid avatar at its top level, each into &lt;folder&gt;/&lt;avatar&gt;/, writes
+        /// summary.txt and exits Unity with 1 when anything failed.
+        /// </summary>
+        public static void RenderFromCommandLine()
+        {
+            string[] args = Environment.GetCommandLineArgs();
+            string Arg(string name)
+            {
+                int i = Array.IndexOf(args, name);
+                return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
+            }
+            string scenePath = Arg("-spikeScene");
+            string avatarName = Arg("-spikeAvatar");
+            string output = Arg("-spikeOut") ?? Path.Combine(Path.GetDirectoryName(Application.dataPath), "FactorioAvatarSpike");
+            var summary = new StringBuilder();
+            int failed = 0;
+            try
+            {
+                var sources = new List<GameObject>();
+                if (avatarName != null && avatarName.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+                {
+                    GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(avatarName);
+                    if (prefab == null)
+                    {
+                        throw new ArgumentException("no prefab at " + avatarName);
+                    }
+                    sources.Add(prefab);
+                }
+                else if (scenePath != null)
+                {
+                    Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                    foreach (GameObject root in scene.GetRootGameObjects())
+                    {
+                        if (avatarName != null ? root.name == avatarName : IsActiveHumanoid(root))
+                        {
+                            sources.Add(root);
+                        }
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException("pass -spikeScene <scene>, -spikeAvatar <prefab>, or both");
+                }
+                if (sources.Count == 0)
+                {
+                    throw new ArgumentException("no avatar found" + (avatarName != null ? " named " + avatarName : " in " + scenePath));
+                }
+                foreach (GameObject source in sources)
+                {
+                    summary.AppendLine("== " + source.name);
+                    try
+                    {
+                        summary.Append(RenderTo(source, Path.Combine(output, SafeFileName(source.name))));
+                    }
+                    catch (Exception e)
+                    {
+                        failed++;
+                        summary.AppendLine("FAILED: " + e);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                failed++;
+                summary.AppendLine("FAILED: " + e);
+            }
+            Directory.CreateDirectory(output);
+            File.WriteAllText(Path.Combine(output, "summary.txt"), summary.ToString());
+            Debug.Log("Factorio avatar spike:\n" + summary);
+            EditorApplication.Exit(failed == 0 ? 0 : 1);
+        }
+
+        private static bool IsActiveHumanoid(GameObject root)
+        {
+            Animator animator = root.activeInHierarchy ? root.GetComponent<Animator>() : null;
+            return animator != null && animator.avatar != null && animator.avatar.isHuman;
+        }
+
         private static string RenderTo(GameObject source, string folder)
         {
             var clock = Stopwatch.StartNew();
@@ -323,6 +407,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             camera.allowHDR = true;
             camera.allowMSAA = false;
             camera.useOcclusionCulling = false;
+            camera.depthTextureMode = DepthTextureMode.Depth; // for shader effects that read depth (Poiyomi depth rim, soft fades)
             return camera;
         }
 
