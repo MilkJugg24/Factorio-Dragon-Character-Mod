@@ -187,11 +187,11 @@ class Painter:
             md.text((cx, (top + bottom) / 2 - self.px(6)), label, fill=(0, 0, 0, 255), font=big, anchor="mm")
             md.text((cx, (top + bottom) / 2 + self.px(12)), f"f{frame + 1}", fill=(0, 0, 0, 255), font=small,
                     anchor="mm")
-        shadow = self.shadow(anim, 1.0 + 0.1 * math.sin(phase * 2 * math.pi), hole=False)
-        flipped = self.shadow(anim, 1.0 + 0.1 * math.sin(phase * 2 * math.pi), hole=True)
+        shadow = self.shadow(anim, 1.0 + 0.1 * math.sin(phase * 2 * math.pi), hole=False, frame=frame)
+        flipped = self.shadow(anim, 1.0 + 0.1 * math.sin(phase * 2 * math.pi), hole=True, frame=frame)
         return base, mask, shadow, flipped
 
-    def shadow(self, anim, stretch, hole):
+    def shadow(self, anim, stretch, hole, frame=None):
         w, h = self.shadow_size(anim)
         img = Image.new("RGBA", (w, h))
         d = ImageDraw.Draw(img)
@@ -200,6 +200,11 @@ class Painter:
         if hole:
             # the flipped shadow has a gap, so it can be told apart from the normal one
             d.rectangle([w / 2 - self.px(4), 0, w / 2 + self.px(4), h], fill=(0, 0, 0, 0))
+        if frame is not None:
+            # the frame number cut out of the shadow, to see whether the game draws the shadow layer in
+            # step with the body (whose label shows the same number)
+            d.text((w / 2 + self.px(22), h / 2), f"{frame + 1}", fill=(0, 0, 0, 0), font=font(self.px(16)),
+                   anchor="mm")
         return img
 
     def corpse(self):
