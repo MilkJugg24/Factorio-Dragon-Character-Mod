@@ -1,6 +1,9 @@
 # Publishes a GitHub release with the installable mod zip.
 #
-# Either push a version tag (e.g. v0.1.0), or run this workflow by hand from
+# Runs by itself after CI passes on main: it publishes a release when the version is new and does
+# nothing when that version is already released, so bumping the version is all a release takes.
+#
+# Otherwise either push a version tag (e.g. v0.1.0), or run this workflow by hand from
 # the Actions tab ("Run workflow"), which creates the tag v<version> from
 # dragon-character/info.json. A pushed tag must match that version.
 name: Release
@@ -9,6 +12,10 @@ on:
   push:
     tags:
       - "v*"
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -16,9 +23,15 @@ permissions:
 
 jobs:
   release:
+    # after CI, only when it passed on a push to main
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
+    env:
+      COMMIT: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.COMMIT }}
 
       - name: Work out the release tag
         id: tag
@@ -44,8 +57,8 @@ jobs:
           TAG: ${{ steps.tag.outputs.tag }}
         run: |
           if gh release view "$TAG" > /dev/null 2>&1; then
-            echo "Release $TAG already exists; bump the version in info.json for a new one."
-            exit 1
+            echo "Release $TAG already exists; bump the version in info.json to publish a new one."
+            exit 0
           fi
           zip=$(ls build/dragon-character_*.zip)
           cat > notes.md <<NOTES
@@ -58,6 +71,6 @@ jobs:
           Requires Factorio 2.0. Space Age is optional (it adds wing-flapping flight with mech armor).
           NOTES
           gh release create "$TAG" "$zip" \
-            --target "$GITHUB_SHA" \
+            --target "$COMMIT" \
             --title "Dragon Character $TAG" \
             --notes-file notes.md

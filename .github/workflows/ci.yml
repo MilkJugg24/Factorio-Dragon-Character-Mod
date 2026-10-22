@@ -1,0 +1,68 @@
+# Checks every push and pull request: the exporter Core's tests, the Python tools' tests, the dragon
+# sprites, and the mod itself in a headless Factorio (base game and Space Age, with avatar packs).
+# The mod zip and the exporter's .unitypackage are kept as build artifacts of each run.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Exporter Core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Python packages for the cross-checks
+        run: pip install numpy pillow
+      - name: Test
+        run: dotnet test unity/dotnet/Core.Tests
+      - name: Build the .unitypackage
+        run: python3 tools/make_unitypackage.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unitypackage
+          path: build/*.unitypackage
+
+  mod:
+    name: Mod in headless Factorio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Python packages
+        run: pip install numpy pillow
+      - name: Python tool tests
+        run: python3 -m unittest discover -s tests -p "test_*.py"
+      - name: Dragon sprites
+        run: python3 tools/validate_sprites.py
+      - name: Download headless Factorio
+        run: |
+          mkdir -p "$RUNNER_TEMP/factorio-dl"
+          curl -fsSL -o "$RUNNER_TEMP/factorio.tar.xz" "https://factorio.com/get-download/stable/headless/linux64"
+          tar -xJf "$RUNNER_TEMP/factorio.tar.xz" -C "$RUNNER_TEMP/factorio-dl"
+          echo "FACTORIO=$RUNNER_TEMP/factorio-dl/factorio" >> "$GITHUB_ENV"
+      - name: Base game
+        run: tests/run_headless.sh "$FACTORIO" --test-packs
+      - name: Space Age
+        run: tests/run_headless.sh "$FACTORIO" --space-age --test-packs
+      - name: Broken packs are rejected
+        run: tests/run_headless.sh "$FACTORIO" --broken-packs
+      - name: Exporter pipeline (harness pack in Factorio)
+        run: tests/run_avatar_pipeline.sh "$FACTORIO" --space-age
+      - name: Build the mod zip
+        run: tools/build_mod.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mod-zip
+          path: build/dragon-character_*.zip
