@@ -30,14 +30,15 @@ def load(folder, frame):
     return Image.open(path).convert("RGB") if os.path.exists(path) else None
 
 
-def label_lanes(image, labels, ppt, lane_tiles, vertical_lanes):
-    """Writes each subject's label next to its lane (lanes are centred on the screenshot)."""
+def label_lanes(image, labels, ppt, lane_tiles, vertical_lanes, room=0):
+    """Writes each subject's label next to its lane (lanes are centred on the screenshot, but for
+    `room` tiles of extra view above them)."""
     draw = ImageDraw.Draw(image)
     n = len(labels)
     for i, label in enumerate(labels):
         offset = (i + 1 - (n + 1) / 2) * lane_tiles
         if vertical_lanes:  # lanes stacked top to bottom (travel east or west)
-            y = image.height / 2 + (offset + 0.75) * ppt - 1.6 * ppt
+            y = image.height / 2 + (offset + 0.75 + room / 2) * ppt - 1.6 * ppt
             draw.text((4, max(0, y)), label, fill=TEXT)
         else:  # lanes side by side (travel north or south)
             x = image.width / 2 + offset * ppt - 0.9 * ppt
@@ -72,11 +73,14 @@ def strip(frames):
 def scene_frames(folder, runs, ppt, lane_tiles):
     """The frames of one scene, ready to animate, or None when no screenshot exists."""
     first = runs[0]
-    vertical = "east" in first["scene"] or "west" in first["scene"]
+    # older manifests have no "travel": the scene names held the direction then
+    travel = first.get("travel") or ("east" if "east" in first["scene"] or "west" in first["scene"] else "south")
+    vertical = travel in ("east", "west")
     if not first["solo"]:
         labels = [s["label"] for s in first["subjects"]]
         frames = [load(folder, f) for f in first["frames"] or []]
-        frames = [label_lanes(f, labels, ppt, lane_tiles, vertical) for f in frames if f is not None]
+        frames = [label_lanes(f, labels, ppt, lane_tiles, vertical, first.get("room", 0))
+                  for f in frames if f is not None]
         return frames or None
     runs = [r for r in runs if r["frames"]]
     if not runs:
@@ -107,6 +111,8 @@ def problems(run):
             found.append(f"{label} mined nothing")
         if name.startswith("fly") and s.get("flew") is False:
             found.append(f"{label} never took off")
+        if s.get("landed") is False:
+            found.append(f"{label} never landed")
         if name == "corpse" and s.get("corpse") is False:
             found.append(f"{label} left no corpse")
     return found

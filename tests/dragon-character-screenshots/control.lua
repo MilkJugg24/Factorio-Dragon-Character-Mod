@@ -21,29 +21,40 @@ local PIXELS_PER_TILE = 64 -- zoom 2 shows the sprites at their own resolution
 local LANE = 3.5 -- tiles between subjects
 local VIEW_ALONG = 5 -- tiles of view along the direction of travel
 local START_DELAY = 60
-local TARGET_DISTANCE = 16 -- tiles north of a shooting subject: in the gun's range, out of the picture
+local TARGET_DISTANCE = 16 -- tiles from a shooting subject: in the gun's range, out of the picture
+local FLIGHT_ROOM = 3 -- extra tiles of view above the lanes in flight scenes, for the flight height
 
 local D = defines.direction
 
 -- Scenes, in order. `move`: walking direction. `face`: standing subjects face this way (they walk
 -- one tick that way, then stop). Screenshots every `every` ticks from tick `from` to `length`;
 -- 2-tick steps give GIFs at the game's real speed (30 fps). `solo`: needs the player, one run per
--- subject.
+-- subject. `gun`: shoots at a target in direction `aim` (default north). `fly`: wears mech armor and
+-- walks onto a lake that starts `water_from` tiles ahead and is `water_width` tiles wide (default
+-- 40, more than the scene covers); `stop_at`: stops walking at that tick.
 local SCENES = {
   { name = "idle-south", face = D.south, length = 50, from = 40, every = 10 },
   { name = "run-east", move = D.east, length = 100, from = 40, every = 2 },
   { name = "run-south", move = D.south, length = 90, from = 40, every = 2 },
   { name = "run-gun-east-aim-north", move = D.east, gun = true, solo = true, length = 100, from = 40, every = 2 },
   { name = "run-gun-west-aim-north", move = D.west, gun = true, solo = true, length = 100, from = 40, every = 2 },
+  -- the gun in view: aimed the way the subject runs, and across it
+  { name = "run-gun-east-aim-east", move = D.east, aim = D.east, gun = true, solo = true, length = 100, from = 40, every = 2 },
+  { name = "run-gun-east-aim-south", move = D.east, aim = D.south, gun = true, solo = true, length = 100, from = 40, every = 2 },
+  -- aimed west the game mirrors the sprite and draws flipped_shadow_running_with_gun
+  { name = "run-gun-north-aim-west", move = D.north, aim = D.west, gun = true, solo = true, length = 100, from = 40, every = 2 },
   -- one ore takes 120 ticks at the engineer's mining speed
   { name = "mine-east", face = D.east, mine = true, solo = true, length = 160, from = 100, every = 2 },
   { name = "fly-east", move = D.east, fly = true, water_from = 4, stop_at = 130, length = 190, from = 20, every = 3 },
+  -- across a narrow lake: take off, fly over it and land on the far side
+  { name = "fly-land-east", move = D.east, fly = true, water_from = 4, water_width = 7, length = 190, from = 20, every = 3 },
   { name = "corpse", face = D.south, die = 10, length = 40, from = 39, every = 10 },
 }
 
 local DIRECTION_VECTORS = {
   [D.north] = { 0, -1 }, [D.east] = { 1, 0 }, [D.south] = { 0, 1 }, [D.west] = { -1, 0 },
 }
+local DIRECTION_NAMES = { [D.north] = "north", [D.east] = "east", [D.south] = "south", [D.west] = "west" }
 
 -- engineer, dragon, one dragon outfit variant, then every avatar pack character
 local function subjects()
@@ -137,6 +148,14 @@ local function lane_offset(index, count, along)
   return { offset, 0 }
 end
 
+-- where a shooting subject at `position` aims: TARGET_DISTANCE tiles in the scene's `aim` direction
+local function target_position(scene, position)
+  local aim = DIRECTION_VECTORS[scene.aim or D.north]
+  local x = position.x or position[1]
+  local y = position.y or position[2]
+  return { x + aim[1] * TARGET_DISTANCE, y + aim[2] * TARGET_DISTANCE }
+end
+
 local function setup(run)
   local scene = run.scene
   local surface = game.surfaces[SURFACE]
@@ -160,7 +179,8 @@ local function setup(run)
   end
   if scene.fly then
     -- a lake ahead of the start line (fly scenes go east): walking onto it with flying armor takes off
-    set_tiles(surface, "water", back + scene.water_from, -40, back + scene.water_from + 40, 40)
+    local from = back + scene.water_from
+    set_tiles(surface, "water", from, -40, from + (scene.water_width or 40), 40)
     if not prototypes.item["mech-armor"] then
       state.notes[#state.notes + 1] = "no mech-armor (Space Age not enabled): the subjects stop at the water"
     end
@@ -173,10 +193,10 @@ local function setup(run)
     if scene.gun then
       character.get_inventory(defines.inventory.character_guns).insert({ name = "submachine-gun" })
       character.get_inventory(defines.inventory.character_ammo).insert({ name = "firearm-magazine", count = 50 })
-      -- something to shoot at, far enough north to stay out of the screenshots (characters don't
+      -- something to shoot at, far enough away to stay out of the screenshots (characters don't
       -- shoot at indestructible entities, so it is healed every tick instead)
       entry.target = surface.create_entity({
-        name = "screenshot-engineer", position = { position[1], position[2] - TARGET_DISTANCE }, force = "enemy",
+        name = "screenshot-engineer", position = target_position(scene, position), force = "enemy",
       })
     end
     if scene.fly and prototypes.item["mech-armor"] then
@@ -211,8 +231,7 @@ local function drive(state)
         control.walking_state = { walking = false, direction = scene.move or scene.face }
       end
       if scene.gun and s.target.valid then
-        local p = c.position
-        s.target.teleport({ p.x, p.y - TARGET_DISTANCE })
+        s.target.teleport(target_position(scene, c.position))
         s.target.health = s.target.max_health
         -- aim at the nearest enemy, the target: selecting it does not work while it is off screen
         control.shooting_state = { state = defines.shooting.shooting_enemies, position = s.target.position }
@@ -226,6 +245,8 @@ local function drive(state)
       end
       if scene.fly and c.is_flying then
         s.flew = true
+      elseif s.flew and not s.landed_at then
+        s.landed_at = state.tick
       end
       if scene.die and state.tick == scene.die then
         s.died_at = c.position
@@ -243,13 +264,15 @@ local function screenshot(state)
   local anchor = first.character.valid and first.character.position or first.died_at
   local along = state.along
   local across = #state.entries * LANE + 1
+  -- a flying character is drawn higher up the screen: more view above, the lanes stay put
+  local room = scene.fly and FLIGHT_ROOM or 0
   local position, size
   if along[1] ~= 0 then
-    position = { anchor.x, -0.75 }
-    size = { VIEW_ALONG, across }
+    position = { anchor.x, -0.75 - room / 2 }
+    size = { VIEW_ALONG, across + room }
   else
-    position = { 0, anchor.y - 0.75 }
-    size = { across, VIEW_ALONG }
+    position = { 0, anchor.y - 0.75 - room / 2 }
+    size = { across, VIEW_ALONG + room }
   end
   local n = #state.frames + 1
   local file = string.format("%s/%s%s-%03d.png", scene.name, scene.name, run.tag and ("-" .. run.tag) or "", n)
@@ -273,6 +296,8 @@ local function summary(state)
   local result = {
     scene = scene.name, every = scene.every, solo = scene.solo or false, notes = state.notes,
     frames = state.frames, subjects = {},
+    -- for laying out the lanes: the direction of travel and the extra view above them, in tiles
+    travel = DIRECTION_NAMES[scene.move or scene.face], room = scene.fly and FLIGHT_ROOM or 0,
   }
   for i, s in ipairs(state.entries) do
     local info = { label = s.label, prototype = s.name }
@@ -290,6 +315,11 @@ local function summary(state)
     end
     if scene.fly then
       info.flew = s.flew or false
+      if scene.water_width then
+        -- a lake with a far side: the subject should be back on the ground there
+        info.landed = s.landed_at ~= nil
+        info.landed_at_tick = s.landed_at
+      end
     end
     if s.died_at then
       info.corpse = #game.surfaces[SURFACE].find_entities_filtered({

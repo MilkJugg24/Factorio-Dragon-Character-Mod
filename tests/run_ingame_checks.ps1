@@ -52,11 +52,22 @@ Copy-Item -Recurse (Join-Path $repo "dragon-character") (Join-Path $mods "dragon
 Copy-Item -Recurse (PathOf $repo "tests" "dragon-character-screenshots") (Join-Path $mods "dragon-character-screenshots")
 if ($Pack.Count -gt 0) {
     foreach ($p in $Pack) { Copy-Item -Recurse (Resolve-Path $p) $mods }
-} elseif ($python) {
-    & $python @pyArgs (PathOf $repo "tools" "avatar_pack" "make_test_pack.py") --out $mods --id test --flight --tint | Out-Null
-    if ($LASTEXITCODE -ne 0) { Write-Warning "could not make the test pack (pip install pillow); going on without packs" }
 } else {
-    Write-Warning "Python not found: no avatar pack in the checks (install Python with Pillow, or pass -Pack)"
+    if ($python) {
+        & $python @pyArgs (PathOf $repo "tools" "avatar_pack" "make_test_pack.py") --out $mods --id test --flight --tint | Out-Null
+        if ($LASTEXITCODE -ne 0) { Write-Warning "could not make the test pack (pip install pillow); going on without it" }
+    } else {
+        Write-Warning "Python not found: no test pack in the checks (install Python with Pillow, or pass -Pack)"
+    }
+    # a real pack from the exporter, drawn by its pack harness (no Unity needed)
+    if (Get-Command dotnet -ErrorAction SilentlyContinue) {
+        Write-Host "== building the harness pack"
+        & dotnet run --project (PathOf $repo "unity" "dotnet" "PackHarness") -c Release -- `
+            --out $mods --id harness-generic --title "Harness generic" --rig generic | Out-Null
+        if ($LASTEXITCODE -ne 0) { Write-Warning "could not build the harness pack; going on without it" }
+    } else {
+        Write-Warning ".NET SDK not found: no harness pack in the checks (install the .NET 8 SDK, or pass -Pack)"
+    }
 }
 
 # mod-list.json: base, the DLC (or not) and every mod in the folder

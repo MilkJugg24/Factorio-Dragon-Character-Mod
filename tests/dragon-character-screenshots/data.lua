@@ -3,4 +3,11 @@
 local engineer = table.deepcopy(data.raw["character"]["character"])
 engineer.name = "screenshot-engineer"
 engineer.hidden = true
-data:extend({ engineer })
+
+-- and of its corpse, which dragon-character restyles as well
+local corpse = table.deepcopy(data.raw["character-corpse"]["character-corpse"])
+corpse.name = "screenshot-engineer-corpse"
+corpse.hidden = true
+engineer.character_corpse = corpse.name
+
+data:extend({ engineer, corpse })

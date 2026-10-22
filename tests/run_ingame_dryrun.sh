@@ -30,7 +30,7 @@ PY
 printf '[path]\nread-data=__PATH__executable__/../../data\nwrite-data=%s\n' "$WORK" > "$WORK/config/config.ini"
 FACTORIO=("$FACTORIO_DIR/bin/x64/factorio" --config "$WORK/config/config.ini" --mod-directory "$WORK/mods")
 "${FACTORIO[@]}" --create "$WORK/checks.zip" > "$WORK/create.log" 2>&1 || { cat "$WORK/create.log"; exit 1; }
-"${FACTORIO[@]}" --benchmark "$WORK/checks.zip" --benchmark-ticks 1300 > "$WORK/run.log" 2>&1 || true
+"${FACTORIO[@]}" --benchmark "$WORK/checks.zip" --benchmark-ticks 1800 > "$WORK/run.log" 2>&1 || true
 grep -q "DRAGON-CHECKS: DONE" "$WORK/run.log" || { cat "$WORK/run.log"; echo "the scenes did not finish" >&2; exit 1; }
 
 python3 - "$WORK/script-output/dragon-checks/manifest.json" "$DLC" <<'PY'
@@ -45,6 +45,8 @@ for run in manifest["runs"]:
             problems.append(f"{name}: {label} hardly moved ({s.get('moved')})")
         if name.startswith("fly") and dlc and not s.get("flew"):
             problems.append(f"{name}: {label} never took off")
+        if dlc and s.get("landed") is False:
+            problems.append(f"{name}: {label} never landed")
         if name == "corpse" and not s.get("corpse"):
             problems.append(f"{name}: {label} left no corpse")
 labels = {s.get("label") for run in manifest["runs"] for s in run["subjects"]}
