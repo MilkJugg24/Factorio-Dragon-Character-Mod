@@ -92,7 +92,7 @@ return {
   tintable = false,              -- true: every animation has a "mask" layer tinted with the player colour
   flight = true,                 -- true: the flight animations below are all present
   timing = {                     -- optional, every field optional (defaults below)
-    distance_per_frame = 0.119,
+    distance_per_frame = 0.238,
     mine_impact_frame = 9,
     left_foot_frames = { 1 },
     right_foot_frames = { 7 },
@@ -168,7 +168,7 @@ return {
 
   | Field | Default |
   | --- | --- |
-  | `distance_per_frame` | 0.119 |
+  | `distance_per_frame` | 0.238 |
   | `mine_impact_frame` | `max(1, floor(mine frames x 9 / 12 + 0.5))` |
   | `left_foot_frames` | `{ 1 }` |
   | `right_foot_frames` | `{ floor(run frames / 2) + 1 }` |

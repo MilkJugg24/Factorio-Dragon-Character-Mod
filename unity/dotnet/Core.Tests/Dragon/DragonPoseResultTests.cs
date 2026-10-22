@@ -153,7 +153,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
             PoseResult expected = DragonPoses.Pose(AnimationSpec.FlyGun, BodyShape.Female, 0.25, 0.5).ToPoseResult();
             Assert.That(r.Joints, Is.EquivalentTo(expected.Joints));
             Assert.That(r.Prop.Tip, Is.EqualTo(expected.Prop.Tip));
-            Assert.That(source.Timing.DistancePerFrame, Is.EqualTo(0.119));
+            Assert.That(source.Timing.DistancePerFrame, Is.EqualTo(0.238));
             Assert.That(source.Timing.MineImpactFrame, Is.EqualTo(AnimationSpec.MineImpactFrame));
             Assert.That(source.Timing.LeftFootFrames, Is.EqualTo(new[] { 1 }));
             Assert.That(source.Timing.RightFootFrames, Is.EqualTo(new[] { 7 }));

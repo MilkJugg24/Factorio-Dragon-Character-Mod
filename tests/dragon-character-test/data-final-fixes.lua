@@ -130,7 +130,7 @@ if mods["dragon-avatar-small"] then
     local anim = c.animations[1]
     check(layer_count(anim.idle) == 2, "pack small: idle should have base and shadow")
     check(anim.idle.layers[1].scale == 1, "pack small: scale should be 1 at 32 pixels per tile")
-    check(c.distance_per_frame == 0.119, "pack small: default distance_per_frame")
+    check(c.distance_per_frame == 0.238, "pack small: default distance_per_frame")
     check(c.mining_with_tool_particles_animation_positions[1] == 6, "pack small: scaled mine impact frame")
     check(diff({ 1 }, c.running_sound_animation_positions, "") == nil, "pack small: default left foot frames")
     check(diff({ 4 }, c.moving_sound_animation_positions, "") == nil, "pack small: scaled right foot frames")

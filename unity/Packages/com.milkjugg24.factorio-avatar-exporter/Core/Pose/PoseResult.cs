@@ -103,7 +103,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     /// <summary>Timing values written to the pack (docs/avatar-pack-format.md, "timing").</summary>
     public sealed class PackTiming
     {
-        public double DistancePerFrame { get; set; } = 0.119;
+        public double DistancePerFrame { get; set; } = 0.238;
         public int MineImpactFrame { get; set; } = AnimationSpec.MineImpactFrame;
         public IReadOnlyList<int> LeftFootFrames { get; set; } = AnimationSpec.LeftFootFrames;
         public IReadOnlyList<int> RightFootFrames { get; set; } = AnimationSpec.RightFootFrames;

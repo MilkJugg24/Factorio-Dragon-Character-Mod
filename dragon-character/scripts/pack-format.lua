@@ -40,8 +40,10 @@ format.OPTIONAL_LAYERS = { ["run-gun"] = { "shadow-flipped" } }
 
 -- The dragon's timing, and the defaults for a pack's `timing` (see
 -- format.default_timing for the frame numbers).
+-- distance_per_frame: a 12-frame run cycle (two steps) covers 2.86 tiles,
+-- the vanilla engineer's stride (22 frames x 0.13), so the legs keep its pace.
 format.DEFAULT_TIMING = {
-  distance_per_frame = 0.119,
+  distance_per_frame = 0.238,
   mine_impact_frame = 9,
   left_foot_frames = { 1 },
   right_foot_frames = { 7 },

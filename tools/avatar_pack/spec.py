@@ -27,7 +27,7 @@ REQUIRED = ("idle", "idle-gun", "run", "run-gun", "mine", "corpse")
 FLIGHT = ("hover", "hover-gun", "fly", "fly-gun", "take-off")
 OPTIONAL_LAYERS = {"run-gun": ("shadow-flipped",)}
 
-DEFAULT_DISTANCE_PER_FRAME = 0.119
+DEFAULT_DISTANCE_PER_FRAME = 0.238
 
 
 def default_timing(run_frames, mine_frames):

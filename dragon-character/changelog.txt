@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.1
+Date: 2026-10-22
+  Bugfixes:
+    - The dragon's legs now run at the engineer's pace. Its run cycle covered half the ground of
+      the engineer's, so its legs moved twice as fast at every speed, and faster still on
+      concrete or with exoskeletons.
+---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 2026-10-21
   Features:

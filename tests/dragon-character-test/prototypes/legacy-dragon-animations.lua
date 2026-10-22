@@ -15,8 +15,8 @@ animations.mine_impact_frame = 9
 animations.left_foot_frames = { 1 }
 animations.right_foot_frames = { 7 }
 
--- One running cycle covers two steps of the vanilla engineer's length.
-animations.distance_per_frame = 0.119
+-- One running cycle (two steps) covers 2.86 tiles, the vanilla engineer's stride (22 frames x 0.13).
+animations.distance_per_frame = 0.238
 
 local speeds = {
   ["idle"] = 0.06,
