@@ -35,7 +35,8 @@ local SCENES = {
   { name = "run-south", move = D.south, length = 90, from = 40, every = 2 },
   { name = "run-gun-east-aim-north", move = D.east, gun = true, solo = true, length = 100, from = 40, every = 2 },
   { name = "run-gun-west-aim-north", move = D.west, gun = true, solo = true, length = 100, from = 40, every = 2 },
-  { name = "mine-east", face = D.east, mine = true, solo = true, length = 100, from = 40, every = 2 },
+  -- one ore takes 120 ticks at the engineer's mining speed
+  { name = "mine-east", face = D.east, mine = true, solo = true, length = 160, from = 100, every = 2 },
   { name = "fly-east", move = D.east, fly = true, water_from = 4, stop_at = 130, length = 190, from = 20, every = 3 },
   { name = "corpse", face = D.south, die = 10, length = 40, from = 39, every = 10 },
 }
@@ -150,6 +151,12 @@ local function setup(run)
       state.skipped = true
       return state
     end
+    -- the player can only take control of a character on its own surface; its own character stays
+    -- behind on the starting surface, out of the pictures
+    if state.player.surface ~= surface then
+      state.player.set_controller({ type = defines.controllers.spectator })
+      state.player.teleport({ 0, 0 }, surface)
+    end
   end
   if scene.fly then
     -- a lake ahead of the start line (fly scenes go east): walking onto it with flying armor takes off
@@ -166,11 +173,11 @@ local function setup(run)
     if scene.gun then
       character.get_inventory(defines.inventory.character_guns).insert({ name = "submachine-gun" })
       character.get_inventory(defines.inventory.character_ammo).insert({ name = "firearm-magazine", count = 50 })
-      -- something to shoot at, far enough north to stay out of the screenshots
+      -- something to shoot at, far enough north to stay out of the screenshots (characters don't
+      -- shoot at indestructible entities, so it is healed every tick instead)
       entry.target = surface.create_entity({
         name = "screenshot-engineer", position = { position[1], position[2] - TARGET_DISTANCE }, force = "enemy",
       })
-      entry.target.destructible = false
     end
     if scene.fly and prototypes.item["mech-armor"] then
       character.get_inventory(defines.inventory.character_armor).insert({ name = "mech-armor" })
@@ -206,12 +213,16 @@ local function drive(state)
       if scene.gun and s.target.valid then
         local p = c.position
         s.target.teleport({ p.x, p.y - TARGET_DISTANCE })
-        control.selected = s.target
-        control.shooting_state = { state = defines.shooting.shooting_selected, position = s.target.position }
+        s.target.health = s.target.max_health
+        -- aim at the nearest enemy, the target: selecting it does not work while it is off screen
+        control.shooting_state = { state = defines.shooting.shooting_enemies, position = s.target.position }
       end
       if scene.mine and state.tick > 2 and s.ore and s.ore.valid then
         control.selected = s.ore
-        control.mining_state = { mining = true, position = s.ore.position }
+        -- set once: setting it again may start the ore over
+        if not control.mining_state.mining then
+          control.mining_state = { mining = true, position = s.ore.position }
+        end
       end
       if scene.fly and c.is_flying then
         s.flew = true

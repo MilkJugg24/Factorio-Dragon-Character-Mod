@@ -33,6 +33,9 @@ if (-not (Test-Path $exe)) { throw "factorio.exe not found at $exe; pass -Factor
 if (-not $Out) { $Out = PathOf $repo "ingame-checks" (Get-Date -Format "yyyy-MM-dd-HHmm") }
 $dlc = (-not $NoSpaceAge) -and (Test-Path (PathOf $Factorio "data" "space-age"))
 $python = @("py", "python", "python3") | Where-Object { Get-Command $_ -ErrorAction SilentlyContinue } | Select-Object -First 1
+# py follows a script's "#!/usr/bin/env python3" line, which can find the Microsoft Store's python3
+# placeholder instead of Python; -3 makes it use the installed Python 3
+$pyArgs = @(if ($python -eq "py") { "-3" })
 
 
 $work = Join-Path ([IO.Path]::GetTempPath()) ("dragon-checks-" + [guid]::NewGuid().ToString("N").Substring(0, 8))
@@ -50,7 +53,7 @@ Copy-Item -Recurse (PathOf $repo "tests" "dragon-character-screenshots") (Join-P
 if ($Pack.Count -gt 0) {
     foreach ($p in $Pack) { Copy-Item -Recurse (Resolve-Path $p) $mods }
 } elseif ($python) {
-    & $python (PathOf $repo "tools" "avatar_pack" "make_test_pack.py") --out $mods --id test --flight --tint | Out-Null
+    & $python @pyArgs (PathOf $repo "tools" "avatar_pack" "make_test_pack.py") --out $mods --id test --flight --tint | Out-Null
     if ($LASTEXITCODE -ne 0) { Write-Warning "could not make the test pack (pip install pillow); going on without packs" }
 } else {
     Write-Warning "Python not found: no avatar pack in the checks (install Python with Pillow, or pass -Pack)"
@@ -76,6 +79,10 @@ if (-not (Test-Path $save)) {
 }
 
 Write-Host "== playing the scenes (the game window opens and closes by itself)"
+# Started outside Steam, the Steam build of the game exits at once and asks Steam to start it again,
+# without the test's arguments; with Factorio's app id in the environment it runs as started.
+$env:SteamAppId = "427520"
+$env:SteamGameId = "427520"
 $done = PathOf $work "script-output" "dragon-checks" "done.txt"
 $game = Start-Process -FilePath $exe -PassThru -ArgumentList ($common + @(
     "--load-game", (Quote $save), "--disable-audio", "--window-size", "1280x720"))
@@ -94,7 +101,7 @@ if (-not (Test-Path (Join-Path $Out "done.txt"))) {
     exit 1
 }
 if ($python) {
-    & $python (PathOf $repo "tools" "ingame_contact_sheet.py") $Out
+    & $python @pyArgs (PathOf $repo "tools" "ingame_contact_sheet.py") $Out
 } else {
     Write-Warning "Python not found: no GIFs or REPORT.md (run tools\ingame_contact_sheet.py later)"
 }

@@ -95,9 +95,11 @@ def problems(run):
     """Anything in a run's results that suggests the scene did not do what it should."""
     found = []
     name = run["scene"]
+    # shooting the submachine gun slows its shooter to 30% (movement_slow_down_factor 0.7)
+    least = 2 if "gun" in name else 5
     for s in run["subjects"]:
         label = s.get("label")
-        if name.startswith("run") and s.get("moved", 0) < 5:
+        if name.startswith("run") and s.get("moved", 0) < least:
             found.append(f"{label} hardly moved ({s.get('moved')} tiles)")
         if "gun" in name and s.get("shots_fired") == 0:
             found.append(f"{label} fired no shots")
