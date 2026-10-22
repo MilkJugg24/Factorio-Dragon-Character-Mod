@@ -1,0 +1,9 @@
+{
+  "name": "dragon-character-screenshots",
+  "version": "0.1.0",
+  "title": "Dragon Character - in-game screenshots",
+  "author": "MilkJugg24",
+  "factorio_version": "2.0",
+  "description": "Development only: makes the engineer, the dragon and every installed avatar pack idle, run, shoot, mine, fly and die side by side, and screenshots each step. Used by tests/run_ingame_checks.ps1. Not meant to be installed by players.",
+  "dependencies": ["dragon-character", "? space-age"]
+}

@@ -58,6 +58,8 @@ jobs:
         run: tests/run_headless.sh "$FACTORIO" --space-age --test-packs
       - name: Broken packs are rejected
         run: tests/run_headless.sh "$FACTORIO" --broken-packs
+      - name: In-game screenshot scenes (dry run)
+        run: tests/run_ingame_dryrun.sh "$FACTORIO" --space-age
       - name: Exporter pipeline (harness pack in Factorio)
         run: tests/run_avatar_pipeline.sh "$FACTORIO" --space-age
       - name: Build the mod zip
