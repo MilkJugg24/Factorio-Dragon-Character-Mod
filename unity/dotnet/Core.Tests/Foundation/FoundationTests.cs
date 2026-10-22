@@ -116,11 +116,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Foundation
         [Test]
         public void LightsMatchPythonRenderer()
         {
-            // render.py: SHADOW_LIGHT = normalize(-1.0, -0.12, 1.6) with y pointing south
+            // render.py: SHADOW_LIGHT = normalize(-1.0, 0.2, 1.0) with y pointing south
             Vec3 l = Conventions.ShadowLight;
-            double n = Math.Sqrt(1.0 + 0.0144 + 2.56);
-            Assert.That(l.ApproximatelyEquals(new Vec3(-1.0 / n, 0.12 / n, 1.6 / n), 1e-12));
+            double n = Math.Sqrt(1.0 + 0.04 + 1.0);
+            Assert.That(l.ApproximatelyEquals(new Vec3(-1.0 / n, -0.2 / n, 1.0 / n), 1e-12));
             Assert.That(l.X, Is.LessThan(0), "light from the west, shadows fall east");
+            Assert.That(l.Y, Is.LessThan(0), "light a little from the south, shadows fall a little north");
         }
 
         [Test]

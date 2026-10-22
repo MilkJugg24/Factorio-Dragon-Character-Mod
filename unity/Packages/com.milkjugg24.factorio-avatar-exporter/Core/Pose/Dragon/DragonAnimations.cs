@@ -15,12 +15,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     public static class DragonAnimations
     {
         /// <summary><c>MINE_ALPHA</c>: pickaxe handle angle of each mine frame, degrees (<see cref="DragonModel.HoldPick"/>).</summary>
-        public static readonly IReadOnlyList<int> MineAlpha = new[] { -30, 5, 45, 90, 125, 148, 152, 75, -45, -52, -46, -38 };
+        public static readonly IReadOnlyList<int> MineAlpha = new[] { -30, 5, 45, 90, 125, 148, 152, 75, -58, -62, -57, -44 };
 
-        /// <summary><c>MINE_LEAN</c>: torso lean of each mine frame (positive leans back, see <see cref="DragonModel.TorsoFrame"/>).</summary>
+        /// <summary>
+        /// <c>MINE_LEAN</c>: torso lean of each mine frame (positive leans back, see <see cref="DragonModel.TorsoFrame"/>):
+        /// back a little for the wind-up, forward into the blow.
+        /// </summary>
         public static readonly IReadOnlyList<double> MineLean = new[]
         {
-            0.30, 0.22, 0.12, 0.03, -0.05, -0.09, -0.09, 0.10, 0.36, 0.38, 0.36, 0.33,
+            -0.08, 0.04, 0.08, 0.03, -0.05, -0.09, -0.09, -0.05, -0.30, -0.34, -0.30, -0.18,
         };
 
         /// <summary><c>MINE_FRAMES</c>: frames of one swing (12, as <see cref="AnimationSpec.Mine"/> renders).</summary>
@@ -104,7 +107,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             foreach ((int side, double phase) in StridePhases(t))
             {
                 double phi = MathUtil.PositiveModulo(phase, 1.0);
-                double y = 0.05 + 0.25 * Math.Cos(MathUtil.Tau * phi);
+                // as long a stride as the legs reach: the planted foot slides less
+                double y = 0.05 + 0.30 * Math.Cos(MathUtil.Tau * phi);
                 double swing = phi > 0.5 ? Math.Sin(MathUtil.Tau * (phi - 0.5)) : 0.0;
                 double z = 0.035 + 0.16 * swing;
                 Vec3 ball = Turn(new Vec3(side * (body.HipWidth + 0.012), y, z), move);
@@ -143,7 +147,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             double alpha = MathUtil.Radians(MineAlpha[i]);
             double lean = MineLean[i];
             double raise = MathUtil.Smoothstep(40, 150, MineAlpha[i]);
-            var pel = new Vec3(0, -0.02, 0.665 + 0.03 * raise);
+            // crouch into the blow so the pick reaches the ground in front of the feet
+            double crouch = MathUtil.Smoothstep(0.1, 0.3, -lean);
+            var pel = new Vec3(0, -0.02 + 0.04 * crouch, 0.665 - 0.10 * crouch + 0.03 * raise);
             DragonPose p = DragonModel.BuildPose(pel, lean: lean, headPitch: -0.15 + 0.25 * (lean - 0.1));
             DragonModel.HoldPick(p, body, alpha);
             foreach (int side in DragonModel.Sides)
@@ -226,7 +232,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             RequireBody(body);
             double crouch = MathUtil.Smoothstep(0.0, 0.28, t) * (1 - MathUtil.Smoothstep(0.28, 0.55, t));
             double lift = MathUtil.Smoothstep(0.3, 1.0, t);
-            double spread = MathUtil.Smoothstep(0.05, 0.6, t);
+            double spread = MathUtil.Smoothstep(0.2, 0.6, t);
             var pel = new Vec3(0, 0, 0.70 - 0.11 * crouch + Conventions.FlyHeight * lift);
             DragonPose p = DragonModel.BuildPose(pel, lean: 0.05 + 0.25 * crouch + 0.05 * lift, headPitch: -0.05);
             RelaxedArms(p, body, spread: 0.03 * spread);

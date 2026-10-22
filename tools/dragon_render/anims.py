@@ -56,7 +56,8 @@ def run(body, t, gun=False, move=0.0):
                    hip_twist=-0.12 * math.sin(ph) - move, head_pitch=-0.12 if not gun else -0.06)
     for side, phi in ((-1, t), (1, t + 0.5)):
         phi = phi % 1.0
-        y = 0.05 + 0.25 * math.cos(TAU * phi)
+        # as long a stride as the legs reach: the planted foot slides less
+        y = 0.05 + 0.30 * math.cos(TAU * phi)
         swing = math.sin(TAU * (phi - 0.5)) if phi > 0.5 else 0.0
         z = 0.035 + 0.16 * swing
         ball = _turn(V(side * (body.hip_w + 0.012), y, z), move)
@@ -74,8 +75,9 @@ def run(body, t, gun=False, move=0.0):
     return p
 
 
-MINE_ALPHA = [-30, 5, 45, 90, 125, 148, 152, 75, -45, -52, -46, -38]
-MINE_LEAN = [0.30, 0.22, 0.12, 0.03, -0.05, -0.09, -0.09, 0.10, 0.36, 0.38, 0.36, 0.33]
+MINE_ALPHA = [-30, 5, 45, 90, 125, 148, 152, 75, -58, -62, -57, -44]
+# torso lean per frame: positive leans back (wind-up), negative leans forward into the blow
+MINE_LEAN = [-0.08, 0.04, 0.08, 0.03, -0.05, -0.09, -0.09, -0.05, -0.30, -0.34, -0.30, -0.18]
 MINE_FRAMES = len(MINE_ALPHA)
 # 1-based frame index in which the pick hits the ground
 MINE_IMPACT_FRAME = 9
@@ -86,7 +88,9 @@ def mine(body, t):
     alpha = math.radians(MINE_ALPHA[i])
     lean = MINE_LEAN[i]
     raise_f = smoothstep(40, 150, MINE_ALPHA[i])
-    pel = V(0, -0.02, 0.665 + 0.03 * raise_f)
+    # crouch into the blow so the pick reaches the ground in front of the feet
+    crouch = smoothstep(0.1, 0.3, -lean)
+    pel = V(0, -0.02 + 0.04 * crouch, 0.665 - 0.10 * crouch + 0.03 * raise_f)
     p = build_pose(body, pel, lean=lean, head_pitch=-0.15 + 0.25 * (lean - 0.1))
     hold_pick(p, body, alpha)
     for side in (1, -1):
@@ -142,10 +146,12 @@ def take_off(body, t):
     """t in [0, 1]: standing -> first frame of the hover cycle."""
     crouch = smoothstep(0.0, 0.28, t) * (1 - smoothstep(0.28, 0.55, t))
     lift = smoothstep(0.3, 1.0, t)
-    spread = smoothstep(0.05, 0.6, t)
+    # The wings rise before they open: spread wings show from above (in the shadow) long before
+    # they show from the side, so opening them first made the shadow run ahead of the body.
+    spread = smoothstep(0.2, 0.6, t)
     # wings go up while opening, beat down once, and come back up for the hover cycle
     if t < 0.5:
-        flap = 0.7 * smoothstep(0.1, 0.5, t)
+        flap = 0.7 * smoothstep(0.0, 0.35, t)
     elif t < 0.8:
         flap = lerp(0.7, -0.55, smoothstep(0.5, 0.8, t))
     else:

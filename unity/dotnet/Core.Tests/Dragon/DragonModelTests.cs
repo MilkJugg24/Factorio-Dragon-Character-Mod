@@ -303,7 +303,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
                 Assert.That(Vec3.Dot(d, fwd), Is.EqualTo(Math.Cos(alpha)).Within(Eps));
                 Assert.That(d.Z, Is.EqualTo(Math.Sin(alpha)).Within(Eps));
                 Assert.That(e.Z, Is.EqualTo(Math.Cos(alpha)).Within(Eps));
-                Assert.That((pick.Top - pick.Base).ApproximatelyEquals(d * 0.56, Eps));
+                Assert.That((pick.Top - pick.Base).ApproximatelyEquals(d * (0.10 + DragonModel.PickLength), Eps));
                 Assert.That(p.Arms[1].HandDirection, Is.EqualTo(d));
                 Assert.That(p.Arms[-1].HandDirection, Is.EqualTo(d));
             }

@@ -169,6 +169,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             p.Prop = new DragonGun(stock, muzzle, aim);
         }
 
+        /// <summary><c>PICK_LENGTH</c>: handle length from the upper hand to the head, long enough that the blade
+        /// reaches the ground in front of the feet at the blow.</summary>
+        public const double PickLength = 0.70;
+
         /// <summary>
         /// <c>hold_pick(p, body, alpha)</c>: a pickaxe held with both hands, its handle at
         /// <paramref name="alpha"/> radians from the torso's horizontal forward, up positive (past pi/2 it
@@ -187,7 +191,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             SetArm(p, body, 1, grip + side * 0.035, -fwd * 0.3 + side * 0.8 - Vec3.UnitZ * 0.5, d);
             SetArm(p, body, -1, grip - side * 0.035 - d * 0.07, -fwd * 0.3 - side * 0.8 - Vec3.UnitZ * 0.5, d);
             Vec3 basePoint = grip - d * 0.10;
-            Vec3 top = grip + d * 0.46;
+            Vec3 top = grip + d * PickLength;
             p.Prop = new DragonPick(basePoint, top, d, e);
         }
 

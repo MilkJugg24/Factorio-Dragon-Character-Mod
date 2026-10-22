@@ -32,7 +32,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         private const double PickHeadRadius = 0.016;
 
         // pickaxe head extent along +Up and -Up from the tip, as fractions of the handle length
-        // (model.py: 0.11 and 0.18 of a 0.56 handle)
+        // (model.py's 0.11 and 0.18 of the humanoid's 0.56 handle; the dragon's handle is 0.80)
         private const double PickHeadBack = 0.2;
         private const double PickHeadPoint = 0.32;
 

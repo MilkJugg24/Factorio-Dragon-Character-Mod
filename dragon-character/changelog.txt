@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.2
+Date: 2026-10-22
+  Bugfixes:
+    - The dragon's pickaxe now reaches the ground. It stopped at hip height, short of the ore: the
+      dragon leaned back into the blow and the handle was too short.
+    - Taking off, the dragon's shadow no longer spreads its wings before the dragon does. The wings
+      now rise before they open.
+  Changes:
+    - Longer running stride, so the dragon's feet slide less.
+    - Longer shadows that fall a little to the north, like the engineer's.
+---------------------------------------------------------------------------------------------------
 Version: 0.2.1
 Date: 2026-10-22
   Bugfixes:

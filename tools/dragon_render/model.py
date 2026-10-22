@@ -280,6 +280,9 @@ def hold_gun(p, body, aim_pitch=0.0):
     p.prop = ("gun", stock, muzzle, aim)
 
 
+PICK_LENGTH = 0.70  # handle length from the upper hand to the head
+
+
 def hold_pick(p, body, alpha):
     """alpha: handle angle in radians measured from forward-horizontal, up positive."""
     fwd = norm(V(p.tf[0], p.tf[1], 0.0))
@@ -291,7 +294,8 @@ def hold_pick(p, body, alpha):
     set_arm(p, body, 1, grip + side * 0.035, -fwd * 0.3 + side * 0.8 - Z * 0.5, d)
     set_arm(p, body, -1, grip - side * 0.035 - d * 0.07, -fwd * 0.3 - side * 0.8 - Z * 0.5, d)
     base = grip - d * 0.10
-    top = grip + d * 0.46
+    # long enough that the blade reaches the ground in front of the feet at the blow
+    top = grip + d * PICK_LENGTH
     p.prop = ("pick", base, top, d, e)
 
 

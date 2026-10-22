@@ -173,6 +173,24 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
         }
 
         [Test]
+        public void TheBladeReachesTheGroundInFrontOfTheFeetAtTheBlow()
+        {
+            // the in-game check of 2026-10-22 saw the pick stop at hip height; frames 9 to 11 are the blow
+            foreach (BodyShape body in BodyShape.All)
+            {
+                for (int frame = AnimationSpec.MineImpactFrame - 1; frame <= AnimationSpec.MineImpactFrame + 1; frame++)
+                {
+                    var pick = (DragonPick)DragonAnimations.Mine(body, frame / 12.0).Prop;
+                    Vec3 d = pick.HandleDirection, e = pick.HeadDirection;
+                    // the blade's point, as model.py's add_prop draws it
+                    Vec3 point = pick.Top - d * 0.055 - e * 0.18;
+                    Assert.That(point.Z, Is.InRange(-0.02, 0.08), $"{body.Name} frame {frame + 1}");
+                    Assert.That(point.Y, Is.GreaterThan(0.45), $"{body.Name} frame {frame + 1}");
+                }
+            }
+        }
+
+        [Test]
         public void TakeOffEndsOnTheFirstHoverFrame()
         {
             int last = AnimationSpec.Get(AnimationSpec.TakeOff).FrameCount - 1;

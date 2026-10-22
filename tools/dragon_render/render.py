@@ -20,8 +20,9 @@ CAM_STRETCH = 1.25
 # Light used for shading (from the west, slightly towards the camera, above)
 SHADE_LIGHT = np.array([-0.70, 0.35, 0.90])
 SHADE_LIGHT = SHADE_LIGHT / np.linalg.norm(SHADE_LIGHT)
-# Light used for the ground shadow (shadows fall to the east like vanilla)
-SHADOW_LIGHT = np.array([-1.0, -0.12, 1.6])
+# Light used for the ground shadow: from the west, a little south, 44 degrees up, so shadows fall
+# to the east and a little north as long as the vanilla engineer's
+SHADOW_LIGHT = np.array([-1.0, 0.2, 1.0])
 SHADOW_LIGHT = SHADOW_LIGHT / np.linalg.norm(SHADOW_LIGHT)
 
 # Canvas (final pixels) and anchor = entity position
@@ -30,10 +31,10 @@ CANVAS_H = 256
 ANCHOR_X = 112
 ANCHOR_Y = 180
 
-SHADOW_W = 320
-SHADOW_H = 192
+SHADOW_W = 448
+SHADOW_H = 256
 SHADOW_AX = 120
-SHADOW_AY = 80
+SHADOW_AY = 144
 
 MAT_ALB, MAT_TINT, MAT_SPEC, MAT_EMIT = material_arrays()
 

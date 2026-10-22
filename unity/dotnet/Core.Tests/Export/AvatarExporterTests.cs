@@ -256,7 +256,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
         }
 
         [TestCase(64, 1024, false, "run shadow")]
-        [TestCase(32, 512, false, "run shadow")]
+        [TestCase(32, 768, false, "run shadow")]
         [TestCase(32, 4096, true, "run base")]
         public void SheetsThatDoNotFitNameTheAnimationAndLayer(int pixelsPerTile, int maxSheetSize, bool wide, string layer)
         {
