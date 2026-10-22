@@ -84,14 +84,19 @@ run_benchmark() {
 }
 
 if [ "$BROKEN_PACKS" = true ]; then
-  for kind in $(python3 "$MAKE_PACK" --list-broken); do
+  # a plain assignment, so a failing generator stops the script (set -e)
+  kinds="$(python3 "$MAKE_PACK" --list-broken)"
+  [ -n "$kinds" ] || fail "make_test_pack.py lists no broken pack kinds"
+  for kind in $kinds; do
     dir="$WORK/broken-$kind"
     new_mods_dir "$dir/mods"
     expected="$(python3 "$MAKE_PACK" --out "$dir/mods" --id broken --broken "$kind" | sed -n 's/^EXPECTED-ERROR: //p')"
     [ -n "$expected" ] || fail "no expected error for $kind"
-    if python3 "$REPO/tools/validate_sprites.py" --pack "$dir/mods/dragon-avatar-broken" > "$dir/validate.log"; then
+    if python3 "$REPO/tools/validate_sprites.py" --pack "$dir/mods/dragon-avatar-broken" > "$dir/validate.log" 2>&1; then
       fail "BROKEN-PACK $kind: tools/validate_sprites.py accepted it"
     fi
+    grep -qF "$expected" "$dir/validate.log" \
+      || { cat "$dir/validate.log"; fail "BROKEN-PACK $kind: tools/validate_sprites.py did not report \"$expected\""; }
     write_mod_list "$dir/mods"
     if "$FACTORIO" --mod-directory "$dir/mods" --create "$dir/test.zip" > "$dir/create.log" 2>&1; then
       fail "BROKEN-PACK $kind: Factorio loaded it"
@@ -108,9 +113,11 @@ PACK_NAMES=()
 if [ "$TEST_PACKS" = true ]; then
   python3 "$MAKE_PACK" --out "$MODS" --id test --title "Test Avatar" --flight --tint --max-sheet 1024 > /dev/null
   # a 30-character title of 90 bytes, and default timing scaled to 6 run / 8 mine frames
-  python3 "$MAKE_PACK" --out "$MODS" --id small --title "$(printf '竜%.0s' $(seq 30))" --ppt 32 \
-    --default-timing --frames run=6,mine=8 > /dev/null
-  PACK_NAMES+=(dragon-avatar-test dragon-avatar-small)
+  # installed as a zip only, like a downloaded pack
+  python3 "$MAKE_PACK" --out "$WORK/packs" --id small --title "$(printf '竜%.0s' $(seq 30))" --ppt 32 \
+    --default-timing --frames run=6,mine=8 --zip > /dev/null
+  cp "$WORK/packs/dragon-avatar-small_1.0.0.zip" "$MODS/"
+  PACK_NAMES+=(dragon-avatar-test dragon-avatar-small_1.0.0.zip)
 fi
 for pack in "${PACKS[@]+"${PACKS[@]}"}"; do
   cp -r "$pack" "$MODS/"

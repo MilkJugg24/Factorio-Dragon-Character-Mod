@@ -1,0 +1,12 @@
+<Project>
+  <!-- Development builds of the exporter's Unity-free Core, outside Unity.
+       Unity 2022.3 compiles the same sources with C# 9 against .NET Standard 2.1,
+       so the Core project targets exactly that. -->
+  <PropertyGroup>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>

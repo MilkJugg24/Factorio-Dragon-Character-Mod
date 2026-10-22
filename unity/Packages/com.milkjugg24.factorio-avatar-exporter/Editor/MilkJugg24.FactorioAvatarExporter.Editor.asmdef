@@ -1,0 +1,18 @@
+{
+    "name": "MilkJugg24.FactorioAvatarExporter.Editor",
+    "rootNamespace": "MilkJugg24.FactorioAvatarExporter.Editor",
+    "references": [
+        "MilkJugg24.FactorioAvatarExporter.Core"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

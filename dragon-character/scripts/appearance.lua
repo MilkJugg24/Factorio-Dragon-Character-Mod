@@ -103,17 +103,6 @@ function appearance.avatar_corpse_name(id)
   return format.corpse_name(id)
 end
 
--- The pack id of an avatar character prototype name, or nil.
-function appearance.avatar_id_of_character(name)
-  return format.id_of_character(name)
-end
-
--- True for every character prototype this mod manages: dragon variants
--- (including the vanilla "character") and avatar pack characters.
-function appearance.is_own_character(name)
-  return by_character[name] ~= nil or format.id_of_character(name) ~= nil
-end
-
 -- The character prototype the player's preferences ask for. When the chosen
 -- avatar pack is not installed (`exists(name)` is false) this falls back to the
 -- dragon and returns the note "avatar-missing" as second value.
@@ -128,14 +117,15 @@ function appearance.resolve(prefs, exists)
   return appearance.character_name(prefs.body, prefs.hoodie, prefs.shorts), nil
 end
 
--- Characters and corpses that do not exist without this mod (or one of its
--- packs) and so must be turned back into vanilla ones before removing it.
+-- Dragon characters and corpses that do not exist without this mod and so
+-- must be turned back into vanilla ones before removing it (avatar pack ones:
+-- see scripts/packs.lua).
 function appearance.is_mod_variant(name)
-  return (name ~= "character" and by_character[name] ~= nil) or format.id_of_character(name) ~= nil
+  return name ~= "character" and by_character[name] ~= nil
 end
 
 function appearance.is_mod_corpse(name)
-  return (name ~= "character-corpse" and by_corpse[name] ~= nil) or format.id_of_corpse(name) ~= nil
+  return name ~= "character-corpse" and by_corpse[name] ~= nil
 end
 
 return appearance

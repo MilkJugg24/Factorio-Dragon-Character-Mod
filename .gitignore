@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 /build/
+unity/dotnet/**/bin/
+unity/dotnet/**/obj/
+.claude/worktrees/

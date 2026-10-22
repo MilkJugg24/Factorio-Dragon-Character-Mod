@@ -91,9 +91,12 @@ everyone using that pack, and their corpses, back into the dragon.
 - Remote interface `dragon-character`: `get_appearance(player_index)`,
   `set_appearance(player_index, {body=, hoodie=, shorts=, avatar=})` (`avatar`
   is a pack id, or `false` for the dragon; returns nil when applied,
-  `"avatar-missing"` when applied but the chosen pack is not installed, or why
-  the change has to wait), `is_dragon_character(name)`,
-  `is_avatar_character(name)`, `get_avatar_packs()`, `revert_all(pack_id)` and
+  `"avatar-missing"` when applied but the chosen pack is not installed, why the
+  change has to wait (such as `"vehicle"`), `"unknown-avatar"` or
+  `"no-player"` when nothing was changed, or `"missing"` when the look does not
+  exist), `is_dragon_character(name)`,
+  `is_avatar_character(name)`, `get_avatar_packs()`, `revert_all(pack_id)` (nil
+  when `pack_id` names no pack) and
   `get_on_character_swapped_event()`. That event is raised whenever the mod
   replaces a player's character entity, with `old_character` and
   `new_character`.
@@ -111,6 +114,8 @@ everyone using that pack, and their corpses, back into the dragon.
 | `docs/avatar-pack-format.md` | The avatar pack format. |
 | `tools/avatar_pack/` | Writes synthetic avatar packs for testing. |
 | `tools/validate_sprites.py` | Checks the dragon sheets, or an avatar pack with `--pack`. |
+| `tools/avatar_pack/preview.py` | Animated GIF previews of an avatar pack, every direction side by side. |
+| `unity/` | The avatar exporter: a Unity package whose Unity-free Core is built and tested with .NET in `unity/dotnet/`. |
 | `tools/build_mod.sh` | Packs the mod into a zip. |
 | `tests/` | Headless Factorio test of the character swap logic. |
 
@@ -175,6 +180,21 @@ Options for avatar packs (combine them freely):
 | `--test-packs` | Adds two synthetic packs, checks their prototypes, swapping into them and `/dragon-revert-all <id>`, then loads the save again without the packs. |
 | `--broken-packs` | Checks that each deliberately broken pack stops the game from loading with the expected error, and that `tools/validate_sprites.py --pack` rejects it too. |
 | `--pack PATH` | Adds a pack (folder or zip) and runs the generic pack checks on it. |
+
+The avatar exporter's Unity-free Core (`unity/`) has NUnit tests, and an
+end-to-end check that builds a pack from a synthetic rig and loads it in
+Factorio (needs the .NET 8 SDK):
+
+```sh
+dotnet test unity/dotnet/Core.Tests
+tests/run_avatar_pipeline.sh /path/to/factorio [--space-age]
+```
+
+The Python tools have their own unit tests, which need no Factorio:
+
+```sh
+python3 -m unittest discover -s tests -p "test_*.py"
+```
 
 The synthetic packs come from `tools/avatar_pack/make_test_pack.py`. Every frame
 is a labelled stand-in figure, so a pack can also be tried in the real game:
