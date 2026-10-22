@@ -160,8 +160,15 @@ return {
   so that its last frame is the first hover frame.
 - `timing.mine_impact_frame` (1-based) is when the mining sound and particles
   play. `left_foot_frames` / `right_foot_frames` are the running frames where a
-  foot lands. `distance_per_frame` is how far the character moves per running
-  frame; it should match the stride so feet don't slide.
+  foot lands. `distance_per_frame` sets how fast the run animation plays for
+  the distance covered. The game does not move the character
+  `distance_per_frame` tiles per frame: one running frame takes
+  `distance_per_frame / animation_speed` tiles (the `run` animation speed), so
+  one run cycle covers `run frames x distance_per_frame / animation_speed`
+  tiles. The vanilla engineer's covers 22 x 0.13 / 0.6 = 4.77 tiles, and so
+  does the dragon's (12 x 0.238 / 0.6). To keep the engineer's pace, use
+  `distance_per_frame = 4.77 x animation_speed / run frames`; changing the
+  `run` animation speed without it changes the pace.
 - Timing fields a pack leaves out get these defaults, which scale with its own
   frame counts (for 12-frame `run` and `mine` animations, like the dragon's,
   they are 9, `{ 1 }` and `{ 7 }`):
@@ -236,8 +243,8 @@ way as `tools/dragon_render`:
   packs).
 - **Lights:** shading light from `(-0.70, 0.35, 0.90)` (normalised; west,
   slightly south, above). The ground shadow is a projection onto the ground
-  along `(-1.0, -0.12, 1.6)` (normalised), so shadows fall east like vanilla
-  shadows.
+  along `(-1.0, 0.2, 1.0)` (normalised; west, a little south, 44 degrees up),
+  so shadows fall east and a little north, as long as the vanilla engineer's.
 - **Size:** a standing character is about 1.5 tiles tall on screen. In the
   flight animations the body is raised 0.42 tiles off the ground.
 

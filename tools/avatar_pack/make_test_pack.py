@@ -177,7 +177,8 @@ class Painter:
             pick_line = [sx, sy, sx + math.cos(a) * self.px(30), sy + math.sin(a) * self.px(30)]
             d.line(pick_line, fill=(110, 80, 40, 255), width=self.px(4))
             md.line(pick_line, fill=(0, 0, 0, 0), width=self.px(4))
-        # labels: direction (row) and frame, both counted from 1 like Factorio's frame numbers
+        # labels: the direction (row label, in eighths of a turn from north counted from 0: east is 2) and
+        # the frame, counted from 1 like Factorio's frame numbers
         big, small = font(self.px(16)), font(self.px(11))
         d.text((cx, (top + bottom) / 2 - self.px(6)), label, fill=(0, 0, 0, 255), font=big, anchor="mm")
         d.text((cx, (top + bottom) / 2 + self.px(12)), f"f{frame + 1}", fill=(0, 0, 0, 255), font=small, anchor="mm")

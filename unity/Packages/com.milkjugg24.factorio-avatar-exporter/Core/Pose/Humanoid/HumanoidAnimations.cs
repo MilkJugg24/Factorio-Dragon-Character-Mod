@@ -31,6 +31,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// </summary>
         private const double RunStride = 0.22;
 
+        /// <summary>
+        /// Tiles the vanilla engineer covers in one run cycle (two steps): 22 frames x distance_per_frame 0.13 /
+        /// animation_speed 0.6.
+        /// </summary>
+        private const double EngineerRunCycle = 22 * 0.13 / 0.6;
+
         private readonly HumanoidRig rig;
 
         /// <summary>Gait sizes relative to the dragon's, from leg length.</summary>
@@ -52,10 +58,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             armScale = rig.ArmLength / DragonArmLength;
             sizeScale = rig.HeadTopHeight / Conventions.DefaultCharacterHeight;
             standingPelvis = rig.HipsHeight - 0.015 * rig.LegLength;
+            AnimationInfo run = AnimationSpec.Get(AnimationSpec.Run);
             Timing = new PackTiming
             {
-                // a foot travels 2 * stride back during its half cycle on the ground, two steps per cycle
-                DistancePerFrame = 4 * RunStride * legScale / AnimationSpec.Get(AnimationSpec.Run).FrameCount,
+                // the game moves distance_per_frame / animation_speed tiles per running frame: one cycle
+                // covers the vanilla engineer's ground, longer for longer legs, like the dragon's 0.238
+                DistancePerFrame = EngineerRunCycle * legScale * run.DefaultSpeed / run.FrameCount,
             };
         }
 

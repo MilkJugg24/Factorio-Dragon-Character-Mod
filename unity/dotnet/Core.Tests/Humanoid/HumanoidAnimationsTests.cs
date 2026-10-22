@@ -201,10 +201,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
         }
 
         [TestCaseSource(nameof(Rigs))]
-        public void RunTimingFollowsTheStride(RigInput input)
+        public void RunTimingKeepsTheEngineersPace(RigInput input)
         {
             HumanoidAnimations animations = Animations(input, out HumanoidRig rig);
-            Assert.That(animations.Timing.DistancePerFrame, Is.EqualTo(4 * 0.22 * rig.LegLength / 0.6 / 12).Within(1e-12));
+            // the game moves distance_per_frame / animation_speed tiles per running frame, so a 12-frame cycle at
+            // speed 0.6 covers the engineer's 22 x 0.13 / 0.6 tiles, scaled by leg length (dragon legs: 0.6)
+            double cycle = 12 * animations.Timing.DistancePerFrame / 0.6;
+            Assert.That(cycle, Is.EqualTo(22 * 0.13 / 0.6 * rig.LegLength / 0.6).Within(1e-12));
             Assert.That(animations.Timing.MineImpactFrame, Is.EqualTo(AnimationSpec.MineImpactFrame));
         }
 
