@@ -1,18 +1,22 @@
-# Publishes a GitHub release of the Avatar Characters mod with its installable zip.
+# Publishes one GitHub release with both downloads: the Unity exporter (.unitypackage) and the
+# Avatar Characters mod (zip). The release is named after the exporter's version.
 #
-# Runs by itself after CI passes on main: it publishes a release when the version is new and does
-# nothing when that version is already released, so bumping the version is all a release takes. Older
-# Avatar Characters releases are then removed, so the Releases page only offers the newest mod zip.
+# Runs by itself after CI passes on main, so bumping a version is all a release takes:
+# - a new exporter version (package.json) publishes a new release with both files;
+# - a new mod version (avatar-characters/info.json) alone swaps the new mod zip into the current
+#   release;
+# - nothing new does nothing.
+# Older releases are then removed, so the Releases page only offers the newest files (the old tags
+# stay, so every version can still be checked out).
 #
-# Otherwise either push a tag avatar-characters-v<version> (e.g. avatar-characters-v0.1.0), or run
-# this workflow by hand from the Actions tab ("Run workflow"), which creates that tag from the version
-# in avatar-characters/info.json. A pushed tag must match that version.
-name: Mod release
+# Otherwise either push a tag exporter-v<version> matching package.json, or run this workflow by hand
+# from the Actions tab ("Run workflow").
+name: Release
 
 on:
   push:
     tags:
-      - "avatar-characters-v*"
+      - "exporter-v*"
   workflow_run:
     workflows: [CI]
     types: [completed]
@@ -29,80 +33,104 @@ jobs:
     runs-on: ubuntu-latest
     env:
       COMMIT: ${{ github.event.workflow_run.head_sha || github.sha }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT }}
 
-      - name: Work out the release tag
-        id: tag
+      - name: Work out the versions
+        id: version
         run: |
-          version=$(python3 -c "import json; print(json.load(open('avatar-characters/info.json'))['version'])")
-          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            if [ "${GITHUB_REF_NAME#avatar-characters-v}" != "$version" ]; then
-              echo "Tag $GITHUB_REF_NAME does not match info.json version $version"
-              exit 1
-            fi
-            tag="$GITHUB_REF_NAME"
-          else
-            tag="avatar-characters-v$version"
+          exporter=$(python3 -c "import json; print(json.load(open('unity/Packages/com.milkjugg24.factorio-avatar-exporter/package.json'))['version'])")
+          mod=$(python3 -c "import json; print(json.load(open('avatar-characters/info.json'))['version'])")
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "${GITHUB_REF_NAME#exporter-v}" != "$exporter" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package.json version $exporter"
+            exit 1
           fi
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "tag=exporter-v$exporter" >> "$GITHUB_OUTPUT"
+          echo "exporter=$exporter" >> "$GITHUB_OUTPUT"
+          echo "mod=$mod" >> "$GITHUB_OUTPUT"
 
-      - name: Build mod zip
-        run: tools/build_mod.sh
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
 
-      - name: Create release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.tag.outputs.tag }}
+      - name: Test the exporter Core
+        run: dotnet test unity/dotnet/Core.Tests
+
+      - name: Build the .unitypackage and the mod zip
         run: |
-          if gh release view "$TAG" > /dev/null 2>&1; then
-            echo "Release $TAG already exists; bump the version in info.json to publish a new one."
+          python3 tools/make_unitypackage.py
+          tools/build_mod.sh
+
+      - name: Publish
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          EXPORTER: ${{ steps.version.outputs.exporter }}
+          MOD: ${{ steps.version.outputs.mod }}
+        run: |
+          package="build/FactorioAvatarExporter_$EXPORTER.unitypackage"
+          zip="build/avatar-characters_$MOD.zip"
+          cat > notes.md <<NOTES
+          Two downloads:
+
+          - **$(basename "$package")**, for turning an avatar into an avatar pack. In Unity 2022.3 (your
+            VRChat project) choose **Assets ▸ Import Package ▸ Custom Package...**, pick the file and click
+            **Import**. It is installed in \`Assets/FactorioAvatarExporter\`; importing a newer version
+            updates it in place. Then open **Tools ▸ Factorio Avatar Exporter ▸ Exporter**.
+          - **$(basename "$zip")**, the Avatar Characters mod $MOD that every player needs. Drop it, still
+            zipped, into Factorio's \`mods\` folder together with the avatar packs:
+            Windows \`%APPDATA%\\Factorio\\mods\`, Linux \`~/.factorio/mods\`, macOS
+            \`~/Library/Application Support/factorio/mods\`. In multiplayer, everyone needs the same mods
+            and packs as the server.
+
+          Factorio 2.0; Space Age is optional. Before removing a pack or the mod from a save, an admin runs
+          \`/avatar-revert-all\` (see the README).
+          NOTES
+          title="Factorio Avatar Exporter $EXPORTER (mod $MOD)"
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" "$package" "$zip" --target "$COMMIT" --title "$title" \
+              --notes-file notes.md --prerelease
             exit 0
           fi
-          zip=$(ls build/avatar-characters_*.zip)
-          cat > notes.md <<NOTES
-          Download **$(basename "$zip")** below and drop it, still zipped, into your Factorio \`mods\` folder:
+          assets=$(gh release view "$TAG" --json assets --jq '.assets[].name')
+          changed=false
+          for file in "$package" "$zip"; do
+            if ! grep -qxF "$(basename "$file")" <<< "$assets"; then
+              gh release upload "$TAG" "$file" --clobber
+              echo "added $(basename "$file") to $TAG"
+              changed=true
+            fi
+          done
+          # the mod zip of an older mod version
+          for old in $(grep -x 'avatar-characters_.*\.zip' <<< "$assets" | grep -vxF "$(basename "$zip")"); do
+            gh release delete-asset "$TAG" "$old" --yes
+            echo "removed $old from $TAG"
+          done
+          if [ "$changed" = true ]; then
+            gh release edit "$TAG" --title "$title" --notes-file notes.md
+          else
+            echo "Release $TAG already has both files; bump a version to publish a new one."
+          fi
 
-          - Windows: \`%APPDATA%\\Factorio\\mods\`
-          - Linux: \`~/.factorio/mods\`
-          - macOS: \`~/Library/Application Support/factorio/mods\`
-
-          Requires Factorio 2.0; Space Age is optional. On its own the mod changes nothing: add avatar packs
-          (mods named \`avatar-pack-<name>\`, made with the Factorio Avatar Exporter for Unity, see the
-          **Avatar Exporter** releases) and every player picks their look in the avatar window
-          (shortcut bar, or Ctrl + Shift + A). In multiplayer, every player needs the same packs.
-
-          Before removing a pack (or this mod) from a save, an admin runs \`/avatar-revert-all\`; see the
-          README in the repository.
-          NOTES
-          gh release create "$TAG" "$zip" \
-            --target "$COMMIT" \
-            --title "Avatar Characters ${TAG#avatar-characters-v}" \
-            --prerelease \
-            --notes-file notes.md
-
-      # The Releases page only lists the newest mod: older mod releases are removed (their tags
-      # stay, so every version can still be checked out). Runs even when this version already existed.
-      - name: Remove older mod releases
-        if: always() && steps.tag.outputs.tag != ''
+      - name: Remove older releases
         env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          TAG: ${{ steps.tag.outputs.tag }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
           gh release view "$TAG" > /dev/null 2>&1 || { echo "no release $TAG; keeping the others"; exit 0; }
-          current="${TAG#avatar-characters-v}"
+          current="${TAG#exporter-v}"
           gh release list --limit 200 --json tagName --jq '.[].tagName' | while read -r old; do
             case "$old" in
-              avatar-characters-v*) ;;
+              exporter-v*)
+                version="${old#exporter-v}"
+                newest=$(printf '%s\n%s\n' "$version" "$current" | sort -V | tail -n 1)
+                [ "$old" != "$TAG" ] && [ "$newest" = "$current" ] || continue
+                ;;
+              avatar-characters-v*) ;; # the mod's own releases, from before both shipped together
               *) continue ;;
             esac
-            version="${old#avatar-characters-v}"
-            newest=$(printf '%s\n%s\n' "$version" "$current" | sort -V | tail -n 1)
-            if [ "$old" != "$TAG" ] && [ "$newest" = "$current" ]; then
-              gh release delete "$old" --yes
-              echo "removed the release $old (the tag stays)"
-            fi
+            gh release delete "$old" --yes
+            echo "removed the release $old (the tag stays)"
           done

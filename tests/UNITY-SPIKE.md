@@ -11,7 +11,7 @@ in Unity, so that its shaders are imported.
 
 ## By hand
 
-1. Download `FactorioAvatarExporter_<version>.unitypackage` from the newest **Avatar Exporter** release.
+1. Download `FactorioAvatarExporter_<version>.unitypackage` from the newest release.
 2. In Unity: **Assets ▸ Import Package ▸ Custom Package...**, pick it, **Import**.
 3. Select the avatar in the Hierarchy and choose **Tools ▸ Factorio Avatar Exporter ▸ Spike: Render Selected Avatar**.
 4. The results open in your file browser: `FactorioAvatarSpike/<avatar>/` next to `Assets`.

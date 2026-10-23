@@ -52,8 +52,8 @@ What it doesn't do yet:
 
 You need Unity 2022.3 (the VRChat version) and a project with an avatar in it.
 
-1. Download `FactorioAvatarExporter_<version>.unitypackage` from the newest **Avatar Exporter** release on
-   the repository's Releases page. In Unity choose **Assets ▸ Import Package ▸ Custom Package...**, pick the
+1. Download `FactorioAvatarExporter_<version>.unitypackage` from the newest release on the repository's
+   Releases page (the mod zip next to it is for Factorio). In Unity choose **Assets ▸ Import Package ▸ Custom Package...**, pick the
    file and click **Import**. It is installed in `Assets/FactorioAvatarExporter`; importing a newer version
    updates it in place.
 

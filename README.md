@@ -12,8 +12,8 @@ Play Factorio 2.0 as your own avatar. Two parts work together:
 Work in progress: the exporter previews your avatar posed in every animation; writing the pack itself
 comes next. See the [exporter's README](unity/Packages/com.milkjugg24.factorio-avatar-exporter/README.md).
 
-Both are on the [Releases](../../releases) page: **Avatar Exporter** (a `.unitypackage` to import into
-Unity) and **Avatar Characters** (the mod zip).
+The newest release on the [Releases](../../releases) page has both downloads side by side: the
+`.unitypackage` to import into Unity, and the `avatar-characters_<version>.zip` mod every player needs.
 
 This project began as the Dragon Character mod, a dragon that replaced the engineer. That mod is archived
 on the [`archive/dragon-character`](../../tree/archive/dragon-character) branch and its version tags
