@@ -16,8 +16,7 @@ The newest release on the [Releases](../../releases) page has both downloads sid
 `.unitypackage` to import into Unity, and the `avatar-characters_<version>.zip` mod every player needs.
 
 This project began as the Dragon Character mod, a dragon that replaced the engineer. That mod is archived
-on the [`archive/dragon-character`](../../tree/archive/dragon-character) branch and its version tags
-(`v0.1.0` to `v0.2.2`).
+on the [`archive/dragon-character`](../../tree/archive/dragon-character) branch.
 
 ## Avatar Characters (the mod)
 

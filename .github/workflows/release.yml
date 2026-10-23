@@ -6,8 +6,8 @@
 # - a new mod version (avatar-characters/info.json) alone swaps the new mod zip into the current
 #   release;
 # - nothing new does nothing.
-# Older releases are then removed, so the Releases page only offers the newest files (the old tags
-# stay, so every version can still be checked out).
+# Older releases are then removed together with their tags, so the Releases page and the tag list
+# only offer the newest files (the commits themselves stay in the history of main).
 #
 # Otherwise either push a tag exporter-v<version> matching package.json, or run this workflow by hand
 # from the Actions tab ("Run workflow").
@@ -136,6 +136,6 @@ jobs:
               avatar-characters-v*) ;; # the mod's own releases, from before both shipped together
               *) continue ;;
             esac
-            gh release delete "$old" --yes
-            echo "removed the release $old (the tag stays)"
+            gh release delete "$old" --yes --cleanup-tag
+            echo "removed the release $old and its tag"
           done
