@@ -108,7 +108,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 Assert.That(info.GetProperty("title").GetString(), Is.EqualTo(PackNaming.InfoTitle(content.Title)));
                 Assert.That(Encoding.UTF8.GetByteCount(info.GetProperty("title").GetString()), Is.LessThanOrEqualTo(100));
                 Assert.That(info.GetProperty("author").GetString(), Is.EqualTo("Tester"));
-                Assert.That(info.GetProperty("factorio_version").GetString(), Is.EqualTo("2.0"));
+                Assert.That(info.GetProperty("factorio_version").GetString(), Is.EqualTo("2.1"));
                 StringAssert.Contains("Test Model", info.GetProperty("description").GetString());
                 Assert.That(info.GetProperty("dependencies").EnumerateArray().Select(d => d.GetString()),
                     Is.EqualTo(new[] { "avatar-characters >= 0.1.0" }));

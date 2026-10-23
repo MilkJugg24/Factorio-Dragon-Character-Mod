@@ -40,7 +40,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>Largest timing.distance_per_frame avatar-characters accepts, tiles.</summary>
         public const double MaxDistancePerFrame = 2.0;
 
-        public const string FactorioVersion = "2.0";
+        public const string FactorioVersion = "2.1";
 
         /// <summary>The Factorio mod that loads avatar packs.</summary>
         public const string MainMod = "avatar-characters";

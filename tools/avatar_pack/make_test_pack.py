@@ -27,7 +27,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import lua_table  # noqa: E402
-from avatar_pack.spec import DATA_LUA, DIRECTIONS, FLIGHT, REQUIRED, info_title, valid_id  # noqa: E402
+from avatar_pack.spec import DATA_LUA, DIRECTIONS, FACTORIO_VERSION, FLIGHT, REQUIRED, info_title, valid_id  # noqa: E402
 
 # Frame counts per animation; --frames overrides them.
 FRAMES = {
@@ -355,7 +355,7 @@ def build(args):
         "version": args.version,
         "title": info_title(args.title),
         "author": args.author,
-        "factorio_version": "2.0",
+        "factorio_version": FACTORIO_VERSION,
         "description": "Synthetic avatar pack for testing Avatar Characters.",
         "dependencies": ["avatar-characters >= 0.1.0"],
     }

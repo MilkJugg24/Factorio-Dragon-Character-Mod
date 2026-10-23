@@ -8,6 +8,7 @@ import math
 import re
 
 MAIN_MOD = "avatar-characters"
+FACTORIO_VERSION = "2.1"  # info.json factorio_version: Factorio only loads mods made for its own minor version
 DATA_TYPE = "avatar-characters.avatar-pack"
 SUPPORTED_VERSION = 1
 MOD_PREFIX = "avatar-pack-"

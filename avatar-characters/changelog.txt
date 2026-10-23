@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.2.0
+Date: 2026-10-23
+  Changes:
+    - For Factorio 2.1, which no longer loads mods made for 2.0. Avatar packs need to be made for 2.1
+      as well: export them again with Factorio Avatar Exporter 0.3.1 or newer.
+---------------------------------------------------------------------------------------------------
 Version: 0.1.0
 Date: 2026-10-23
   Features:

@@ -1,6 +1,6 @@
 # Factorio Avatar Exporter
 
-Play Factorio 2.0 as your own avatar. Two parts work together:
+Play Factorio 2.1 as your own avatar. Two parts work together:
 
 - **The Factorio Avatar Exporter**, a Unity package. It takes a humanoid avatar (a VRChat avatar, for
   example) in your Unity project, poses it in every animation the game needs (idle, running, shooting,

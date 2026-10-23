@@ -1,6 +1,6 @@
 # Factorio Avatar Exporter
 
-Play Factorio 2.0 as your own avatar. This Unity tool turns a humanoid avatar (a VRChat avatar, for
+Play Factorio 2.1 as your own avatar. This Unity tool turns a humanoid avatar (a VRChat avatar, for
 example) into an **avatar pack**: a small Factorio mod with your avatar idling, running, shooting, mining,
 flying with mech armor and lying as a corpse, in every direction, with its shadow. In the game, the
 **Avatar Characters** mod lets every player pick their own look.
@@ -12,7 +12,7 @@ Downloads and source: https://github.com/MilkJugg24/Factorio-VRChat-Avatar-Expor
 ### 1. What you need
 
 - Unity 2022.3 with a project that has your avatar in it (your VRChat avatar project works).
-- Factorio 2.0. Space Age is optional; it adds flying with mech armor.
+- Factorio 2.1. Space Age is optional; it adds flying with mech armor.
 - From the newest release on the Releases page, both downloads:
   - `FactorioAvatarExporter_<version>.unitypackage` (this tool);
   - `avatar-characters_<version>.zip` (the Factorio mod every player needs).

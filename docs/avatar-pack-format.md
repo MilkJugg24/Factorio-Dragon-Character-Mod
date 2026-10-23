@@ -51,7 +51,7 @@ avatar-pack-<id>_<version>/
   "version": "1.0.0",
   "title": "Avatar pack: <title>",
   "author": "<author>",
-  "factorio_version": "2.0",
+  "factorio_version": "2.1",
   "description": "...",
   "dependencies": ["avatar-characters >= 0.1.0"]
 }

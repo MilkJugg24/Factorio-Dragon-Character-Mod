@@ -6,7 +6,7 @@ pack side by side, idling, running, running with a gun, mining, flying with mech
 
 ## Running them
 
-You need Factorio 2.0 installed (Steam is fine; Space Age optional, for the flight scene) and,
+You need Factorio 2.1 installed (Steam is fine; Space Age optional, for the flight scene) and,
 for the test pack, GIFs and the report, Python 3 with Pillow (`py -m pip install pillow`).
 
 From the repository folder, in PowerShell:

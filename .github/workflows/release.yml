@@ -85,7 +85,7 @@ jobs:
 
           **Installing the mod (Avatar Characters $MOD):** Factorio's \`mods\` folder is
           \`%APPDATA%\\Factorio\\mods\` on Windows, \`~/.factorio/mods\` on Linux and
-          \`~/Library/Application Support/factorio/mods\` on macOS. Factorio 2.0; Space Age is optional. In
+          \`~/Library/Application Support/factorio/mods\` on macOS. Factorio 2.1; Space Age is optional. In
           multiplayer, everyone needs the same mods and packs as the server. Before removing a pack or the mod
           from a save, an admin runs \`/avatar-revert-all\` (see the README).
 

@@ -90,8 +90,8 @@ class Checker:
         version = info.get("version")
         if not isinstance(version, str) or not re.fullmatch(r"\d+\.\d+\.\d+", version):
             self.error(f"info.json: version must look like 1.0.0, not {version!r}")
-        if info.get("factorio_version") != "2.0":
-            self.error('info.json: factorio_version must be "2.0"')
+        if info.get("factorio_version") != spec.FACTORIO_VERSION:
+            self.error(f'info.json: factorio_version must be "{spec.FACTORIO_VERSION}"')
         if self.files.root_name not in (name, f"{name}_{version}"):
             self.warn(f'the pack folder is "{self.files.root_name}"; Factorio expects "{name}_{version}"'
                       f' or "{name}"')
