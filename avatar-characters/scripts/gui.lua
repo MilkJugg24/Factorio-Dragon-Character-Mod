@@ -9,6 +9,10 @@ gui.FRAME = "avatar_characters_frame"
 gui.TOP_BUTTON = "avatar_characters_top_button"
 gui.SHORTCUT = "avatar-characters-choose"
 
+-- the look list shows this many rows before it scrolls (each row is a 72 px button plus 4 px spacing)
+local LOOK_ROWS = 4
+local LOOK_ROW_HEIGHT = 76
+
 local function find(element, name)
   if element.name == name then
     return element
@@ -68,6 +72,34 @@ function gui.close(player, prefs)
   player.set_shortcut_toggled(gui.SHORTCUT, false)
 end
 
+-- One row of the look list: the look's button, its name and its author. Clicking the name picks it too.
+local function add_look(looks, id, sprite, title, author)
+  local tags = { avatar_action = "look", avatar = id }
+  local row = looks.add({ type = "flow", name = "avatar_look_" .. id, direction = "horizontal", tags = tags })
+  row.style.vertical_align = "center"
+  row.style.horizontal_spacing = 8
+  row.add({
+    type = "sprite-button",
+    name = "avatar_look_button",
+    style = "avatar_characters_look_button",
+    sprite = sprite,
+    tooltip = title,
+    tags = tags,
+  })
+  local names = row.add({ type = "flow", direction = "vertical" })
+  names.style.vertical_spacing = 0
+  local name = names.add({ type = "label", caption = title, tags = tags })
+  name.style.font = "default-bold"
+  name.style.single_line = false
+  name.style.maximal_width = 220
+  if author and author ~= "" then
+    local by = names.add({ type = "label", caption = { "avatar-characters.by-author", author }, tags = tags })
+    by.style.single_line = false
+    by.style.maximal_width = 220
+    by.style.font_color = { 0.7, 0.7, 0.7 }
+  end
+end
+
 function gui.open(player, prefs)
   gui.close(player, prefs)
   local frame = player.gui.screen.add({ type = "frame", name = gui.FRAME, direction = "vertical" })
@@ -120,35 +152,17 @@ function gui.open(player, prefs)
   options.style.vertical_spacing = 6
   options.style.width = 330
 
-  -- the engineer and every installed avatar pack
+  -- the engineer and every installed avatar pack, a row each with its name (icons alone can't tell
+  -- similar avatars apart); whole rows only, so it is clear when the list scrolls
   options.add({ type = "label", style = "caption_label", caption = { "avatar-characters.look" } })
   local pane = options.add({ type = "scroll-pane", horizontal_scroll_policy = "never" })
-  pane.style.maximal_height = 248
-  local looks = pane.add({ type = "table", name = "avatar_looks", column_count = 4 })
-  looks.style.horizontal_spacing = 4
+  pane.style.maximal_height = LOOK_ROWS * LOOK_ROW_HEIGHT - 4
+  local looks = pane.add({ type = "flow", name = "avatar_looks", direction = "vertical" })
   looks.style.vertical_spacing = 4
-  looks.add({
-    type = "sprite-button",
-    name = "avatar_look_",
-    style = "avatar_characters_look_button",
-    sprite = "entity/character",
-    tooltip = { "avatar-characters.look-engineer" },
-    tags = { avatar_action = "look", avatar = "" },
-  })
+  add_look(looks, "", "entity/character", { "avatar-characters.look-engineer" }, nil)
   local installed = packs.list()
   for _, pack in ipairs(installed) do
-    local tooltip = pack.title
-    if pack.author and pack.author ~= "" then
-      tooltip = { "avatar-characters.look-author", pack.title, pack.author }
-    end
-    looks.add({
-      type = "sprite-button",
-      name = "avatar_look_" .. pack.id,
-      style = "avatar_characters_look_button",
-      sprite = pack.sprite,
-      tooltip = tooltip,
-      tags = { avatar_action = "look", avatar = pack.id },
-    })
+    add_look(looks, pack.id, pack.sprite, pack.title, pack.author)
   end
   if #installed == 0 then
     local none = options.add({ type = "label", caption = { "avatar-characters.no-packs-installed" } })
@@ -208,9 +222,9 @@ function gui.refresh(player, prefs)
   local pack = packs.get(prefs.avatar)
   local looks = find(frame, "avatar_looks")
   if looks then
-    for _, button in pairs(looks.children) do
-      local id = button.tags.avatar
-      button.toggled = (pack == nil and id == "") or (pack ~= nil and id == pack.id)
+    for _, row in pairs(looks.children) do
+      local id = row.tags.avatar
+      row.avatar_look_button.toggled = (pack == nil and id == "") or (pack ~= nil and id == pack.id)
     end
   end
   local chosen = find(frame, "avatar_chosen")

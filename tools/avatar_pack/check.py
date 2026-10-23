@@ -15,7 +15,9 @@ from PIL import Image
 import lua_table
 from avatar_pack import spec
 
-VRAM_WARNING_MB = 256
+# uncompressed; Factorio compresses sprites and trims their empty edges, so in the game a pack takes
+# about a tenth of this (12 test packs of 89 MB each added about 120 MB of video memory)
+VRAM_WARNING_MB = 1024
 
 
 class PackFiles:
@@ -462,8 +464,9 @@ def report(path):
     if checker.errors:
         return False
     mb = checker.vram_mb()
-    print(f"OK: {label}: {len(checker.sheets)} sprite sheets, about {mb:.0f} MB of video memory")
+    print(f"OK: {label}: {len(checker.sheets)} sprite sheets, {mb:.0f} MB uncompressed"
+          f" (about {mb / 10:.0f} MB of video memory in the game)")
     if mb > VRAM_WARNING_MB:
-        print(f"{label}: warning: more than {VRAM_WARNING_MB} MB of video memory; consider 32 pixels per tile,"
+        print(f"{label}: warning: more than {VRAM_WARNING_MB} MB uncompressed; consider 32 pixels per tile,"
               " fewer frames or leaving out flight")
     return True

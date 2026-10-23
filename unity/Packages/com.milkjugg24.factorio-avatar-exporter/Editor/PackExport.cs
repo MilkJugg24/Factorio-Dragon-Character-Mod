@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.5.3";
+        public const string Version = "0.5.4";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -183,7 +183,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     File.WriteAllBytes(Path.Combine(options.PreviewFolder, name), PngWriter.Encode(character.Files[i]));
                 }
             }
-            report.AppendLine($"{files} sprite sheets, about {bytes / (1024 * 1024)} MB of video memory in the game");
+            // Factorio compresses sprites and trims their empty edges: 12 test packs of 89 MB each added about 120 MB
+            report.AppendLine($"{files} sprite sheets, {bytes / (1024 * 1024)} MB uncompressed (about " +
+                $"{bytes / (10 * 1024 * 1024)} MB of video memory in the game)");
             report.AppendLine($"done in {clock.Elapsed.TotalSeconds:0} s");
             File.WriteAllText(Path.Combine(options.PreviewFolder, "report.txt"), report.ToString());
             return new PackExportResult { ZipPath = zip, Report = report.ToString() };

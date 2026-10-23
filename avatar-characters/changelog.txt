@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.2
+Date: 2026-10-23
+  Changes:
+    - The avatar window lists the looks one per row, each with its name and author, so similar avatars
+      can be told apart; click the button or the name. It shows four rows before it scrolls, never part
+      of one.
+---------------------------------------------------------------------------------------------------
 Version: 0.3.1
 Date: 2026-10-23
   Bugfixes:

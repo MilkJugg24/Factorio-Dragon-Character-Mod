@@ -37,8 +37,8 @@ a newer `.unitypackage` the same way.
    - **Name**: shown in the game. The **Pack id** is made from it; keep it the same when you export a
      new version later.
    - **Author** (optional) and **Version** (start with 1.0.0).
-   - **Resolution**: 64 pixels per tile is sharp. 32 uses a quarter of the video memory, which is worth it
-     on a server with many avatars.
+   - **Resolution**: 64 pixels per tile is sharp, and right for almost everyone. 32 uses a quarter of
+     the video memory, for very large servers or old computers.
    - **Flight animations**: on, unless you never fly with mech armor.
    - Tick **I made this avatar, or its author allows me to use it this way**, and if you like, add a note
      (the avatar's license, or who gave permission). It goes into the pack's README.
@@ -126,8 +126,10 @@ To leave a character out of a new bundle, untick it in Combine Packs. Before the
 bundle, run `/avatar-revert-all <id>` in the game for it (see the section on removing below), or the characters
 using it are deleted together with their items.
 
-Each character uses video memory on every player's computer; `report.txt` says how much. With many
-avatars, export them at 32 pixels per tile.
+Each character uses video memory on every player's computer; `report.txt` says how much. It's less than
+you might fear, because the game compresses sprites. In a test, a bundle of 12 characters at 64 pixels per
+tile added about 120 MB of video memory and about a second of loading time, and the game ran at a full
+60 frames per second with all 12 on screen. Avatars with big wings or long hair take more.
 
 ## Updating your avatar
 
