@@ -152,11 +152,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
 
             EditorGUILayout.Space();
-            if (GUILayout.Button("Save every animation as images"))
+            if (GUILayout.Button("Export All"))
             {
                 SaveAllSheets();
             }
-            if (GUILayout.Button("Save only this animation"))
+            if (GUILayout.Button("Export Selected Animation"))
             {
                 SaveSheet(info.Name);
             }

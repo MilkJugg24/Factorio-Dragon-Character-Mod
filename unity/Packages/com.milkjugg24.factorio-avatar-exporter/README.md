@@ -26,10 +26,10 @@ scene; your scene and avatar are not changed.
   - the corpse.
 - **Pose check:** how far the avatar's bones ended up from where the exporter meant to put them, in
   pixels. Under 1 px means the posing works on your rig. If it says more, please report it.
-- **Save every animation as images:** a sheet per animation (a row per direction, a column per frame)
-  and `report.txt` with the report and each animation's pose check, in
-  `FactorioAvatarExport/<avatar>/preview/` next to `Assets`. Handy for sending. **Save only this
-  animation** does the one shown.
+- **Export All:** saves a sheet per animation (a row per direction, a column per frame) and
+  `report.txt` with the report and each animation's pose check, in
+  `FactorioAvatarExport/<avatar>/preview/` next to `Assets`. Handy for sending. **Export Selected
+  Animation** saves only the animation shown.
 
 Outfits and accessories with their own armature (joined to the body by VRCFury's Armature Link or Modular
 Avatar's Merge Armature, which only do it in Play mode), and objects held on by constraints, would be left
