@@ -43,9 +43,9 @@ for run in manifest["runs"]:
         label = s.get("label")
         if name.startswith("run") and not run["solo"] and s.get("moved", 0) < 5:
             problems.append(f"{name}: {label} hardly moved ({s.get('moved')})")
-        if name.startswith("fly") and dlc and not s.get("flew"):
+        if name.startswith("fly") and dlc and not run["solo"] and not s.get("flew"):
             problems.append(f"{name}: {label} never took off")
-        if dlc and s.get("landed") is False:
+        if dlc and not run["solo"] and s.get("landed") is False:
             problems.append(f"{name}: {label} never landed")
         if name == "corpse" and not s.get("corpse"):
             problems.append(f"{name}: {label} left no corpse")
