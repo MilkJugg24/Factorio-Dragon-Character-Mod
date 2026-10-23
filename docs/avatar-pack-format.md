@@ -148,7 +148,7 @@ return {
 | `hover-gun` | 8 | 0.27 | flying in place with a gun |
 | `fly` | 8 | 0.3 | flying |
 | `fly-gun` | 18 | 0.3 | flying with a gun (see below) |
-| `take-off` | 8 | 0.3 | taking off; landing plays it backwards |
+| `take-off` | 8 | 0.3 | taking off, with the gun; landing plays it backwards |
 
 - `idle`, `idle-gun`, `run`, `run-gun`, `mine` and `corpse` are required.
 - The flight animations are all present (`flight = true`) or all absent. A pack
@@ -158,6 +158,10 @@ return {
   (Factorio's limit). Looping animations are
   sampled at `t = frame / frame_count`; `take-off` at `t = frame / (frame_count - 1)`
   so that its last frame is the first hover frame.
+- Factorio has a single take-off animation and keeps firing while a character
+  takes off, with the muzzle flash where the gun would be. So `take-off` holds
+  the gun, as the engineer's mech armor sprites do, and ends in the first
+  `hover-gun` frame.
 - `timing.mine_impact_frame` (1-based) is when the mining sound and particles
   play. `left_foot_frames` / `right_foot_frames` are the running frames where a
   foot lands. `distance_per_frame` sets how fast the run animation plays for

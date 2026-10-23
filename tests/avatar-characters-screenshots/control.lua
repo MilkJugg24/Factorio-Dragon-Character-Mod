@@ -49,11 +49,11 @@ local SCENES = {
   -- across a narrow lake: take off, fly over it and land on the far side
   { name = "fly-land-east", move = D.east, fly = true, water_from = 4, water_width = 7, length = 190, from = 20, every = 3 },
   -- flying while shooting (flying_with_gun, then hovering with the gun once it stops): the gun aimed
-  -- across the flight and along it
-  { name = "fly-gun-east-aim-north", move = D.east, aim = D.north, fly = true, gun = true, solo = true, water_from = 4,
-    stop_at = 130, length = 190, from = 20, every = 3 },
-  { name = "fly-gun-east-aim-east", move = D.east, aim = D.east, fly = true, gun = true, solo = true, water_from = 4,
-    stop_at = 130, length = 190, from = 20, every = 3 },
+  -- across the flight and along it. Shooting slows everyone to 30%, so the lake starts a tile ahead
+  { name = "fly-gun-east-aim-north", move = D.east, aim = D.north, fly = true, gun = true, solo = true, water_from = 1,
+    stop_at = 160, length = 190, from = 20, every = 3 },
+  { name = "fly-gun-east-aim-east", move = D.east, aim = D.east, fly = true, gun = true, solo = true, water_from = 1,
+    stop_at = 160, length = 190, from = 20, every = 3 },
   { name = "corpse", face = D.south, die = 10, length = 40, from = 39, every = 10 },
 }
 

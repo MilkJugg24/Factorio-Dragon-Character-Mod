@@ -181,6 +181,11 @@ function gui.open(player, prefs)
   player.opened = frame
   player.set_shortcut_toggled(gui.SHORTCUT, true)
   gui.refresh(player, prefs)
+  -- centred once it has its contents: auto_center alone centred the still empty frame, so the full window
+  -- hung from the middle of the screen
+  if not prefs.gui_location then
+    frame.force_auto_center()
+  end
 end
 
 function gui.refresh(player, prefs)

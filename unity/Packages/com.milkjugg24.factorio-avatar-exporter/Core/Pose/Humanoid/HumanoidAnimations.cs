@@ -270,28 +270,64 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// </summary>
         private const double PickWindUp = 0.6;
 
+        /// <summary>How far the hands hold the pick from between the shoulders, arm lengths (they reach further in the blow).</summary>
+        private const double PickReach = 0.73;
+
+        /// <summary>Length of the pick's handle from the hands to the head, and behind the hands, tiles at the default height.</summary>
+        private const double PickAhead = 0.62, PickBehind = 0.10;
+
+        /// <summary>The point between the shoulders the pick swings round.</summary>
+        private Vec3 PickPivot(HumanoidPoseBuilder b, Quat chest) =>
+            (Shoulder(b, 1) + Shoulder(b, -1)) * 0.5 + chest.Forward.Horizontal.Normalized * (0.03 * sizeScale) - chest.Up * (0.015 * sizeScale);
+
+        /// <summary>
+        /// The handle angle (radians from forward-horizontal, up positive) at which the pick's point, swung
+        /// down in front with the hands <paramref name="reach"/> arm lengths out, touches the ground; the lowest
+        /// it reaches when the ground is too far down.
+        /// </summary>
+        private double GroundAlpha(HumanoidPoseBuilder b, Quat chest, double reach)
+        {
+            // the point: pivot + handle(alpha) * along - head(alpha) * point, so its height is
+            // pivot.Z + along * sin(alpha) - point * cos(alpha) = pivot.Z + r * sin(alpha - phi)
+            (double r, double phi) = PickSwing(reach);
+            double height = PickPivot(b, chest).Z;
+            return phi + (height >= r ? -Math.PI / 2 : Math.Asin(-height / r));
+        }
+
+        /// <summary>
+        /// How far the pick's point is from the pivot with the hands <paramref name="reach"/> arm lengths out, and
+        /// the angle between the handle and the line to the point.
+        /// </summary>
+        private (double radius, double angle) PickSwing(double reach)
+        {
+            double along = reach * rig.ArmLength + PickAhead * sizeScale;
+            double point = StickFigure.PickHeadPoint * (PickAhead + PickBehind) * sizeScale;
+            return (Math.Sqrt(along * along + point * point), Math.Atan2(point, along));
+        }
+
         /// <summary>
         /// The pickaxe with its handle at <paramref name="alpha"/> radians from forward-horizontal, up
-        /// positive (model.hold_pick), both hands closed round it (<see cref="HoldHandle"/>). As the pick is
-        /// raised (<paramref name="raise"/> from 0 to 1), the hands, which model.hold_pick moves along the
-        /// handle to behind the shoulders, stay over the head (<see cref="PickWindUp"/>), and the elbows turn
-        /// from out, back and down to out, up and a little forward: shoulders do not reach further back.
+        /// positive (model.hold_pick), both hands closed round it (<see cref="HoldHandle"/>) <paramref name="reach"/>
+        /// arm lengths out. As the pick is raised (<paramref name="raise"/> from 0 to 1), the hands, which
+        /// model.hold_pick moves along the handle to behind the shoulders, stay over the head
+        /// (<see cref="PickWindUp"/>), and the elbows turn from out, back and down to out, up and a little
+        /// forward: shoulders do not reach further back.
         /// </summary>
-        private void HoldPick(HumanoidPoseBuilder b, Quat chest, double alpha, double raise)
+        private void HoldPick(HumanoidPoseBuilder b, Quat chest, double alpha, double raise, double reach = PickReach)
         {
             Vec3 forward = chest.Forward.Horizontal.Normalized;
             Vec3 handle = forward * Math.Cos(alpha) + Vec3.UnitZ * Math.Sin(alpha);
             Vec3 head = -forward * Math.Sin(alpha) + Vec3.UnitZ * Math.Cos(alpha);
             Vec3 side = Vec3.Cross(forward, Vec3.UnitZ).Normalized;
-            Vec3 pivot = (Shoulder(b, 1) + Shoulder(b, -1)) * 0.5 + forward * (0.03 * sizeScale) - chest.Up * (0.015 * sizeScale);
-            Vec3 reach = handle * (0.73 * rig.ArmLength);
-            double back = Math.Min(0, Vec3.Dot(reach, forward));
-            Vec3 grip = pivot + reach - forward * (back * PickWindUp * raise)
+            Vec3 pivot = PickPivot(b, chest);
+            Vec3 hands = handle * (reach * rig.ArmLength);
+            double back = Math.Min(0, Vec3.Dot(hands, forward));
+            Vec3 grip = pivot + hands - forward * (back * PickWindUp * raise)
                         + Vec3.UnitZ * (0.12 * rig.ArmLength * PickWindUp * raise);
             Vec3 bend = Vec3.Lerp(-forward * 0.3 - Vec3.UnitZ * 0.5, forward * 0.2 + Vec3.UnitZ * 0.6, raise);
             HoldHandle(b, 1, grip, handle, side * 0.8 + bend);
             HoldHandle(b, -1, grip - handle * (0.07 * sizeScale), handle, -side * 0.8 + bend);
-            b.SetProp(new PropPose(PropKind.Pickaxe, grip - handle * (0.10 * sizeScale), grip + handle * (0.46 * sizeScale), head));
+            b.SetProp(new PropPose(PropKind.Pickaxe, grip - handle * (PickBehind * sizeScale), grip + handle * (PickAhead * sizeScale), head));
         }
 
         // -- animations -----------------------------------------------------------------------------
@@ -366,11 +402,17 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         /// <summary>
         /// Handle angle of every mine frame, degrees, and the forward lean that goes with it: anims.mine's
-        /// tables, with the blow from frame 9 on swung lower and leaned into further, since a human's
-        /// longer body needs that for the pick to reach the ground.
+        /// tables, with the blow from frame 9 on leaned into further, since a human's longer body needs that
+        /// for the pick to reach the ground. In the blow and the dig (<see cref="FirstDigFrame"/> to
+        /// <see cref="LastDigFrame"/>) the arms reach out and the angle is the one that puts the pick's point
+        /// on the ground in front (<see cref="GroundAlpha"/>), as far ahead as the body allows.
         /// </summary>
         private static readonly int[] MineAlpha = { -30, 5, 45, 90, 125, 148, 152, 75, -62, -66, -60, -48 };
-        private static readonly double[] MineLean = { 0.30, 0.22, 0.12, 0.03, -0.05, -0.09, -0.09, 0.15, 0.62, 0.64, 0.60, 0.50 };
+        private static readonly double[] MineLean = { 0.30, 0.22, 0.12, 0.03, -0.05, -0.09, -0.09, 0.15, 0.95, 0.98, 0.93, 0.60 };
+        private const int FirstDigFrame = 8, LastDigFrame = 10;
+
+        /// <summary>How far out the hands hold the pick in the blow, arm lengths.</summary>
+        private const double PickBlowReach = 0.85;
 
         /// <summary>anims.mine: raise the pick over the shoulder, strike on frame 9, lean into the blow.</summary>
         private PoseResult Mine(double t)
@@ -379,16 +421,32 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             double alpha = MathUtil.Radians(MineAlpha[i]);
             double lean = MineLean[i];
             double raise = MathUtil.Smoothstep(40, 150, MineAlpha[i]);
-            // crouch into the blow
+            // crouch and shift the weight forward into the blow
             double crouch = MathUtil.Smoothstep(0.3, 0.6, lean);
-            var pelvis = new Vec3(0, -0.02 * legScale - 0.08 * legScale * crouch,
-                rig.HipsHeight - 0.06 * rig.LegLength - 0.1 * rig.LegLength * crouch + 0.03 * legScale * raise);
-            HumanoidPoseBuilder b = Torso(pelvis, lean, headPitch: 0.15 - 0.25 * (lean - 0.1));
-            HoldPick(b, ChestFrame(lean), alpha, raise);
+            var pelvis = new Vec3(0, -0.02 * legScale + 0.06 * legScale * crouch,
+                rig.HipsHeight - 0.06 * rig.LegLength - 0.16 * rig.LegLength * crouch + 0.03 * legScale * raise);
+            double headPitch = 0.15 - 0.25 * (lean - 0.1);
+            HumanoidPoseBuilder b = Torso(pelvis, lean, headPitch: headPitch);
+            Quat chest = ChestFrame(lean);
+            bool dig = i >= FirstDigFrame && i <= LastDigFrame;
+            double reach = dig ? PickBlowReach : PickReach;
+            if (dig)
+            {
+                // a body too tall for its arms and pick crouches lower, so the point reaches the ground ahead
+                double tooHigh = PickPivot(b, chest).Z - 0.85 * PickSwing(reach).radius;
+                if (tooHigh > 0)
+                {
+                    pelvis -= Vec3.UnitZ * Math.Min(tooHigh, 0.15 * rig.LegLength);
+                    b = Torso(pelvis, lean, headPitch: headPitch);
+                }
+            }
+            // the point never goes into the ground
+            double ground = GroundAlpha(b, chest, reach);
+            HoldPick(b, chest, dig ? ground : Math.Max(alpha, ground), raise, reach);
             foreach (int side in Sides)
             {
                 Vec3 rest = rig.Ball(side);
-                var ball = new Vec3(rest.X + side * 0.04 * legScale, rest.Y + (side < 0 ? 0.12 : -0.08) * legScale, rest.Z);
+                var ball = new Vec3(rest.X + side * 0.04 * legScale, rest.Y + (side < 0 ? 0.18 : -0.08) * legScale, rest.Z);
                 Vec3 forward = rig.FootForward(side);
                 b.SetFoot(side, ball, forward, 0, forward + Vec3.UnitX * (side * 0.2));
             }
@@ -438,17 +496,20 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             return b.Build();
         }
 
-        /// <summary>anims.take_off: crouch, spring up, and end exactly in the first hover frame.</summary>
+        /// <summary>
+        /// anims.take_off: crouch, spring up, and end exactly in the first hover-with-gun frame. The gun stays in
+        /// the hands, as on the game's own mech armor sprites: Factorio has no take-off without a gun, and keeps
+        /// firing while a character takes off, with the muzzle flash where the gun would be.
+        /// </summary>
         private PoseResult TakeOff(double t)
         {
             double crouch = MathUtil.Smoothstep(0.0, 0.28, t) * (1 - MathUtil.Smoothstep(0.28, 0.55, t));
             double lift = MathUtil.Smoothstep(0.3, 1.0, t);
-            double spread = MathUtil.Smoothstep(0.05, 0.6, t);
             double lean = 0.03 + 0.25 * crouch + 0.07 * lift;
             var pelvis = new Vec3(0, -0.005 * legScale * (1 - lift),
                 standingPelvis - 0.11 * legScale * crouch + Conventions.FlyHeight * lift);
             HumanoidPoseBuilder b = Torso(pelvis, lean, headPitch: -0.05 * lift);
-            RelaxedArms(b, ChestFrame(lean), 0, 0.03 * spread);
+            HoldGun(b, ChestFrame(lean));
             if (lift < 0.05)
             {
                 StandingFeet(b, 0.01);

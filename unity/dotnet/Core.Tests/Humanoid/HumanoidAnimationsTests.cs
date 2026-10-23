@@ -123,17 +123,18 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
         }
 
         [TestCaseSource(nameof(Rigs))]
-        public void TakeOffEndsInTheFirstHoverFrame(RigInput input)
+        public void TakeOffEndsInTheFirstHoverWithGunFrame(RigInput input)
         {
             HumanoidAnimations animations = Animations(input, out _);
             PoseResult end = animations.Pose(AnimationSpec.TakeOff, 1.0, 0);
-            PoseResult hover = animations.Pose(AnimationSpec.Hover, 0.0, 0);
+            PoseResult hover = animations.Pose(AnimationSpec.HoverGun, 0.0, 0);
             foreach (KeyValuePair<string, Vec3> joint in hover.Joints)
             {
                 TestMath.AssertClose(end.Joints[joint.Key], joint.Value, 1e-9, joint.Key);
             }
+            TestMath.AssertClose(end.Prop.Tip, hover.Prop.Tip, 1e-9, "the gun");
             PoseResult start = animations.Pose(AnimationSpec.TakeOff, 0.0, 0);
-            PoseResult idle = animations.Pose(AnimationSpec.Idle, 0.0, 0);
+            PoseResult idle = animations.Pose(AnimationSpec.IdleGun, 0.0, 0);
             TestMath.AssertClose(start.Joints[JointNames.Ball(1)], idle.Joints[JointNames.Ball(1)], 1e-9, "take-off starts standing");
         }
 
@@ -142,7 +143,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
         {
             HumanoidAnimations animations = Animations(input, out HumanoidRig rig);
             double size = rig.HeadTopHeight / 1.5;
-            foreach (string animation in new[] { AnimationSpec.IdleGun, AnimationSpec.RunGun, AnimationSpec.HoverGun, AnimationSpec.FlyGun })
+            // take-off too: the game keeps shooting while a character takes off
+            foreach (string animation in new[] { AnimationSpec.IdleGun, AnimationSpec.RunGun, AnimationSpec.HoverGun, AnimationSpec.FlyGun,
+                AnimationSpec.TakeOff })
             {
                 AnimationInfo info = AnimationSpec.Get(animation);
                 for (int row = 0; row < info.DirectionCount; row++)
@@ -175,6 +178,16 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
             Assert.That(impact.Prop.Kind, Is.EqualTo(PropKind.Pickaxe));
             Assert.That(impact.Prop.Tip.Z, Is.LessThan(rig.HipsHeight * 0.6), "the pick head comes down");
             Assert.That(impact.Prop.Tip.Y, Is.GreaterThan(0), "in front of the body");
+            // the point strikes the ground well ahead of the feet, as the engineer's pick reaches the ore in front of it
+            Vec3 point = PickPoint(impact);
+            Assert.That(point.Z, Is.EqualTo(0).Within(1e-9), "the point is on the ground");
+            double toes = TestMath.Sides.Max(side => impact.Joints[JointNames.Toe(side)].Y);
+            Assert.That(point.Y, Is.GreaterThan(toes + 0.15 * rig.HeadTopHeight), "well ahead of the front foot");
+            Assert.That(point.Y, Is.GreaterThan(0.4 * rig.HeadTopHeight), "most of a tile ahead at the usual size");
+            for (int f = 0; f < AnimationSpec.Get(AnimationSpec.Mine).FrameCount; f++)
+            {
+                Assert.That(PickPoint(Frame(animations, AnimationSpec.Mine, f)).Z, Is.GreaterThan(-1e-9), $"frame {f + 1}: not in the ground");
+            }
             // the wind-up, frames 4 to 8
             for (int f = 3; f < 8; f++)
             {
@@ -183,6 +196,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
                     $"frame {f + 1}: raised above the shoulders");
             }
         }
+
+        /// <summary>The point of the pick's head, as drawn (<see cref="StickFigure"/>).</summary>
+        private static Vec3 PickPoint(PoseResult pose) =>
+            pose.Prop.Tip - pose.Prop.Up * (StickFigure.PickHeadPoint * Vec3.Distance(pose.Prop.Base, pose.Prop.Tip));
 
         [TestCaseSource(nameof(Rigs))]
         public void TheCorpseLiesFlat(RigInput input)
