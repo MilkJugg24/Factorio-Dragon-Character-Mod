@@ -22,6 +22,7 @@ goldens also need numba.
 | `Core/` | The package's Core sources as a `netstandard2.1` library. |
 | `Core.Tests/` | NUnit tests (`net8.0`). `Goldens/` holds reference data written by Python tools. |
 | `PackHarness/` | Writes a real avatar pack from a synthetic rig drawn by the software stick-figure renderer: the whole exporter without Unity. |
+| `EditorTypeCheck/` | Compiles Core and the Unity `Editor/` scripts against Unity's own assemblies (the `Unity3D.SDK` NuGet package, Unity 2021.1), so a script that would not compile in Unity fails here and in CI: `dotnet build unity/dotnet/EditorTypeCheck`. |
 
 ```sh
 dotnet run --project unity/dotnet/PackHarness -- --out build/harness --rig generic --zip

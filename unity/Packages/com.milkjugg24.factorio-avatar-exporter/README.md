@@ -1,12 +1,37 @@
 # Factorio Avatar Exporter (Unity package)
 
 Turns a humanoid avatar (a VRChat avatar, for example) into an avatar pack for the Dragon Character
-Factorio mod. Work in progress: this version has only the **rendering spike**, a test of whether avatars
-render cleanly for sprites before the full exporter window is built.
+Factorio mod. Work in progress: this version **previews your avatar posed in every animation** of an
+avatar pack. Writing the pack itself comes next. It also still has the **rendering spike**, the first test
+of whether avatars render cleanly for sprites.
 
 - `Core/`: everything that decides what to draw and writes the pack. It has no Unity references and is
   developed and tested outside Unity (see `unity/dotnet/README.md`).
 - `Editor/`: the Unity side.
+
+## The exporter window (preview)
+
+Open **Tools ▸ Factorio Avatar Exporter ▸ Exporter**, drag your avatar into the Avatar field (the object
+with the VRChat avatar descriptor, or its prefab) and press **Load avatar**. A copy is made in a hidden
+scene; your scene and avatar are not changed.
+
+- **Report:** height, how big it is drawn, leg style (plantigrade or digitigrade), optional bones it
+  lacks, scripts removed from the copy, and warnings about the rig.
+- **Preview:** choose an animation, a direction and a frame, or press **Play**. The yellow cross is where
+  the character stands in the game. Every animation of a pack is there:
+  - idle, run and mine, with or without a gun;
+  - flight (hover, fly, take-off);
+  - the corpse.
+- **Pose check:** how far the avatar's bones ended up from where the exporter meant to put them, in
+  pixels. Under 1 px means the posing works on your rig. If it says more, please report it.
+- **Save every frame of this animation as an image:** a sheet with a row per direction, in
+  `FactorioAvatarExport/<avatar>/preview/` next to `Assets`. Handy for sending.
+
+What it doesn't do yet:
+- fingers don't close around the gun or pickaxe, and the gun and pickaxe themselves aren't drawn;
+- no ground shadows;
+- wings, tails and ears stay in their rest pose in every animation;
+- no pack output.
 
 ## Trying the rendering spike
 

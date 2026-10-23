@@ -1,6 +1,7 @@
 <#
 .SYNOPSIS
-Runs the exporter's rendering spike on avatars in a Unity project, without opening the Editor. See tests/UNITY-SPIKE.md.
+Runs the exporter on avatars in a Unity project without opening the Editor: the rendering spike, or every
+animation posed (-Mode poses). See tests/UNITY-SPIKE.md.
 
 .DESCRIPTION
 Builds the exporter's .unitypackage from this repository, imports it into the Unity project (it lands in
@@ -25,7 +26,9 @@ param(
     # Where the results go; default unity-spike\<date-time> in the repository.
     [string]$Out = "",
     # Don't import the package (it is already in the project, e.g. imported by hand).
-    [switch]$SkipImport
+    [switch]$SkipImport,
+    # spike: the T-pose in 8 directions; poses: every animation posed by the exporter, a sheet each.
+    [ValidateSet("spike", "poses")][string]$Mode = "spike"
 )
 $ErrorActionPreference = "Stop"
 function Quote([string]$s) { '"' + $s + '"' }
@@ -65,9 +68,9 @@ if (-not $SkipImport) {
     if ($code -ne 0) { throw "the import failed (exit $code); see $Out\unity-import.log" }
 }
 
-Write-Host "== rendering (Unity runs without a window; this takes a minute or two)"
-$render = @("-executeMethod", "MilkJugg24.FactorioAvatarExporter.Editor.RenderSpike.RenderFromCommandLine",
-    "-spikeOut", (Quote $Out))
+Write-Host "== rendering ($Mode; Unity runs without a window; this takes a few minutes)"
+$method = if ($Mode -eq "poses") { "ExporterCommandLine.RenderPoses" } else { "RenderSpike.RenderFromCommandLine" }
+$render = @("-executeMethod", "MilkJugg24.FactorioAvatarExporter.Editor.$method", "-spikeOut", (Quote $Out))
 if ($Scene) { $render += @("-spikeScene", (Quote $Scene)) }
 if ($Avatar) { $render += @("-spikeAvatar", (Quote $Avatar)) }
 $code = Run-Unity ($render + @("-quit")) (PathOf $Out "unity-render.log")

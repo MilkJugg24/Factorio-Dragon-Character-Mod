@@ -30,7 +30,10 @@ powershell -ExecutionPolicy Bypass -File tests\run_unity_spike.ps1 -Project "<pr
 The script builds the `.unitypackage` from this repository (needs Python), imports it into the project
 (it lands in `Assets/FactorioAvatarExporter`, the same as importing by hand) and has Unity render without
 opening a window. It finds Unity through Unity Hub from the project's version, or takes `-Unity <Unity.exe>`.
-Add `-SkipImport` if the package is already in the project.
+Add `-SkipImport` if the package is already in the project. Add `-Mode poses` to render every animation
+posed by the exporter instead of the spike's T-pose: one sheet per animation (`<avatar>/<animation>.png`, a
+row per direction) and a `report.txt` with the rig report and, per animation, how far the bones ended up
+from where the exporter meant to put them.
 
 Results go to `unity-spike/<date-time>/` in the repository:
 
@@ -63,12 +66,14 @@ Paste into a Claude Code session started in this repository on the PC with Unity
 > Pull `main`. Then test the Unity avatar exporter's rendering spike, following `tests/UNITY-SPIKE.md`.
 > Find my VRChat Unity project(s) (Unity Hub lists them in `%APPDATA%\UnityHub\projects-v1.json`;
 > ask me if it's unclear which to use) and the scene or prefabs with my avatars. Make sure the project
-> is closed in Unity, then run `tests\run_unity_spike.ps1` on it. Install Python's Pillow first if
+> is closed in Unity, then run `tests\run_unity_spike.ps1` on it, once as it is and once with `-Mode poses`. Install Python's Pillow first if
 > needed (`py -m pip install pillow`). Prefer an avatar using Poiyomi, one using lilToon, and any other
 > humanoid. If the script or Unity fails, read `unity-render.log` and `unity-import.log`. Fix only the
 > test script, or the exporter's `Editor/` code if it doesn't compile, and note every fix. Look at each
-> avatar's `strip-on-grey.png` and the raw renders, and write `unity-spike/<date-time>/OBSERVATIONS.md`:
-> per avatar, which shaders it uses, whether it looks like it does in Unity's Scene view (colours,
-> outlines, shading), fringes or halos at the edges, missing or cut-off parts, and Console errors.
+> avatar's `strip-on-grey.png` and the raw renders, and the animation sheets of the poses run, and write
+> `unity-spike/<date-time>/OBSERVATIONS.md`: per avatar, which shaders it uses, whether it looks like it
+> does in Unity's Scene view (colours, outlines, shading), fringes or halos at the edges, missing or
+> cut-off parts, Console errors, and for the poses whether each animation looks right (limbs bent the
+> natural way, nothing twisted, feet on the ground when they should be) and the pose check numbers.
 > Commit the results folder (and any fixes) to the branch `unity-spike` and push it; don't push to
 > `main` and don't commit the Unity project. Finish with a short summary.

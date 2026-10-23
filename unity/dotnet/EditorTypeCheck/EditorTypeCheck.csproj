@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Compiles the package's Core and Editor sources against Unity's own UnityEngine and UnityEditor
+    assemblies (the Unity3D.SDK NuGet package, Unity 2021.1), so an Editor script that would not compile
+    in Unity is caught here. Nothing is built for use: the output is thrown away. Unity 2022.3 has every
+    API 2021.1 has, so code that compiles here compiles there, but an API new in 2022 would fail here.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>CS1591;NU1701</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Packages/com.milkjugg24.factorio-avatar-exporter/Core/**/*.cs" />
+    <Compile Include="../../Packages/com.milkjugg24.factorio-avatar-exporter/Editor/**/*.cs" />
+    <PackageReference Include="Unity3D.SDK" Version="2021.1.14.1" />
+  </ItemGroup>
+</Project>

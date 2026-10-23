@@ -224,6 +224,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     RenderTextureReadWrite.Linear) { antiAliasing = 1 };
                 temporary.Add(target);
                 camera.targetTexture = target;
+                // the projection itself, after the target: Unity resets the aspect ratio to the target's, which
+                // squeezed the view and cut off wide wings
+                camera.projectionMatrix = Matrix4x4.Ortho((float)-view.HalfWidth, (float)view.HalfWidth,
+                    (float)-view.HalfHeight, (float)view.HalfHeight, (float)view.Near, (float)view.Far);
                 var readback = new Texture2D(view.TargetWidth, view.TargetHeight, TextureFormat.RGBAFloat, false, true);
                 temporary.Add(readback);
 

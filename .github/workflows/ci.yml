@@ -25,6 +25,8 @@ jobs:
         run: pip install numpy pillow
       - name: Test
         run: dotnet test unity/dotnet/Core.Tests
+      - name: Unity Editor scripts compile against Unity's API
+        run: dotnet build unity/dotnet/EditorTypeCheck
       - name: Build the .unitypackage
         run: python3 tools/make_unitypackage.py
       - uses: actions/upload-artifact@v4

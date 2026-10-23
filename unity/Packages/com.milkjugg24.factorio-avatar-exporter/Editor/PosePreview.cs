@@ -1,0 +1,197 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using MilkJugg24.FactorioAvatarExporter.Core;
+using UnityEngine;
+using AnimationInfo = MilkJugg24.FactorioAvatarExporter.Core.AnimationInfo;
+
+namespace MilkJugg24.FactorioAvatarExporter.Editor
+{
+    /// <summary>One rendered frame of an animation, with what the preview knows about it.</summary>
+    internal sealed class PreviewFrame
+    {
+        public Image8 Image;
+        public CanvasSpec Canvas;
+
+        /// <summary>How far the posed bones are from Core's joints, final pixels (NaN when not checked).</summary>
+        public double JointErrorPixels;
+    }
+
+    /// <summary>
+    /// Renders an avatar posed by Core's humanoid animations, frame by frame, for the exporter window and
+    /// the command line. Each animation gets one canvas for all its directions and frames, planned from the
+    /// posed meshes; if a frame still reaches the canvas edge (something the meshes didn't show, such as a wide
+    /// outline), the canvas grows and the frame is rendered again.
+    /// </summary>
+    internal sealed class PosePreview : IDisposable
+    {
+        public const int PixelsPerTile = 64;
+        private const int MarginStep = 16;
+        private const int MaxGrowth = 6;
+
+        private readonly AvatarStage stage;
+        private readonly StageCamera camera;
+        private readonly HumanoidAnimations poses;
+        private readonly Dictionary<string, Bounds3> bounds = new Dictionary<string, Bounds3>();
+        private readonly Dictionary<string, int> margins = new Dictionary<string, int>();
+
+        private PosePreview(AvatarStage stage)
+        {
+            this.stage = stage;
+            camera = new StageCamera(stage);
+            poses = new HumanoidAnimations(stage.Rig);
+            Notes.AddRange(stage.Notes);
+            Notes.Add($"shaders: compiled {StageCamera.CompileShaders(stage.Avatar)} passes up front");
+        }
+
+        public List<string> Notes { get; } = new List<string>();
+        public string AvatarName => stage.Avatar.name;
+
+        /// <summary>Times a canvas grew because a frame reached its edge.</summary>
+        public int Growths { get; private set; }
+
+        public int Retakes => camera.Retakes;
+        public int PlaceholderLeft => camera.PlaceholderLeft;
+
+        public static PosePreview Load(GameObject source)
+        {
+            AvatarStage stage = AvatarStage.Load(source);
+            try
+            {
+                return new PosePreview(stage);
+            }
+            catch
+            {
+                stage.Dispose();
+                throw;
+            }
+        }
+
+        public PoseResult Pose(string animation, int row, int frame) =>
+            poses.Pose(animation, AnimationSpec.FramePhase(animation, frame), AnimationSpec.Direction(animation, row).Move);
+
+        /// <summary>Frame <paramref name="frame"/> of direction <paramref name="row"/> (both from 0).</summary>
+        public PreviewFrame Render(string animation, int row, int frame)
+        {
+            Canvas(animation); // planning poses every frame, so it comes first
+            PoseResult pose = Pose(animation, row, frame);
+            stage.SetOrientation(0);
+            stage.ApplyPose(pose);
+            double error = pose.GroundToLowestPoint ? double.NaN : stage.JointError(pose) * PixelsPerTile;
+            stage.SetOrientation(AnimationSpec.Direction(animation, row).Orientation);
+            for (int growth = 0; ; growth++)
+            {
+                CanvasSpec canvas = Canvas(animation);
+                camera.Aim(canvas);
+                Image8 image = ImageConvert.ToImage8(camera.RenderFrame());
+                if (!StageCamera.TouchesEdge(image) || growth == MaxGrowth)
+                {
+                    return new PreviewFrame { Image = image, Canvas = canvas, JointErrorPixels = error };
+                }
+                margins[animation] = Margin(animation) + MarginStep;
+                Growths++;
+            }
+        }
+
+        private int Margin(string animation) =>
+            margins.TryGetValue(animation, out int margin) ? margin : CanvasPlanner.DefaultMarginPixels;
+
+        /// <summary>
+        /// The animation's canvas: the posed meshes of every frame (as the first direction moves), turned to every
+        /// direction, plus the margin.
+        /// </summary>
+        private CanvasSpec Canvas(string animation)
+        {
+            if (!bounds.TryGetValue(animation, out Bounds3 box))
+            {
+                AnimationInfo info = AnimationSpec.Get(animation);
+                box = Bounds3.Empty;
+                for (int frame = 0; frame < info.FrameCount; frame++)
+                {
+                    stage.SetOrientation(0);
+                    stage.ApplyPose(Pose(animation, 0, frame));
+                    List<Vector3> points = stage.MeshPoints();
+                    for (int row = 0; row < info.DirectionCount; row++)
+                    {
+                        Quaternion turn = Quaternion.Euler(0, (float)(360 * AnimationSpec.Direction(animation, row).Orientation), 0);
+                        foreach (Vector3 p in points)
+                        {
+                            box = box.Encapsulate(AvatarStage.ToCore(turn * p) * stage.Rig.TilesPerMeter);
+                        }
+                    }
+                }
+                bounds[animation] = box;
+            }
+            return CanvasPlanner.PlanColor(new[] { box }, PixelsPerTile, StageCamera.Supersampling, Margin(animation));
+        }
+
+        /// <summary>Every frame of every direction of an animation in one image: a row per direction.</summary>
+        public Image8 Sheet(string animation, out double worstJointErrorPixels, Action<float> progress = null)
+        {
+            AnimationInfo info = AnimationSpec.Get(animation);
+            var frames = new PreviewFrame[info.DirectionCount, info.FrameCount];
+            worstJointErrorPixels = 0;
+            int done = 0;
+            // render twice if the canvas grew on the way, so every frame shares the final canvas
+            for (int pass = 0; pass < 2; pass++)
+            {
+                int growthsBefore = Growths;
+                for (int row = 0; row < info.DirectionCount; row++)
+                {
+                    for (int frame = 0; frame < info.FrameCount; frame++)
+                    {
+                        frames[row, frame] = Render(animation, row, frame);
+                        if (!double.IsNaN(frames[row, frame].JointErrorPixels))
+                        {
+                            worstJointErrorPixels = Math.Max(worstJointErrorPixels, frames[row, frame].JointErrorPixels);
+                        }
+                        progress?.Invoke((float)++done / (2 * info.DirectionCount * info.FrameCount));
+                    }
+                }
+                if (Growths == growthsBefore)
+                {
+                    break;
+                }
+            }
+            int w = frames[0, 0].Image.Width, h = frames[0, 0].Image.Height;
+            var sheet = new Image8(w * info.FrameCount, h * info.DirectionCount);
+            for (int row = 0; row < info.DirectionCount; row++)
+            {
+                for (int frame = 0; frame < info.FrameCount; frame++)
+                {
+                    Image8 image = frames[row, frame].Image;
+                    for (int y = 0; y < Math.Min(h, image.Height); y++)
+                    {
+                        for (int x = 0; x < Math.Min(w, image.Width); x++)
+                        {
+                            for (int c = 0; c < 4; c++)
+                            {
+                                sheet[frame * w + x, row * h + y, c] = image[x, y, c];
+                            }
+                        }
+                    }
+                }
+            }
+            return sheet;
+        }
+
+        /// <summary>The name of a sheet row, e.g. "south" or "gun north, moving east".</summary>
+        public static string DirectionName(string animation, int row)
+        {
+            string[] names = { "north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west" };
+            AnimationInfo info = AnimationSpec.Get(animation);
+            if (info.GunMoveRows)
+            {
+                (int gun, int move) = AnimationSpec.GunMoveDirections[row];
+                return $"gun {names[gun % 8]}, moving {names[move % 8]}";
+            }
+            return info.DirectionCount == 8 ? names[row] : "the one direction";
+        }
+
+        public void Dispose()
+        {
+            camera.Dispose();
+            stage.Dispose();
+        }
+    }
+}
