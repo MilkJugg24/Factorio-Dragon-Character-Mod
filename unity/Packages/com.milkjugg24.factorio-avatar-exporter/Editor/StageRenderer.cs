@@ -33,10 +33,63 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// </summary>
         public double PaddingTiles { get; set; } = 0.25;
 
+        /// <summary>
+        /// Also measure what the color pass actually draws (<see cref="DrawnBounds"/>), for parts drawn past their
+        /// meshes, such as a tuft or fur a shader extends: slower, so only on the export's retry.
+        /// </summary>
+        public bool MeasureDrawn { get; set; }
+
+        /// <summary>Room around the meshes the drawn measurement looks in, tiles.</summary>
+        private const double ProbeTiles = 3;
+
+        /// <summary>Pixels per tile of the drawn measurement: coarse is enough, and quick.</summary>
+        private const int ProbePixelsPerTile = 32;
+
         public Bounds3 MeasureWorldBounds(PoseResult pose, double orientation, bool mirrored)
         {
             Place(pose);
-            return stage.WorldBounds(orientation, mirrored).Expanded(PaddingTiles);
+            Bounds3 meshes = stage.WorldBounds(orientation, mirrored).Expanded(PaddingTiles);
+            // the shadow is drawn from the meshes themselves, so they measure it exactly
+            return MeasureDrawn && !mirrored ? DrawnBounds(meshes, orientation) : meshes;
+        }
+
+        /// <summary>
+        /// <paramref name="meshes"/> grown to cover what the color pass draws: the avatar as posed now is rendered on
+        /// a canvas <see cref="ProbeTiles"/> larger all round, and the corners of what is drawn there, on the camera
+        /// plane, are added (the canvas planner projects boxes, so those corners land where the drawing ends).
+        /// </summary>
+        private Bounds3 DrawnBounds(Bounds3 meshes, double orientation)
+        {
+            CanvasSpec probe = CanvasPlanner.PlanColor(new[] { meshes.Expanded(ProbeTiles) }, ProbePixelsPerTile,
+                StageCamera.Supersampling, 0);
+            camera.Aim(probe);
+            stage.SetOrientation(orientation);
+            Image8 image = ImageConvert.ToImage8(camera.RenderFrame());
+            int left = image.Width, right = -1, top = image.Height, bottom = -1;
+            for (int y = 0; y < image.Height; y++)
+            {
+                for (int x = 0; x < image.Width; x++)
+                {
+                    if (image.Alpha(x, y) != 0)
+                    {
+                        left = Math.Min(left, x);
+                        right = Math.Max(right, x);
+                        top = Math.Min(top, y);
+                        bottom = Math.Max(bottom, y);
+                    }
+                }
+            }
+            stage.SetOrientation(0);
+            if (right < 0)
+            {
+                return meshes;
+            }
+            Bounds3 drawn = meshes;
+            foreach ((double x, double y) in new[] { (left, top), (right + 1.0, top), (left, bottom + 1.0), (right + 1.0, bottom + 1.0) })
+            {
+                drawn = drawn.Encapsulate(FactorioCamera.Unproject(x, y, probe));
+            }
+            return drawn;
         }
 
         public RenderResult Render(FrameRequest request)

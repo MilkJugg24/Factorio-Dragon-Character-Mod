@@ -168,8 +168,9 @@ anything it couldn't change. Then save, and remove the mod.
   report it with `report.txt`.
 - **"Something reached the edge of the picture ... and was cut off"** after exporting: a part of the avatar
   draws further out than its meshes, like a tuft drawn past its mesh, a faint glow, or a very wide outline.
-  The exporter renders again with a tile more room around the avatar, and cuts off whatever still reaches
-  the edge, as the preview does. `report.txt` lists those frames. Look at the preview images: if
+  When something reaches the edge, the exporter renders again, this time measuring what each frame
+  actually draws (up to 3 tiles past the meshes), so such parts fit; only what reaches even further is cut
+  off, and `report.txt` lists those frames. Look at the preview images: if
   something visible is clipped, or you don't want a part in the sprites at all (a fake ground shadow, an
   effect), drag it into **Leave out of the sprites** under the Avatar field, press **Reload avatar** and
   export again. The exporter draws the game's own shadow, so a fake shadow on the avatar isn't needed.

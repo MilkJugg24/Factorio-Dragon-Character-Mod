@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.6.6";
+        public const string Version = "0.6.7";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -30,8 +30,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         public string ZipPath;
 
         /// <summary>
-        /// When something still reaches the edge of a frame on the retry with a tile more room, cut it off there
-        /// instead of stopping, as the preview does; report.txt and the result list those frames.
+        /// When something still reaches the edge of a frame on the retry, which measures what each frame draws, cut
+        /// it off there instead of stopping; report.txt and the result list those frames.
         /// </summary>
         public bool AllowCutOff = true;
 
@@ -99,22 +99,24 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             AvatarExporter exporter = null;
             ExportedArt art = null;
             var extra = new List<string>();
-            // the measured meshes plus some room; if a shader still draws further out (a wide outline, a tuft drawn
-            // past its mesh), once more with a tile more, cutting off what still reaches the edge
-            foreach (double padding in new[] { 0.25, 1.0 })
+            // the measured meshes plus some room; if something is still drawn further out (a wide outline, a tuft
+            // drawn past its mesh), once more, measuring what each frame actually draws, and cutting off only what
+            // that still misses
+            renderer.PaddingTiles = 0.25;
+            foreach (bool retry in new[] { false, true })
             {
-                renderer.PaddingTiles = padding;
-                settings.AllowCutOff = options.AllowCutOff && padding >= 1.0;
+                renderer.MeasureDrawn = retry;
+                settings.AllowCutOff = options.AllowCutOff && retry;
                 exporter = new AvatarExporter(poses, renderer, settings);
                 try
                 {
                     art = exporter.Render(new SynchronousProgress(progress), cancel);
                     break;
                 }
-                catch (InvalidOperationException e) when (padding < 1.0 && e.Message.Contains("drew outside the bounds"))
+                catch (InvalidOperationException e) when (!retry && e.Message.Contains("drew outside the bounds"))
                 {
                     extra.Add("something was drawn past the measured meshes (a wide outline, or a part drawn past its " +
-                        "mesh); exported again with a tile more room around the avatar");
+                        "mesh); exported again, measuring what each frame draws");
                 }
             }
 
