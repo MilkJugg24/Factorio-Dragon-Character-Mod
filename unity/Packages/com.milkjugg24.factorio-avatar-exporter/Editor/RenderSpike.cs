@@ -157,6 +157,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
             Scene scene = EditorSceneManager.NewPreviewScene();
             var temporary = new List<Object>();
+            // Unity draws a cyan placeholder while a shader variant compiles in the background; compile
+            // each one before it is drawn instead
+            bool asyncCompilation = ShaderUtil.allowAsyncCompilation;
+            ShaderUtil.allowAsyncCompilation = false;
             try
             {
                 // the avatar hangs under a pivot at the origin, its feet on the ground and its hips over the pivot
@@ -237,6 +241,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
             finally
             {
+                ShaderUtil.allowAsyncCompilation = asyncCompilation;
                 EditorSceneManager.ClosePreviewScene(scene);
                 foreach (Object o in temporary)
                 {
@@ -435,6 +440,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 RenderSettings.ambientMode = AmbientMode.Flat;
                 RenderSettings.ambientLight = Ambient;
                 camera.Render();
+                // should asynchronous compilation still have kicked in, wait for it and draw again
+                for (int tries = 0; ShaderUtil.anythingCompiling && tries < 600; tries++)
+                {
+                    System.Threading.Thread.Sleep(50);
+                    if (!ShaderUtil.anythingCompiling)
+                    {
+                        camera.Render();
+                    }
+                }
             }
             finally
             {
