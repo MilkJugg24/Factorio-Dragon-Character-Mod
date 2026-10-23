@@ -29,6 +29,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         private RenderTexture target;
         private Texture2D readback;
 
+        // targets by size: an export alternates between the character's and its shadow's canvases
+        private const int KeptTargets = 4;
+        private readonly Dictionary<(int, int), (RenderTexture target, Texture2D readback)> targets =
+            new Dictionary<(int, int), (RenderTexture, Texture2D)>();
+
         public StageCamera(AvatarStage stage)
         {
             this.stage = stage;
@@ -69,13 +74,18 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             camera.transform.SetPositionAndRotation(
                 new Vector3((float)view.Position.x, (float)view.Position.y, (float)view.Position.z),
                 new Quaternion((float)view.Rotation.x, (float)view.Rotation.y, (float)view.Rotation.z, (float)view.Rotation.w));
-            if (target == null || target.width != view.TargetWidth || target.height != view.TargetHeight)
+            (int, int) size = (view.TargetWidth, view.TargetHeight);
+            if (!targets.TryGetValue(size, out (RenderTexture target, Texture2D readback) pair))
             {
-                ReleaseTargets();
-                target = new RenderTexture(view.TargetWidth, view.TargetHeight, 24, RenderTextureFormat.ARGBHalf,
-                    RenderTextureReadWrite.Linear) { antiAliasing = 1 };
-                readback = new Texture2D(view.TargetWidth, view.TargetHeight, TextureFormat.RGBAFloat, false, true);
+                if (targets.Count >= KeptTargets)
+                {
+                    ReleaseTargets();
+                }
+                pair = (new RenderTexture(size.Item1, size.Item2, 24, RenderTextureFormat.ARGBHalf, RenderTextureReadWrite.Linear)
+                    { antiAliasing = 1 }, new Texture2D(size.Item1, size.Item2, TextureFormat.RGBAFloat, false, true));
+                targets.Add(size, pair);
             }
+            (target, readback) = pair;
             camera.targetTexture = target;
             camera.orthographic = true;
             camera.orthographicSize = (float)view.HalfHeight;
@@ -93,11 +103,39 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// </summary>
         public ImageF RenderFrame()
         {
+            (ImageF onBlack, ImageF onWhite) = RenderBlackAndWhite();
+            return Downsample.Box(Matting.FromBlackAndWhite(onBlack, onWhite, linear), Supersampling);
+        }
+
+        /// <summary>True when renders hold linear light (the project's colour space is Linear).</summary>
+        public bool Linear => linear;
+
+        /// <summary>
+        /// The avatar as posed now, rendered on black and on white at the render size (canvas size x the
+        /// canvas's supersampling), row 0 at the top: the raw input of difference matting.
+        /// </summary>
+        public (ImageF onBlack, ImageF onWhite) RenderBlackAndWhite()
+        {
             using (new SynchronousShaders())
             {
-                ImageF onBlack = RenderChecked(Color.black);
-                ImageF onWhite = RenderChecked(Color.white);
-                return Downsample.Box(Matting.FromBlackAndWhite(onBlack, onWhite, linear), Supersampling);
+                return (RenderChecked(Color.black), RenderChecked(Color.white));
+            }
+        }
+
+        /// <summary>
+        /// Another preview scene (a shadow proxy's) seen through this camera, on white: the shadow pass's
+        /// black silhouette.
+        /// </summary>
+        public ImageF RenderSilhouette(Scene scene)
+        {
+            camera.scene = scene;
+            try
+            {
+                return RenderOnce(Color.white, scene);
+            }
+            finally
+            {
+                camera.scene = stage.Scene;
             }
         }
 
@@ -129,7 +167,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         {
             for (int attempt = 1; ; attempt++)
             {
-                ImageF image = RenderOnce(background);
+                ImageF image = RenderOnce(background, stage.Scene);
                 int placeholder = PlaceholderPixels(image);
                 if (placeholder == 0)
                 {
@@ -149,11 +187,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
         }
 
-        /// <summary>Renders over a solid background and reads the result back with row 0 at the top.</summary>
-        private ImageF RenderOnce(Color background)
+        /// <summary>Renders <paramref name="scene"/> over a solid background and reads it back with row 0 at the top.</summary>
+        private ImageF RenderOnce(Color background, Scene scene)
         {
             camera.backgroundColor = background;
-            Unsupported.SetOverrideLightingSettings(stage.Scene);
+            Unsupported.SetOverrideLightingSettings(scene);
             try
             {
                 RenderSettings.ambientMode = AmbientMode.Flat;
@@ -233,14 +271,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         private void ReleaseTargets()
         {
             camera.targetTexture = null;
-            if (target != null)
+            foreach ((RenderTexture t, Texture2D r) in targets.Values)
             {
-                Object.DestroyImmediate(target);
+                Object.DestroyImmediate(t);
+                Object.DestroyImmediate(r);
             }
-            if (readback != null)
-            {
-                Object.DestroyImmediate(readback);
-            }
+            targets.Clear();
+            target = null;
+            readback = null;
         }
 
         public void Dispose()

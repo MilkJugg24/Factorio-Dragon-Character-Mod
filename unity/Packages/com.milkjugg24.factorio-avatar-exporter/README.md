@@ -1,16 +1,16 @@
 # Factorio Avatar Exporter (Unity package)
 
 Turns a humanoid avatar (a VRChat avatar, for example) into an avatar pack for the Avatar Characters
-Factorio mod, so you can play as your avatar (every player picks their own). Work in progress: this
-version **previews your avatar posed in every animation** of an avatar pack. Writing the pack itself
-comes next. It also still has the **rendering spike**, the first test of whether avatars render
-cleanly for sprites.
+Factorio mod, so you can play as your avatar (every player picks their own). It previews your avatar
+posed in every animation, and **Export All** writes the avatar pack: a Factorio mod zip. Work in
+progress (see "What it doesn't do yet"). It also still has the **rendering spike**, the first test of
+whether avatars render cleanly for sprites.
 
 - `Core/`: everything that decides what to draw and writes the pack. It has no Unity references and is
   developed and tested outside Unity (see `unity/dotnet/README.md`).
 - `Editor/`: the Unity side.
 
-## The exporter window (preview)
+## The exporter window
 
 Open **Tools ▸ Factorio Avatar Exporter ▸ Exporter**, drag your avatar into the Avatar field (the object
 with the VRChat avatar descriptor, or its prefab) and press **Load avatar**. A copy is made in a hidden
@@ -26,10 +26,30 @@ scene; your scene and avatar are not changed.
   - the corpse.
 - **Pose check:** how far the avatar's bones ended up from where the exporter meant to put them, in
   pixels. Under 1 px means the posing works on your rig. If it says more, please report it.
-- **Export All:** saves a sheet per animation (a row per direction, a column per frame) and
-  `report.txt` with the report and each animation's pose check, in
-  `FactorioAvatarExport/<avatar>/preview/` next to `Assets`. Handy for sending. **Export Selected
-  Animation** saves only the animation shown.
+- **Export Selected Animation:** saves the animation shown as one image (a row per direction, a column
+  per frame) in `FactorioAvatarExport/<avatar>/preview/` next to `Assets`.
+
+### Exporting the avatar pack
+
+Below the preview, in **Avatar pack**:
+- **Name:** shown in the game's avatar window. **Pack id:** made from the name; the mod is called
+  `avatar-pack-<id>`. Keep it when you export a new version.
+- **Author** (optional) and **Version**. Raise the version (1.0.1, 1.1.0, ...) when you export again for a
+  server: every player needs the same version.
+- **Resolution:** 64 pixels per tile is sharp; 32 uses a quarter of the video memory, worth it on a
+  server with many avatars.
+- **Flight animations:** hovering and flying with Space Age's mech armor.
+- **Save the pack in:** Factorio's mods folder when the exporter finds it, so the pack is ready the
+  next time Factorio starts.
+- **Permission:** tick that you made the avatar or its author allows you to use it this way. The note
+  below it (the avatar's license, or who gave permission) goes into the pack's `README.txt`.
+
+**Export All** renders every animation with its ground shadow, which takes a few minutes. It then
+writes `avatar-pack-<id>_<version>.zip`. It also writes `report.txt` and a preview image per
+animation to `FactorioAvatarExport/<avatar>/preview/`; the report includes how much video memory the
+pack needs in the game. To play, put the zip, still zipped, in Factorio's `mods` folder next to the
+Avatar Characters mod (both are on the Releases page), start Factorio and choose your avatar in the
+avatar window.
 
 Outfits and accessories with their own armature (joined to the body by VRCFury's Armature Link or Modular
 Avatar's Merge Armature, which only do it in Play mode), and objects held on by constraints, would be left
@@ -43,10 +63,9 @@ The report lists each part and what it follows. If something still floats away, 
 line in the report.
 
 What it doesn't do yet:
-- fingers don't close around the gun or pickaxe, and the gun and pickaxe themselves aren't drawn;
-- no ground shadows;
+- fingers don't close around the gun or pickaxe (which are simple stand-in shapes);
 - wings, tails and ears stay in their rest pose in every animation;
-- no pack output.
+- no colour tinting: the player colour doesn't change the avatar.
 
 ## Trying the rendering spike
 

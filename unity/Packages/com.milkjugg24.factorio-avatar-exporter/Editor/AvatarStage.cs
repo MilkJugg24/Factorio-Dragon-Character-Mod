@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using HumanBone = MilkJugg24.FactorioAvatarExporter.Core.HumanBone;
 using Object = UnityEngine.Object;
@@ -34,6 +35,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// <summary>Loose parts held to a body bone: the part's rest position and rotation in the bone's frame.</summary>
         private readonly List<(Transform part, Transform bone, Vector3 position, Quaternion rotation)> links =
             new List<(Transform, Transform, Vector3, Quaternion)>();
+
+        // the held tools, built from Unity's primitives (the sizes of Core's stick figure)
+        private GameObject gun;
+        private GameObject pickaxe;
+        private Transform pickHandle;
+        private Transform pickHead;
 
         private AvatarStage(Scene scene)
         {
@@ -138,6 +145,91 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 restRotations.Add(bone.Key, Quaternion.Inverse(Pivot.rotation) * bone.Value.rotation);
             }
+            BuildProps();
+        }
+
+        /// <summary>
+        /// The gun and the pickaxe, hidden until a pose holds one: plain shapes the size of Core's stick
+        /// figure's (a dark rod; a wooden handle with a metal head). They are children of the avatar, so they
+        /// are drawn, measured and cast shadows like the rest of it.
+        /// </summary>
+        private void BuildProps()
+        {
+            Material metal = PropMaterial("Prop metal", new Color(0.22f, 0.22f, 0.24f), 0.7f, 0.45f);
+            Material wood = PropMaterial("Prop wood", new Color(0.45f, 0.29f, 0.14f), 0f, 0.25f);
+            Material steel = PropMaterial("Prop steel", new Color(0.55f, 0.56f, 0.58f), 0.8f, 0.5f);
+            gun = new GameObject("Factorio gun");
+            SceneManager.MoveGameObjectToScene(gun, Scene);
+            gun.transform.SetParent(Avatar.transform, false);
+            Cylinder("Barrel", gun.transform, metal);
+            pickaxe = new GameObject("Factorio pickaxe");
+            SceneManager.MoveGameObjectToScene(pickaxe, Scene);
+            pickaxe.transform.SetParent(Avatar.transform, false);
+            pickHandle = Cylinder("Handle", pickaxe.transform, wood);
+            pickHead = Cylinder("Head", pickaxe.transform, steel);
+            gun.SetActive(false);
+            pickaxe.SetActive(false);
+        }
+
+        private Material PropMaterial(string name, Color color, float metallic, float smoothness)
+        {
+            Shader shader = Shader.Find("Standard") ?? Shader.Find("Unlit/Color");
+            var material = new Material(shader) { name = name, hideFlags = HideFlags.HideAndDontSave, color = color };
+            material.SetFloat("_Metallic", metallic);
+            material.SetFloat("_Glossiness", smoothness);
+            temporary.Add(material);
+            return material;
+        }
+
+        private Transform Cylinder(string name, Transform parent, Material material)
+        {
+            GameObject cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            Object.DestroyImmediate(cylinder.GetComponent<Collider>());
+            cylinder.name = name;
+            SceneManager.MoveGameObjectToScene(cylinder, Scene);
+            cylinder.transform.SetParent(parent, false);
+            cylinder.GetComponent<MeshRenderer>().sharedMaterial = material;
+            return cylinder.transform;
+        }
+
+        /// <summary>
+        /// Shows the tool <paramref name="prop"/> holds, if any, from its base to its tip (model space,
+        /// tiles), like Core's stick figure: the gun as a rod, the pickaxe as a handle with a head through the
+        /// tip along Up, its point towards -Up.
+        /// </summary>
+        private void PlaceProp(PropPose prop)
+        {
+            gun.SetActive(prop != null && prop.Kind == PropKind.Gun);
+            pickaxe.SetActive(prop != null && prop.Kind == PropKind.Pickaxe);
+            if (prop == null)
+            {
+                return;
+            }
+            double height = Conventions.DefaultCharacterHeight;
+            if (prop.Kind == PropKind.Gun)
+            {
+                Span(gun.transform.GetChild(0), prop.Base, prop.Tip, StickFigure.GunRadius * height);
+                return;
+            }
+            Span(pickHandle, prop.Base, prop.Tip, StickFigure.HandleRadius * height);
+            double handle = Vec3.Distance(prop.Base, prop.Tip);
+            Vec3 up = prop.Up.Normalized;
+            Span(pickHead, prop.Tip + up * (StickFigure.PickHeadBack * handle), prop.Tip - up * (StickFigure.PickHeadPoint * handle),
+                StickFigure.PickHeadRadius * height);
+        }
+
+        /// <summary>Stretches a unit primitive cylinder (2 tall, 1 wide, along y) from a to b (model tiles), radius r tiles.</summary>
+        private void Span(Transform cylinder, Vec3 a, Vec3 b, double radius)
+        {
+            Vector3 from = Pivot.TransformPoint(ToUnity(a, MetersPerTile));
+            Vector3 to = Pivot.TransformPoint(ToUnity(b, MetersPerTile));
+            float width = (float)(2 * radius * MetersPerTile);
+            cylinder.position = (from + to) / 2;
+            cylinder.rotation = Quaternion.FromToRotation(Vector3.up, to - from);
+            // the parent chain (the avatar root) may be scaled: undo it
+            Vector3 parentScale = cylinder.parent.lossyScale;
+            cylinder.localScale = new Vector3(width / parentScale.x, (to - from).magnitude / 2 / parentScale.y,
+                width / parentScale.z);
         }
 
         /// <summary>
@@ -399,6 +491,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             Pivot.rotation = Quaternion.Euler(0, (float)(360 * orientation), 0);
         }
 
+        /// <summary>
+        /// Pivot space to world space for a model facing <paramref name="orientation"/>, mirrored left/right
+        /// first (model x -> -x) when <paramref name="mirrored"/>. Mirroring is only ever measured and
+        /// projected, never rendered, so the pivot itself is never mirrored.
+        /// </summary>
+        private static Matrix4x4 Placement(double orientation, bool mirrored) =>
+            Matrix4x4.TRS(Vector3.zero, Quaternion.Euler(0, (float)(360 * orientation), 0),
+                mirrored ? new Vector3(-1, 1, 1) : Vector3.one);
+
         /// <summary>Puts every transform back where it was in the rest pose.</summary>
         public void ApplyRest()
         {
@@ -416,8 +517,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// <summary>
         /// Poses the avatar as PoseResult documents: from the rest pose, parent first, every listed bone gets
         /// the rotation <c>delta * rest</c> (in the pivot's space), then the hips move to the pose's hips
-        /// position, then the parts held on the body follow their bones, then the whole avatar drops onto the
-        /// ground if the pose asks for it. Fingers and props are not done yet.
+        /// position, then the parts held on the body follow their bones and the held tool is placed, then the
+        /// whole avatar drops onto the ground if the pose asks for it. Fingers don't close around the tools yet.
         /// </summary>
         public void ApplyPose(PoseResult pose)
         {
@@ -431,6 +532,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
             bones[HumanBone.Hips].position = Pivot.TransformPoint(ToUnity(pose.HipsPosition, MetersPerTile));
             FollowLinks();
+            PlaceProp(pose.Prop);
             if (pose.GroundToLowestPoint)
             {
                 float lowest = MeshPoints().Min(p => p.y);
@@ -478,17 +580,82 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         {
             var points = new List<Vector3>();
             Matrix4x4 toPivot = Pivot.worldToLocalMatrix;
+            ForEachMesh(false, (mesh, toWorld) =>
+            {
+                Matrix4x4 m = toPivot * toWorld;
+                foreach (Vector3 v in mesh.vertices)
+                {
+                    points.Add(m.MultiplyPoint3x4(v));
+                }
+            });
+            return points;
+        }
+
+        /// <summary>
+        /// Fills <paramref name="shadow"/> with the ground shadow of the avatar as posed now, facing
+        /// <paramref name="orientation"/> (mirrored when <paramref name="mirrored"/>): every triangle of the
+        /// shadow-casting renderers flattened onto the ground (world y = 0) along Core's shadow light
+        /// (<see cref="PlanarShadow"/>), in world space. Leaves the pivot facing north.
+        /// </summary>
+        public void BakeShadow(Mesh shadow, double orientation, bool mirrored)
+        {
+            SetOrientation(0);
+            Matrix4x4 place = Placement(orientation, mirrored);
+            double[] p = PlanarShadow.UnityMatrix();
+            var project = new Matrix4x4();
+            for (int row = 0; row < 4; row++)
+            {
+                for (int column = 0; column < 4; column++)
+                {
+                    project[row, column] = (float)p[row * 4 + column];
+                }
+            }
+            var vertices = new List<Vector3>();
+            var triangles = new List<int>();
+            ForEachMesh(true, (mesh, toWorld) =>
+            {
+                int start = vertices.Count;
+                Matrix4x4 m = project * place * toWorld;
+                foreach (Vector3 v in mesh.vertices)
+                {
+                    vertices.Add(m.MultiplyPoint3x4(v));
+                }
+                for (int sub = 0; sub < mesh.subMeshCount; sub++)
+                {
+                    if (mesh.GetTopology(sub) != MeshTopology.Triangles)
+                    {
+                        continue;
+                    }
+                    foreach (int index in mesh.GetTriangles(sub))
+                    {
+                        triangles.Add(start + index);
+                    }
+                }
+            });
+            shadow.Clear();
+            shadow.indexFormat = IndexFormat.UInt32;
+            shadow.SetVertices(vertices);
+            shadow.subMeshCount = 1;
+            shadow.SetTriangles(triangles, 0);
+            shadow.RecalculateBounds();
+        }
+
+        /// <summary>
+        /// Calls <paramref name="visit"/> with every enabled mesh of the avatar as posed now and its matrix to
+        /// world space (skinned meshes baked; particles, lines and trails left out). With
+        /// <paramref name="castersOnly"/>, only renderers that cast shadows.
+        /// </summary>
+        private void ForEachMesh(bool castersOnly, Action<Mesh, Matrix4x4> visit)
+        {
             var baked = new Mesh();
             try
             {
                 foreach (Renderer renderer in Avatar.GetComponentsInChildren<Renderer>(false))
                 {
-                    if (!renderer.enabled)
+                    if (!renderer.enabled || (castersOnly && renderer.shadowCastingMode == ShadowCastingMode.Off))
                     {
                         continue;
                     }
-                    Mesh mesh;
-                    Matrix4x4 toWorld;
                     if (renderer is SkinnedMeshRenderer skinned)
                     {
                         if (skinned.sharedMesh == null)
@@ -496,26 +663,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                             continue;
                         }
                         skinned.BakeMesh(baked, true);
-                        mesh = baked;
-                        toWorld = Matrix4x4.TRS(skinned.transform.position, skinned.transform.rotation, Vector3.one);
+                        visit(baked, Matrix4x4.TRS(skinned.transform.position, skinned.transform.rotation, Vector3.one));
                     }
                     else if (renderer is MeshRenderer)
                     {
                         MeshFilter filter = renderer.GetComponent<MeshFilter>();
-                        if (filter == null || filter.sharedMesh == null)
+                        if (filter != null && filter.sharedMesh != null)
                         {
-                            continue;
+                            visit(filter.sharedMesh, renderer.transform.localToWorldMatrix);
                         }
-                        mesh = filter.sharedMesh;
-                        toWorld = renderer.transform.localToWorldMatrix;
-                    }
-                    else
-                    {
-                        continue; // particles, lines and trails are not measured
-                    }
-                    foreach (Vector3 v in mesh.vertices)
-                    {
-                        points.Add(toPivot.MultiplyPoint3x4(toWorld.MultiplyPoint3x4(v)));
                     }
                 }
             }
@@ -523,14 +679,16 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 Object.DestroyImmediate(baked);
             }
-            return points;
         }
 
-        /// <summary>World space bounds (tiles) of the meshes as posed now, facing <paramref name="orientation"/>.</summary>
-        public Bounds3 WorldBounds(double orientation)
+        /// <summary>
+        /// World space bounds (tiles) of the meshes as posed now, facing <paramref name="orientation"/>, mirrored
+        /// when <paramref name="mirrored"/>. Leaves the pivot facing north.
+        /// </summary>
+        public Bounds3 WorldBounds(double orientation, bool mirrored = false)
         {
-            SetOrientation(orientation);
-            Matrix4x4 toWorld = Pivot.localToWorldMatrix;
+            SetOrientation(0);
+            Matrix4x4 toWorld = Placement(orientation, mirrored);
             Bounds3 bounds = Bounds3.Empty;
             foreach (Vector3 p in MeshPoints())
             {

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using MilkJugg24.FactorioAvatarExporter.Core;
 using UnityEngine;
 using AnimationInfo = MilkJugg24.FactorioAvatarExporter.Core.AnimationInfo;
@@ -207,6 +208,18 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             report.AppendLine($"done in {clock.Elapsed.TotalSeconds:0.0} s");
             File.WriteAllText(Path.Combine(folder, "report.txt"), report.ToString());
             return report.ToString();
+        }
+
+        /// <summary>
+        /// Exports the avatar as an avatar pack (<see cref="PackExport.Write"/>): every animation rendered
+        /// with shadows, the zip written to the options' output folder.
+        /// </summary>
+        public PackExportResult ExportPack(PackOptions options, Action<ExportProgress> progress, CancellationToken cancel)
+        {
+            using (var renderer = new StageRenderer(stage, camera))
+            {
+                return PackExport.Write(options, AvatarName, poses, renderer, Notes, progress, cancel);
+            }
         }
 
         /// <summary>The name of a sheet row, e.g. "south" or "gun north, moving east".</summary>

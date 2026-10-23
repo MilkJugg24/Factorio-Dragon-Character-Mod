@@ -4,7 +4,9 @@
     python3 -m unittest discover -s tests -p "test_*.py"
 """
 
+import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -56,6 +58,17 @@ class LuaTableTests(unittest.TestCase):
         value = {"t": "竜" * 30 + '"\\\n\x01', "list": [1, 2.5, "x"], "end": 1, "with space": [{"q": 1}],
                  "long": ["__avatar-pack-test__/graphics/fly-gun-base-%d.png" % i for i in range(3)]}
         self.assertEqual(lua_table.loads(lua_table.dumps(value)), value)
+
+
+class ExporterVersionTests(unittest.TestCase):
+    def test_editor_version_matches_package_json(self):
+        package = os.path.join(REPO, "unity", "Packages", "com.milkjugg24.factorio-avatar-exporter")
+        with open(os.path.join(package, "package.json"), encoding="utf-8") as fh:
+            version = json.load(fh)["version"]
+        with open(os.path.join(package, "Editor", "PackExport.cs"), encoding="utf-8") as fh:
+            match = re.search(r'public const string Version = "([^"]+)";', fh.read())
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), version, "ExporterInfo.Version in Editor/PackExport.cs must match package.json")
 
 
 class PackCheckTests(unittest.TestCase):

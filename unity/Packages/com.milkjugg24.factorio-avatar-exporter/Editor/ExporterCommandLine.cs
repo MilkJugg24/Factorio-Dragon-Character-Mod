@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
+using MilkJugg24.FactorioAvatarExporter.Core;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -21,7 +23,18 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// &lt;folder&gt;/&lt;avatar&gt;/&lt;animation&gt;.png with report.txt, writes summary.txt and exits Unity
         /// with 1 when anything failed.
         /// </summary>
-        public static void RenderPoses()
+        public static void RenderPoses() => ForEachAvatar(PreviewAvatar);
+
+        /// <summary>
+        /// <c>... -executeMethod MilkJugg24.FactorioAvatarExporter.Editor.ExporterCommandLine.ExportPacks</c>, with the
+        /// same arguments as <see cref="RenderPoses"/>: exports each avatar as an avatar pack, the zip, report.txt
+        /// and a preview sheet per animation in &lt;folder&gt;/&lt;avatar&gt;/. For testing: the pack's README
+        /// says so instead of a permission.
+        /// </summary>
+        public static void ExportPacks() => ForEachAvatar(ExportPack);
+
+        /// <summary>Runs <paramref name="export"/>(avatar, its folder) for every avatar the arguments name.</summary>
+        private static void ForEachAvatar(Func<GameObject, string, string> export)
         {
             string[] args = Environment.GetCommandLineArgs();
             string Arg(string name)
@@ -39,7 +52,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     summary.AppendLine("== " + source.name);
                     try
                     {
-                        summary.Append(PreviewAvatar(source, Path.Combine(output, source.name)));
+                        summary.Append(export(source, Path.Combine(output, source.name)));
                     }
                     catch (Exception e)
                     {
@@ -64,6 +77,23 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             using (PosePreview preview = PosePreview.Load(source))
             {
                 return preview.SaveAllSheets(folder);
+            }
+        }
+
+        private static string ExportPack(GameObject source, string folder)
+        {
+            using (PosePreview preview = PosePreview.Load(source))
+            {
+                var options = new PackOptions
+                {
+                    Title = source.name,
+                    Id = PackNaming.DeriveId(source.name),
+                    Confirmed = false,
+                    PermissionNote = "Exported by tests/run_unity_spike.ps1 to test the exporter; not for sharing.",
+                    OutputFolder = folder,
+                    PreviewFolder = folder,
+                };
+                return preview.ExportPack(options, null, CancellationToken.None).Report;
             }
         }
 

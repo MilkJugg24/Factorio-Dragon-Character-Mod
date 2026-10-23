@@ -27,14 +27,16 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         private const double ThighRadius = 0.04;
         private const double ShinRadius = 0.034;
         private const double FootRadius = 0.022;
-        private const double GunRadius = 0.02;
-        private const double HandleRadius = 0.011;
-        private const double PickHeadRadius = 0.016;
+
+        // the held tools, public so the Unity exporter draws the same ones
+        public const double GunRadius = 0.02;
+        public const double HandleRadius = 0.011;
+        public const double PickHeadRadius = 0.016;
 
         // pickaxe head extent along +Up and -Up from the tip, as fractions of the handle length
         // (model.py's 0.11 and 0.18 of the humanoid's 0.56 handle; the dragon's handle is 0.80)
-        private const double PickHeadBack = 0.2;
-        private const double PickHeadPoint = 0.32;
+        public const double PickHeadBack = 0.2;
+        public const double PickHeadPoint = 0.32;
 
         private const string PoseParameter = "pose";
 

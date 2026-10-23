@@ -1,0 +1,228 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using MilkJugg24.FactorioAvatarExporter.Core;
+using UnityEngine;
+
+namespace MilkJugg24.FactorioAvatarExporter.Editor
+{
+    /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
+    internal static class ExporterInfo
+    {
+        public const string Version = "0.3.0";
+    }
+
+    /// <summary>What the user chose for a pack.</summary>
+    internal sealed class PackOptions
+    {
+        public string Title;
+        public string Id;
+        public string Author;
+        public string Version = PackContent.DefaultVersion;
+        public int PixelsPerTile = Conventions.DefaultPixelsPerTile;
+        public bool Flight = true;
+
+        /// <summary>The user ticked "I made this avatar, or its author allows me to use it this way".</summary>
+        public bool Confirmed = true;
+
+        /// <summary>The user's own note on the avatar's license or permission (optional when <see cref="Confirmed"/>).</summary>
+        public string PermissionNote;
+
+        /// <summary>Where the pack's zip goes (usually Factorio's mods folder).</summary>
+        public string OutputFolder;
+
+        /// <summary>Where report.txt and preview sheets go.</summary>
+        public string PreviewFolder;
+
+        /// <summary>What is wrong with these options, or null when the pack can be exported.</summary>
+        public string Problem()
+        {
+            int length = PackNaming.TitleLength(Title ?? "");
+            if (length == 0 || length > 80 || (Title ?? "").IndexOfAny(new[] { '\n', '\r' }) >= 0)
+            {
+                return "The name must be 1 to 80 characters on one line.";
+            }
+            if (!PackNaming.IsValidId(Id))
+            {
+                return "The pack id must be lowercase letters, digits and -, at most 35 characters, not starting with corpse-.";
+            }
+            if (!PackNaming.IsValidVersion(Version))
+            {
+                return "The version must look like 1.0.0.";
+            }
+            if (string.IsNullOrWhiteSpace(OutputFolder))
+            {
+                return "Choose where the pack goes.";
+            }
+            if (!Confirmed && string.IsNullOrWhiteSpace(PermissionNote))
+            {
+                return "Tick the permission box to export.";
+            }
+            return null;
+        }
+    }
+
+    /// <summary>What an export wrote.</summary>
+    internal sealed class PackExportResult
+    {
+        public string ZipPath;
+        public string Report;
+    }
+
+    /// <summary>Helpers for writing avatar packs from the Editor.</summary>
+    internal static class PackExport
+    {
+        /// <summary>Factorio's mods folder on this computer, or null when there is none.</summary>
+        public static string FactorioModsFolder()
+        {
+            string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string folder;
+            switch (Application.platform)
+            {
+                case RuntimePlatform.WindowsEditor:
+                    folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Factorio", "mods");
+                    break;
+                case RuntimePlatform.OSXEditor:
+                    folder = Path.Combine(home, "Library", "Application Support", "factorio", "mods");
+                    break;
+                default:
+                    folder = Path.Combine(home, ".factorio", "mods");
+                    break;
+            }
+            return Directory.Exists(folder) ? folder : null;
+        }
+
+        /// <summary>
+        /// The permission statement written to the pack's README.txt: the user's confirmation (when given) and
+        /// their note.
+        /// </summary>
+        public static string Permission(string sourceAvatar, bool confirmed, string note)
+        {
+            if (!confirmed)
+            {
+                return note.Trim();
+            }
+            string statement = "Whoever exported this pack confirmed that they made the avatar \"" + sourceAvatar +
+                "\", or have its author's permission to use it this way.";
+            return string.IsNullOrWhiteSpace(note) ? statement : statement + "\n\n" + note.Trim();
+        }
+
+        /// <summary>
+        /// Renders every animation of <paramref name="poses"/> with <paramref name="renderer"/> and writes the
+        /// pack's zip to <see cref="PackOptions.OutputFolder"/>, then report.txt and a preview sheet per
+        /// animation to <see cref="PackOptions.PreviewFolder"/>. Throws <see cref="OperationCanceledException"/>
+        /// when cancelled (nothing is written then).
+        /// </summary>
+        public static PackExportResult Write(PackOptions options, string sourceAvatar, IPoseSource poses,
+            StageRenderer renderer, IEnumerable<string> notes, Action<ExportProgress> progress, CancellationToken cancel)
+        {
+            string problem = options.Problem();
+            if (problem != null)
+            {
+                throw new ArgumentException(problem);
+            }
+            var clock = Stopwatch.StartNew();
+            var settings = new ExportSettings
+            {
+                PixelsPerTile = options.PixelsPerTile,
+                Supersampling = StageCamera.Supersampling,
+                Flight = options.Flight,
+            };
+            AvatarExporter exporter = null;
+            ExportedArt art = null;
+            var extra = new List<string>();
+            // the measured meshes plus some room; if a shader still draws further out (a wide outline), once more with more
+            foreach (double padding in new[] { 0.25, 1.0 })
+            {
+                renderer.PaddingTiles = padding;
+                exporter = new AvatarExporter(poses, renderer, settings);
+                try
+                {
+                    art = exporter.Render(new SynchronousProgress(progress), cancel);
+                    break;
+                }
+                catch (InvalidOperationException e) when (padding < 1.0 && e.Message.Contains("drew outside the bounds"))
+                {
+                    extra.Add("something was drawn past the measured meshes (a wide outline?); exported again with " +
+                        "more room around the avatar");
+                }
+            }
+
+            var content = new PackContent
+            {
+                Id = options.Id,
+                Title = options.Title.Trim(),
+                Author = string.IsNullOrWhiteSpace(options.Author) ? null : options.Author.Trim(),
+                Version = options.Version,
+                SourceAvatar = sourceAvatar,
+                Permission = Permission(sourceAvatar, options.Confirmed, options.PermissionNote),
+                GeneratorVersion = ExporterInfo.Version,
+            };
+            exporter.Fill(content, art);
+
+            Directory.CreateDirectory(options.OutputFolder);
+            string zip = Path.Combine(options.OutputFolder, PackNaming.ZipFileName(content.Id, content.Version));
+            string partial = zip + ".partial";
+            using (FileStream stream = File.Create(partial))
+            {
+                new PackWriter(PngWriter.Encode).Write(content, new ZipPackOutput(stream));
+            }
+            if (File.Exists(zip))
+            {
+                File.Delete(zip);
+            }
+            File.Move(partial, zip);
+
+            var report = new StringBuilder();
+            foreach (string note in notes.Concat(extra))
+            {
+                report.AppendLine(note);
+            }
+            report.AppendLine($"pack: {zip}");
+            report.AppendLine($"mod: {PackNaming.ModName(content.Id)} {content.Version}, \"{content.Title}\", " +
+                $"{options.PixelsPerTile} pixels per tile, {(options.Flight ? "with" : "without")} flight");
+            long bytes = 0;
+            int files = 0;
+            Directory.CreateDirectory(options.PreviewFolder);
+            foreach (KeyValuePair<string, Dictionary<string, SheetSet>> animation in art.Animations)
+            {
+                foreach (SheetSet sheets in animation.Value.Values)
+                {
+                    foreach (Image8 file in sheets.Files)
+                    {
+                        bytes += 4L * file.Width * file.Height;
+                        files++;
+                    }
+                }
+                SheetSet character = animation.Value[PackLayers.Base];
+                report.AppendLine($"{animation.Key}: {character.DirectionCount} directions x {character.FrameCount} frames of " +
+                    $"{character.FrameWidth}x{character.FrameHeight} px");
+                for (int i = 0; i < character.Files.Count; i++)
+                {
+                    string name = animation.Key + (character.Files.Count > 1 ? "-" + (i + 1) : "") + ".png";
+                    File.WriteAllBytes(Path.Combine(options.PreviewFolder, name), PngWriter.Encode(character.Files[i]));
+                }
+            }
+            report.AppendLine($"{files} sprite sheets, about {bytes / (1024 * 1024)} MB of video memory in the game");
+            report.AppendLine($"done in {clock.Elapsed.TotalSeconds:0} s");
+            File.WriteAllText(Path.Combine(options.PreviewFolder, "report.txt"), report.ToString());
+            return new PackExportResult { ZipPath = zip, Report = report.ToString() };
+        }
+
+        private sealed class SynchronousProgress : IProgress<ExportProgress>
+        {
+            private readonly Action<ExportProgress> report;
+
+            public SynchronousProgress(Action<ExportProgress> report)
+            {
+                this.report = report;
+            }
+
+            public void Report(ExportProgress value) => report?.Invoke(value);
+        }
+    }
+}

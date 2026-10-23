@@ -33,7 +33,9 @@ opening a window. It finds Unity through Unity Hub from the project's version, o
 Add `-SkipImport` if the package is already in the project. Add `-Mode poses` to render every animation
 posed by the exporter instead of the spike's T-pose: one sheet per animation (`<avatar>/<animation>.png`, a
 row per direction) and a `report.txt` with the rig report and, per animation, how far the bones ended up
-from where the exporter meant to put them.
+from where the exporter meant to put them. Add `-Mode pack` to export each avatar as an avatar pack, as
+**Export All** does: `<avatar>/avatar-pack-<id>_1.0.0.zip` (its README says it is a test export, not for
+sharing), `report.txt` and a preview image per animation.
 
 Results go to `unity-spike/<date-time>/` in the repository:
 
