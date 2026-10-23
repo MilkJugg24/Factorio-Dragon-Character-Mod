@@ -1,0 +1,131 @@
+   0.001 2026-10-23 11:53:44; Factorio 2.1.23 (build 87750, win64, steam, space-age)
+   0.001 Operating system: Windows 11 (build 26200) 
+   0.000 Initializing Steam API.
+   0.001 Program arguments: "C:\Program Files (x86)\Steam\steamapps\common\Factorio\bin\x64\factorio.exe" "--config" "C:\Users\MilkJ\AppData\Local\Temp\avatar-checks-b4277f22\config\config.ini" "--mod-directory" "C:\Users\MilkJ\AppData\Local\Temp\avatar-checks-b4277f22\mods" "--load-game" "C:\Users\MilkJ\AppData\Local\Temp\avatar-checks-b4277f22\checks.zip" "--disable-audio" "--window-size" "1280x720" 
+   0.001 Config path: C:/Users/MilkJ/AppData/Local/Temp/avatar-checks-b4277f22/config/config.ini
+   0.002 Read data path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/data
+   0.002 Write data path: C:/Users/MilkJ/AppData/Local/Temp/avatar-checks-b4277f22 [309256/475835MB]
+   0.002 Binaries path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/bin
+   0.015 System info: [CPU: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz, 12 cores, RAM: 10780/32612 MB, page: 11026/34660 MB, virtual: 4376/134217727 MB, extended virtual: 0 MB]
+   0.048 Memory info:
+   0.048  [0]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.048  [1]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.070 Display options: [FullScreen: true] [VSync: true] [UIScale: automatic (100.0%)] [Native DPI: true] [Screen: 4294967295] [Special: lmw] [Lang: en]
+   1.378 Video driver: windows
+   1.379 Available displays: 1
+   1.379  [0]: \\.\DISPLAY1 - Intel(R) UHD Graphics 630 {0x05, [0,0], 1920x1080, 32bit, 144Hz}
+   1.421 [Direct3D11] Display: 4294967295, Output: 0, DisplayAdapter: 0, RenderingAdapter: -1; d3dcompiler_47.dll
+   2.510 Initialised Direct3D[0]: NVIDIA GeForce RTX 2060; id: 10de-1f11; driver: nvldumdx.dll 32.0.16.1047
+   2.510   D3D Feature Level: 11.1, DXGI 1.5+, SwapChain: 3,flip-discard,-,-,-,none
+   2.510   [Local Video Memory] Budget: 5187MB, CurrentUsage: 5MB, Reservation: 0/2721MB
+   2.510   [Non-Local Vid.Mem.] Budget: 15538MB, CurrentUsage: 0MB, Reservation: 0/7897MB
+   2.510   Tiled resources: Tier 2
+   2.510   Unified Memory Architecture: No
+   2.510   BGR 565 Supported: Yes
+   2.510   MaximumFrameLatency: 3, GPUThreadPriority: 0
+   2.510 Graphics settings preset: very-high
+   2.510   Dedicated video memory size 5955 MB
+   2.546 Desktop composition is active.
+   2.547 Graphics options: [Graphics quality: high] [Video memory usage: all] [DXT: high-quality]
+   2.547                   [Max threads (load/render): 32/12] [Max texture size: 0] [Tex.Stream.: false] [Rotation quality: normal] [Other: STDCWTl] [B:0,C:0,S:100]
+   2.547 Audio is disabled
+   2.700 Logitech LED Controller initialized.
+   2.953 SteelSeries GameSense Controller initialized.
+   2.955 Info ModManager.cpp:455: FeatureFlag: expansion, expansion-shaders, freezing, quality, rail-bridges, segmented-units, space-travel, spoiling
+   2.957 Loading mod settings avatar-characters 0.3.1 (settings.lua)
+   2.961 Loading mod core 0.0.0 (data.lua)
+   2.986 Loading mod base 2.1.23 (data.lua)
+   3.274 Loading mod elevated-rails 2.1.23 (data.lua)
+   3.317 Loading mod recycler 2.1.23 (data.lua)
+   3.335 Loading mod quality 2.1.23 (data.lua)
+   3.347 Loading mod space-age 2.1.23 (data.lua)
+   3.838 Loading mod avatar-characters 0.3.1 (data.lua)
+   3.852 Loading mod avatar-bundle-test-server 1.0.0 (data.lua)
+   3.868 Loading mod base 2.1.23 (data-updates.lua)
+   3.883 Loading mod recycler 2.1.23 (data-updates.lua)
+   3.908 Loading mod space-age 2.1.23 (data-updates.lua)
+   3.923 Loading mod avatar-characters 0.3.1 (data-final-fixes.lua)
+   4.036 Checksum for core: 3668028660
+   4.036 Checksum of base: 3864816957
+   4.036 Checksum of elevated-rails: 1429039930
+   4.036 Checksum of recycler: 3293728126
+   4.036 Checksum of quality: 3330349790
+   4.036 Checksum of space-age: 3787586506
+   4.036 Checksum of avatar-characters: 2360450080
+   4.036 Checksum of avatar-bundle-test-server: 4227624260
+   4.036 Checksum of avatar-characters-screenshots: 0
+   4.589 Prototype list checksum: 2591262341
+   4.653 Info PlayerData.cpp:564: Cloud player-data.json available
+   4.657 Post-data load graphics options: [Light occlusion: YES]
+   5.000 Crop bitmaps.
+   5.003 Parallel sprite loader initialized (threads: 12, bitmaps: 8843)
+  16.662 Initial atlas bitmap size is 16384
+  16.676 Created an atlas bitmap (size 16384x16384) [none]
+  16.695 Created an atlas bitmap (size 16384x16380) [none]
+  16.717 Created an atlas bitmap (size 16384x16376) [none]
+  16.718 Created an atlas bitmap (size 16384x14924) [none]
+  16.719 Created an atlas bitmap (size 16384x16000) [low-object]
+  16.723 Created an atlas bitmap (size 16384x16324) [corpse-decay]
+  16.723 Created an atlas bitmap (size 4096x2804) [corpse-decay]
+  16.723 Created an atlas bitmap (size 16384x9336) [decal]
+  16.724 Created an atlas bitmap (size 16384x5956) [none]
+  16.724 Created an atlas bitmap (size 8192x2800) [none]
+  16.724 Created an atlas bitmap (size 16384x3436) [procession-cover, linear-minification, linear-magnification]
+  16.725 Created an atlas bitmap (size 4096x1392) [none]
+  16.725 Created an atlas bitmap (size 1676x79) [not-compressed]
+  16.725 Created an atlas bitmap (size 16384x4368) [mipmap, linear-minification, linear-magnification, linear-mip-level]
+  16.726 Created an atlas bitmap (size 4096x3040) [smoke, mipmap, linear-minification, linear-magnification]
+  16.735 Created an atlas bitmap (size 16384x16368) [terrain, mipmap, linear-minification, linear-mip-level]
+  16.736 Created an atlas bitmap (size 16384x10752) [terrain, mipmap, linear-minification, linear-mip-level]
+  16.736 Created an atlas bitmap (size 8192x6080) [terrain-effect-map, mipmap, linear-minification, linear-mip-level]
+  16.736 Created an atlas bitmap (size 8192x2800) [mipmap]
+  16.737 Created an atlas bitmap (size 8192x4544) [mipmap]
+  16.737 Created an atlas bitmap (size 8192x3408) [mipmap]
+  16.737 Created an atlas bitmap (size 3504x768) [mipmap]
+  16.737 Created an atlas bitmap (size 4096x3152) [mipmap]
+  16.738 Created an atlas bitmap (size 4096x3152) [mipmap]
+  16.738 Created an atlas bitmap (size 4096x3152) [mipmap]
+  16.738 Created an atlas bitmap (size 8192x3984) [icon, not-compressed, mipmap, linear-minification, linear-magnification, linear-mip-level, ]
+  16.740 Created an atlas bitmap (size 16384x10268) [alpha-mask]
+  16.761 Created an atlas bitmap (size 16384x16384) [shadow, linear-magnification, alpha-mask]
+  16.768 Created an atlas bitmap (size 16384x16356) [shadow, linear-magnification, alpha-mask]
+  16.768 Created an atlas bitmap (size 16384x5936) [shadow, linear-magnification, alpha-mask]
+  16.769 Created an atlas bitmap (size 8192x5216) [shadow, mipmap, linear-magnification, alpha-mask]
+  16.769 Created an atlas bitmap (size 4096x336) [icon-background, not-compressed, mipmap, linear-minification, linear-magnification, linear-mip-level, ]
+  16.769 Loading 3D bitmaps: 20
+  16.784 Texture processor created (4096). GPU accelerated compression Supported: yes, Enabled: yes/yes. Test passed. YCoCgDXT PSNR: 35.83, BC3 PSNR: 33.82
+  16.818 Parallel sprite loader initialized (threads: 11, bitmaps: 8843)
+  36.254 Sprites loaded
+  36.426 Generated mipmaps (4) for atlas [4] of size 16384x16000   
+  36.439 Generated mipmaps (3) for atlas [13] of size 16384x4368   
+  36.450 Generated mipmaps (3) for atlas [14] of size 4096x3040   
+  36.461 Generated mipmaps (3) for atlas [15] of size 16384x16368   
+  36.472 Generated mipmaps (3) for atlas [16] of size 16384x10752   
+  36.484 Generated mipmaps (3) for atlas [17] of size 8192x6080   
+  36.546 Generated mipmaps (3) for atlas [18] of size 8192x2800   
+  36.604 Generated mipmaps (3) for atlas [19] of size 8192x4544   
+  36.616 Generated mipmaps (3) for atlas [20] of size 8192x3408   
+  36.627 Generated mipmaps (3) for atlas [21] of size 3504x768   
+  36.638 Generated mipmaps (3) for atlas [22] of size 4096x3152   
+  36.673 Generated mipmaps (3) for atlas [23] of size 4096x3152   
+  36.684 Generated mipmaps (3) for atlas [24] of size 4096x3152   
+  36.695 Generated mipmaps (5) for atlas [25] of size 8192x3984   
+  36.706 Generated mipmaps (3) for atlas [30] of size 8192x5216   
+  36.732 Custom mipmaps uploaded (3518)
+  36.765 Estimated VRAM usage for textures: 3876.87 MB (Atlases: 3777.05 MB, Textures: 99.82 MB)
+  36.765 Real VRAM usage for the whole program: 4164.82 MB
+  36.768 Info GlobalContext.cpp:1346: Resetting config.
+  36.769 Custom inputs active: 1
+  37.244 Factorio initialised
+  37.644 Steam Storage Quota: 23446/23841
+  37.652 Loading map C:\Users\MilkJ\AppData\Local\Temp\avatar-checks-b4277f22\checks.zip: 901197 bytes.
+  37.747 Loading level.dat: 1266508 bytes.
+  37.747 Info Scenario.cpp:152: Map version 2.1.23-2
+  37.764 Loading blueprint storage: Local timestamp -1, Cloud timestamp -1
+  37.764 Blueprint storage "blueprint-storage-2.dat" was not found, trying to load previous version storage "blueprint-storage.dat"
+  37.764 Loading blueprint storage: Local timestamp -1, Cloud timestamp -1
+  37.764 Loading script.dat: 1387 bytes.
+  37.771 Checksum for script __level__/control.lua: 2385776952
+  37.775 Checksum for script __avatar-characters__/control.lua: 199544188
+  37.777 Checksum for script __avatar-characters-screenshots__/control.lua: 780202937
+ 109.780 Script @__avatar-characters-screenshots__/control.lua:377: AVATAR-CHECKS: DONE
