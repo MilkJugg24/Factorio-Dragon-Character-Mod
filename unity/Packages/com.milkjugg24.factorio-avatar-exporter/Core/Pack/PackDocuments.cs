@@ -28,10 +28,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             AppendJsonField(json, "name", PackNaming.ModName(content.Id));
             AppendJsonField(json, "version", content.Version);
             AppendJsonField(json, "title", PackNaming.InfoTitle(content.Title));
-            if (!string.IsNullOrEmpty(content.Author))
-            {
-                AppendJsonField(json, "author", content.Author);
-            }
+            AppendJsonField(json, "author", AuthorOrUnknown(content.Author));
             AppendJsonField(json, "factorio_version", PackFormat.FactorioVersion);
             AppendJsonField(json, "description", ModDescription(content));
             json.Append("  ").Append(JsonString("dependencies")).Append(": [")
@@ -71,9 +68,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             text.Append("Source avatar:  ").Append(content.SourceAvatar).Append('\n');
             text.Append("Made with:      ").Append(Generator(content)).Append('\n');
             text.Append('\n');
-            Section(text, "Permission");
-            text.Append(NormalizeLines(content.Permission.Trim())).Append('\n');
-            text.Append('\n');
+            if (!string.IsNullOrWhiteSpace(content.Permission))
+            {
+                Section(text, "Permission");
+                text.Append(NormalizeLines(content.Permission.Trim())).Append('\n');
+                text.Append('\n');
+            }
             Section(text, "Installing");
             text.Append("Put ").Append(PackNaming.ZipFileName(content.Id, content.Version))
                 .Append(" (or the ").Append(modName).Append(" folder) into Factorio's mods folder\n");
@@ -107,6 +107,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             text.Append(heading).Append('\n').Append('-', heading.Length).Append('\n');
 
         internal static string NormalizeLines(string text) => text.Replace("\r\n", "\n").Replace('\r', '\n');
+
+        /// <summary>
+        /// The author for info.json, which Factorio requires ("Key \"author\" not found" otherwise): the given one,
+        /// or "unknown".
+        /// </summary>
+        internal static string AuthorOrUnknown(string author) => string.IsNullOrWhiteSpace(author) ? "unknown" : author.Trim();
 
         internal static void AppendJsonField(StringBuilder json, string name, string value) =>
             json.Append("  ").Append(JsonString(name)).Append(": ").Append(JsonString(value)).Append(",\n");

@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.6.3";
+        public const string Version = "0.6.4";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -25,12 +25,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         public string Version = PackContent.DefaultVersion;
         public int PixelsPerTile = Conventions.DefaultPixelsPerTile;
         public bool Flight = true;
-
-        /// <summary>The user ticked "I made this avatar, or its author allows me to use it this way".</summary>
-        public bool Confirmed = true;
-
-        /// <summary>The user's own note on the avatar's license or permission (optional when <see cref="Confirmed"/>).</summary>
-        public string PermissionNote;
 
         /// <summary>The file the pack's zip is saved as (the user chooses it; see <see cref="PackNaming.ZipFileName"/>).</summary>
         public string ZipPath;
@@ -60,9 +54,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 return "The version must look like 1.0.0.";
             }
-            if (!Confirmed && string.IsNullOrWhiteSpace(PermissionNote))
+            if (string.IsNullOrWhiteSpace(Author))
             {
-                return "Tick the permission box to export.";
+                return "Enter an author (your name): Factorio needs one for every mod.";
             }
             return null;
         }
@@ -81,21 +75,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>Helpers for writing avatar packs from the Editor.</summary>
     internal static class PackExport
     {
-        /// <summary>
-        /// The permission statement written to the pack's README.txt: the user's confirmation (when given) and
-        /// their note.
-        /// </summary>
-        public static string Permission(string sourceAvatar, bool confirmed, string note)
-        {
-            if (!confirmed)
-            {
-                return note.Trim();
-            }
-            string statement = "Whoever exported this pack confirmed that they made the avatar \"" + sourceAvatar +
-                "\", or have its author's permission to use it this way.";
-            return string.IsNullOrWhiteSpace(note) ? statement : statement + "\n\n" + note.Trim();
-        }
-
         /// <summary>
         /// Renders every animation of <paramref name="poses"/> with <paramref name="renderer"/> and writes the
         /// pack's zip to <see cref="PackOptions.ZipPath"/>, then report.txt and a preview sheet per
@@ -152,7 +131,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 Author = string.IsNullOrWhiteSpace(options.Author) ? null : options.Author.Trim(),
                 Version = options.Version,
                 SourceAvatar = sourceAvatar,
-                Permission = Permission(sourceAvatar, options.Confirmed, options.PermissionNote),
                 GeneratorVersion = ExporterInfo.Version,
             };
             exporter.Fill(content, art);

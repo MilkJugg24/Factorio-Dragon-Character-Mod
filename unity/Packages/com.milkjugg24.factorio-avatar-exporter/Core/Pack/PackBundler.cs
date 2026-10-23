@@ -397,10 +397,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             PackDocuments.AppendJsonField(json, "name", ModName(info.Id));
             PackDocuments.AppendJsonField(json, "version", info.Version);
             PackDocuments.AppendJsonField(json, "title", InfoTitle(info.Title));
-            if (!string.IsNullOrEmpty(info.Author))
-            {
-                PackDocuments.AppendJsonField(json, "author", info.Author);
-            }
+            PackDocuments.AppendJsonField(json, "author", PackDocuments.AuthorOrUnknown(info.Author));
             PackDocuments.AppendJsonField(json, "factorio_version", PackFormat.FactorioVersion);
             PackDocuments.AppendJsonField(json, "description", Description(characters));
             json.Append("  ").Append(PackDocuments.JsonString("dependencies")).Append(": [")

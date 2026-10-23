@@ -37,7 +37,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
             yield return Case("MultilineAuthor", p => p.Author = "a\tb", "the author must be a single line");
             yield return Case("BadVersion", p => p.Version = "1.0", "the version \"1.0\" must look like 1.0.0");
             yield return Case("MissingSource", p => p.SourceAvatar = "", "the name of the source avatar is missing");
-            yield return Case("MissingPermission", p => p.Permission = "  \n", "the permission statement is missing");
             yield return Case("MissingGenerator", p => p.GeneratorVersion = null, "the generator name and version are required");
             yield return Case("BadPixelsPerTile", p => p.PixelsPerTile = 48, "pixels per tile is 48; only 64 and 32");
             yield return Case("MissingIcon", p => p.Icon = null, "the icon is missing");
@@ -125,7 +124,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         {
             PackContent pack = SyntheticPack.Build(false, false);
             pack.Id = "Bad Id";
-            pack.Permission = null;
+            pack.Version = "1.0";
             pack.Animations.Remove("corpse");
             IReadOnlyList<string> errors = PackValidator.Validate(pack);
             Assert.That(errors.Count, Is.EqualTo(3), string.Join("\n", errors));

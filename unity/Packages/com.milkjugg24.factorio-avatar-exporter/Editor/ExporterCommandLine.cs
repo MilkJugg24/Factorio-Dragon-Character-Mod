@@ -28,8 +28,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// <summary>
         /// <c>... -executeMethod MilkJugg24.FactorioAvatarExporter.Editor.ExporterCommandLine.ExportPacks</c>, with the
         /// same arguments as <see cref="RenderPoses"/>: exports each avatar as an avatar pack, the zip, report.txt
-        /// and a preview sheet per animation in &lt;folder&gt;/&lt;avatar&gt;/. For testing: the pack's README
-        /// says so instead of a permission.
+        /// and a preview sheet per animation in &lt;folder&gt;/&lt;avatar&gt;/. For testing: the author is
+        /// run_unity_spike.ps1.
         /// </summary>
         public static void ExportPacks() => ForEachAvatar(ExportPack);
 
@@ -88,8 +88,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 {
                     Title = source.name,
                     Id = PackNaming.DeriveId(source.name),
-                    Confirmed = false,
-                    PermissionNote = "Exported by tests/run_unity_spike.ps1 to test the exporter; not for sharing.",
+                    Author = "run_unity_spike.ps1",
                     ZipPath = Path.Combine(folder, PackNaming.ZipFileName(PackNaming.DeriveId(source.name), PackContent.DefaultVersion)),
                     PreviewFolder = folder,
                 };

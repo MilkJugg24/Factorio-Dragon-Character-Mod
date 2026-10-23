@@ -130,7 +130,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     GUI.FocusControl(null);
                 }
             }
-            bundleAuthor = EditorGUILayout.TextField("Author (optional)", bundleAuthor);
+            if (string.IsNullOrWhiteSpace(bundleAuthor))
+            {
+                string account = CloudProjectSettings.userName;
+                bundleAuthor = string.IsNullOrWhiteSpace(account) || account == "anonymous" ? "" : account;
+            }
+            bundleAuthor = EditorGUILayout.TextField(new GUIContent("Author", "Your name, as whoever runs the server. " +
+                "Factorio needs one for every mod."), bundleAuthor);
 
             List<BundleCharacter> chosen = Chosen();
             string problem = chosen.Count == 0 ? "Add at least one pack." : Problem();
@@ -232,6 +238,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             if (!PackNaming.IsValidVersion(bundleVersion))
             {
                 return "The version must look like 1.0.0.";
+            }
+            if (string.IsNullOrWhiteSpace(bundleAuthor))
+            {
+                return "Enter an author (your name): Factorio needs one for every mod.";
             }
             string previous = PreviousVersion();
             if (previous != null && PackBundler.CompareVersions(bundleVersion, previous) <= 0)

@@ -28,8 +28,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public string SourceAvatar { get; set; }
 
         /// <summary>
-        /// The user's statement of why this avatar may be shared as a pack (its license, or the
-        /// permission of its author). Required; written to README.txt, and may span several lines.
+        /// A note on the avatar's license or permission, optional; written to README.txt when given, and may span
+        /// several lines.
         /// </summary>
         public string Permission { get; set; }
 

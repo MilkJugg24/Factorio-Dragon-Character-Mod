@@ -113,6 +113,10 @@ class Checker:
         elif len(title.encode("utf-8")) > spec.INFO_TITLE_MAX_BYTES:
             self.error(f"info.json: title is {len(title.encode('utf-8'))} bytes; Factorio crashes on start when it"
                        f" is longer than {spec.INFO_TITLE_MAX_BYTES} bytes")
+        author = info.get("author")
+        if not isinstance(author, str) or not author.strip():
+            # Factorio: 'Failed to load mod: Key "author" not found in property tree at ROOT'
+            self.error("info.json: author is missing; Factorio refuses to load a mod without one")
         version = info.get("version")
         if not isinstance(version, str) or not re.fullmatch(r"\d+\.\d+\.\d+", version):
             self.error(f"info.json: version must look like 1.0.0, not {version!r}")

@@ -40,7 +40,7 @@ avatar-pack-<id>_<version>/
   graphics/icon.png              64 x 64, shown in the customization window
   graphics/<animation>-<layer>.png
   graphics/<animation>-<layer>-<n>.png   (when a sheet is split, n = 1, 2, ...)
-  README.txt                     source avatar, its author, permission to use it
+  README.txt                     source avatar, its author, and any license note
 ```
 
 `info.json`:
@@ -56,6 +56,9 @@ avatar-pack-<id>_<version>/
   "dependencies": ["avatar-characters >= 0.1.0"]
 }
 ```
+
+`author` is required: Factorio refuses to load a mod without one ("Key "author"
+not found in property tree"). The exporter writes "unknown" when none is given.
 
 The `info.json` title must be at most **100 bytes** of UTF-8 (about 33 Japanese
 characters): Factorio 2.0 stops with a crash, without an error message, when a
@@ -262,7 +265,7 @@ exporter's Combine Packs for a Server writes them; they need `avatar-characters`
 | --- | --- |
 | Mod name | `avatar-bundle-<name>`, with `"dependencies": ["avatar-characters >= 0.3.0"]` |
 | Zip file | `avatar-bundle-<name>_<version>.zip` |
-| A character's folder | `characters/<id>/`, holding `avatar-pack.lua` (the pack's description), its graphics, `README.txt` (its source and permission) and `pack.json` (id, title, author and the pack's version) |
+| A character's folder | `characters/<id>/`, holding `avatar-pack.lua` (the pack's description), its graphics, `README.txt` (its source) and `pack.json` (id, title, author and the pack's version) |
 | mod-data, character and corpse prototypes | the same as the pack's: `avatar-pack-<id>`, `avatar-pack-corpse-<id>` |
 
 A character's file paths point into the bundle, `__avatar-bundle-<name>__/characters/<id>/...`, and the

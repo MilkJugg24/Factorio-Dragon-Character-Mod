@@ -113,10 +113,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 Assert.That(info.GetProperty("dependencies").EnumerateArray().Select(d => d.GetString()),
                     Is.EqualTo(new[] { "avatar-characters >= 0.1.0" }));
             }
+            // Factorio refuses a mod without an author ("Key "author" not found in property tree")
             content.Author = null;
             using (JsonDocument doc = JsonDocument.Parse(Write(content).Files[PackFiles.InfoJson]))
             {
-                Assert.That(doc.RootElement.TryGetProperty("author", out _), Is.False);
+                Assert.That(doc.RootElement.GetProperty("author").GetString(), Is.EqualTo("unknown"));
             }
         }
 
@@ -239,18 +240,19 @@ print(json.dumps(lua_table.loads(sys.stdin.read())))
             StringAssert.Contains("avatar-pack-test-avatar_1.0.0.zip", readme);
             StringAssert.Contains("\n    /avatar-revert-all test-avatar\n", readme);
             content.Author = null;
+            content.Permission = null;
             Assert.That(PackDocuments.Readme(content), Does.Not.Contain("Author:"));
+            Assert.That(PackDocuments.Readme(content), Does.Not.Contain("Permission"));
         }
 
         [Test]
         public void RefusesInvalidPacksBeforeTouchingTheOutput()
         {
             PackContent content = SyntheticPack.Build(false, false);
-            content.Permission = null;
+            content.Id = "Bad Id";
             content.Animations.Remove("idle");
             var output = new MemoryPackOutput();
             var e = Assert.Throws<InvalidOperationException>(() => new PackWriter(TestPng.Encode).Write(content, output));
-            StringAssert.Contains("the permission statement is missing", e.Message);
             StringAssert.Contains("the required \"idle\" animation is missing", e.Message);
             Assert.That(output.PackId, Is.Null);
             Assert.That(output.Paths, Is.Empty);

@@ -38,8 +38,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private int sizePercent = 100;
         [SerializeField] private bool flight = true;
         [SerializeField] private string saveFolder;
-        [SerializeField] private bool permission;
-        [SerializeField] private string permissionNote;
         private string exported;
         private int appliedSize;
         private List<string> edgeDrawers = new List<string>();
@@ -90,14 +88,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 EditorUtility.DisplayProgressBar("Factorio Avatar Exporter", "Loading " + source.name, 0.5f);
                 if (packFor != source.name)
                 {
-                    // another avatar: its own name, id, size and permission
+                    // another avatar: its own name, id and size
                     packFor = source.name;
                     packTitle = source.name;
                     packId = "";
                     sizePercent = 100;
                     leaveOut.Clear();
-                    permission = false;
-                    permissionNote = "";
                 }
                 preview = PosePreview.Load(source, HeightTiles(sizePercent), LeaveOutPaths());
                 appliedSize = sizePercent;
@@ -207,13 +203,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             LightingGUI();
 
             EditorGUILayout.Space();
-            if (GUILayout.Button("Export Selected Animation"))
+            PackGUI();
+
+            // rarely needed: the pack is what the game uses
+            EditorGUILayout.Space(16);
+            if (GUILayout.Button(new GUIContent("Export Selected Animation", "Saves only the animation shown as one " +
+                "image, in the preview folder, to look at it closely. Not needed for the game."), EditorStyles.miniButton))
             {
                 SaveSheet(info.Name);
             }
-
-            EditorGUILayout.Space();
-            PackGUI();
             EditorGUILayout.EndScrollView();
         }
 
@@ -256,6 +254,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             .Where(o => o != null && source != null && o.transform.IsChildOf(source.transform) && o != source)
             .Select(o => AnimationUtility.CalculateTransformPath(o.transform, source.transform))
             .ToList();
+
+        /// <summary>The Unity account's name, a likely author; empty when not signed in.</summary>
+        private static string DefaultAuthor()
+        {
+            string name = CloudProjectSettings.userName;
+            return string.IsNullOrWhiteSpace(name) || name == "anonymous" ? "" : name;
+        }
 
         private static readonly string[] LightingModes = { "Factorio style", "Custom" };
 
@@ -327,7 +332,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             string id = EditorGUILayout.TextField(new GUIContent("Pack id", "Lowercase letters, digits and -. The mod is " +
                 "called avatar-pack-<id>; keep it the same when you export a new version."), string.IsNullOrEmpty(packId) ? derived : packId);
             packId = id == derived ? "" : id;
-            packAuthor = EditorGUILayout.TextField(new GUIContent("Author (optional)", "Your name, shown with the pack."), packAuthor);
+            if (string.IsNullOrWhiteSpace(packAuthor))
+            {
+                packAuthor = DefaultAuthor();
+            }
+            packAuthor = EditorGUILayout.TextField(new GUIContent("Author", "Your name, shown with the pack. Factorio " +
+                "needs one for every mod."), packAuthor);
             packVersion = EditorGUILayout.TextField(new GUIContent("Version", "Raise it (1.0.1, 1.1.0, ...) when you export " +
                 "the pack again for a server: every player needs the same version."), packVersion);
             pixelsPerTile = EditorGUILayout.IntPopup("Resolution", pixelsPerTile, Resolutions, ResolutionValues);
@@ -345,15 +355,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             flight = EditorGUILayout.Toggle(new GUIContent("Flight animations", "Hovering and flying with Space Age's mech armor. " +
                 "Without them the avatar walks in the air."), flight);
 
-            permission = EditorGUILayout.ToggleLeft("I made this avatar, or its author allows me to use it this way", permission);
-            EditorGUILayout.LabelField("Note for the pack's README (optional): the avatar's license, or who gave permission",
-                EditorStyles.wordWrappedMiniLabel);
-            permissionNote = EditorGUILayout.TextArea(permissionNote ?? "", GUILayout.MinHeight(36));
-            EditorGUILayout.HelpBox("Many avatars may only be used in VRChat. Only share a pack with others when the avatar's " +
-                "author allows it. In multiplayer, every player needs the pack too.", MessageType.None);
-
             PackOptions options = Options();
-            string problem = permission ? options.Problem() : "Tick the permission box to export.";
+            string problem = options.Problem();
             using (new EditorGUI.DisabledScope(problem != null))
             {
                 if (GUILayout.Button(new GUIContent("Export All", "Asks where to save the avatar pack (a Factorio mod zip), " +
@@ -413,8 +416,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             Version = packVersion,
             PixelsPerTile = pixelsPerTile,
             Flight = flight,
-            Confirmed = permission,
-            PermissionNote = permissionNote,
             PreviewFolder = PreviewFolder,
         };
 

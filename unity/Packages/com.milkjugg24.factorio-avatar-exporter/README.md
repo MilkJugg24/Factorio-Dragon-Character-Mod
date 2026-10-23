@@ -36,7 +36,9 @@ a newer `.unitypackage` the same way.
 5. Under **Avatar pack**, fill in:
    - **Name**: shown in the game. The **Pack id** is made from it; keep it the same when you export a
      new version later.
-   - **Author** (optional) and **Version** (start with 1.0.0).
+   - **Author**: your name (filled in from your Unity account if you're signed in). Factorio needs one
+     for every mod.
+   - **Version**: start with 1.0.0.
    - **Resolution**: 64 pixels per tile is sharp, and right for almost everyone. 32 uses a quarter of
      the video memory, for very large servers or old computers.
    - **Size in game**: how tall your avatar is drawn, compared with the engineer (100%), from 75% to
@@ -44,8 +46,6 @@ a newer `.unitypackage` the same way.
      takes up the engineer's space and moves as fast, with longer or shorter steps. Every avatar starts
      at 100%, whatever its height in VRChat, since VRChat avatars come in any size.
    - **Flight animations**: on, unless you never fly with mech armor.
-   - Tick **I made this avatar, or its author allows me to use it this way**, and if you like, add a note
-     (the avatar's license, or who gave permission). It goes into the pack's README.
 6. Press **Export All** and choose where to save the pack. Keep its file name,
    `avatar-pack-<id>_<version>.zip`: Factorio expects a mod's zip to be named that way. Then the exporter
    renders every animation, which takes a few minutes; you can cancel from the progress bar.
@@ -151,11 +151,6 @@ the engineer. Before removing a whole bundle, do it for each of its characters. 
 type `/avatar-revert-all`. Everyone should be online, alive and out of vehicles; the command reports
 anything it couldn't change. Then save, and remove the mod.
 
-## Permission
-
-Many avatars may only be used in VRChat. Only make a pack of an avatar you made, or whose author allows
-it, and only share the pack with others if the author allows that too.
-
 ## If something goes wrong
 
 - **"has no humanoid rig":** the avatar's model needs **Animation Type: Humanoid** in its import
@@ -200,7 +195,7 @@ it, and only share the pack with others if the author allows that too.
   loose parts it held on to the body.
 - **Pose check:** how far the avatar's bones ended up from where the exporter meant to put them, in
   pixels.
-- **Export Selected Animation:** saves only the animation shown as one image (a row per direction, a
+- **Export Selected Animation** (at the bottom; not needed for the game): saves only the animation shown as one image (a row per direction, a
   column per frame) in `FactorioAvatarExport/<avatar>/preview/`.
 
 ## The rendering spike

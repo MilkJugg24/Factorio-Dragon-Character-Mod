@@ -62,10 +62,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             {
                 CheckOneLine("the source avatar name", content.SourceAvatar, errors);
             }
-            if (string.IsNullOrWhiteSpace(content.Permission))
-            {
-                errors.Add("the permission statement is missing: say why this avatar may be shared (its license, or its author's permission)");
-            }
             if (string.IsNullOrWhiteSpace(content.GeneratorName) || string.IsNullOrWhiteSpace(content.GeneratorVersion))
             {
                 errors.Add("the generator name and version are required");
