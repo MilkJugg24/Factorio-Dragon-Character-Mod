@@ -1,7 +1,8 @@
 # Publishes a GitHub release of the Unity avatar exporter as a .unitypackage.
 #
 # Runs by itself after CI passes on main: it publishes a release when the version is new and does
-# nothing when that version is already released, so bumping the version is all a release takes.
+# nothing when that version is already released, so bumping the version is all a release takes. Older
+# exporter releases are then removed, so the Releases page only offers the newest .unitypackage.
 #
 # Otherwise either push a tag exporter-v<version> (e.g. exporter-v0.0.1), or run this workflow by hand from the
 # Actions tab ("Run workflow"), which creates that tag from the version in
@@ -81,3 +82,27 @@ jobs:
             --title "Avatar Exporter $TAG" \
             --notes-file notes.md \
             --prerelease
+
+      # The Releases page only lists the newest exporter: older exporter releases are removed (their tags
+      # stay, so every version can still be checked out). Runs even when this version already existed.
+      - name: Remove older exporter releases
+        if: always() && steps.tag.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          gh release view "$TAG" > /dev/null 2>&1 || { echo "no release $TAG; keeping the others"; exit 0; }
+          current="${TAG#exporter-v}"
+          gh release list --limit 200 --json tagName --jq '.[].tagName' | while read -r old; do
+            case "$old" in
+              exporter-v*) ;;
+              *) continue ;;
+            esac
+            version="${old#exporter-v}"
+            newest=$(printf '%s\n%s\n' "$version" "$current" | sort -V | tail -n 1)
+            if [ "$old" != "$TAG" ] && [ "$newest" = "$current" ]; then
+              gh release delete "$old" --yes
+              echo "removed the release $old (the tag stays)"
+            fi
+          done
