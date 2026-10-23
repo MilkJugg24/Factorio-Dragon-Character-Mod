@@ -354,9 +354,11 @@ local function window_shot()
     status = remote.call("avatar-characters", "set_appearance", player.index, { avatar = packs[1].id })
   end
   remote.call("avatar-characters", "open_window", player.index)
+  -- the player's own screen size: the GUI is laid out for it, so a smaller picture cuts the window off
+  local screen = player.display_resolution
   game.take_screenshot({
-    player = player, by_player = player, surface = surface, position = { 0, -1 }, resolution = { 1280, 720 },
-    zoom = 1, path = OUT .. "window/window.png", show_gui = true, daytime = 0,
+    player = player, by_player = player, surface = surface, position = { 0, -1 },
+    resolution = { screen.width, screen.height }, zoom = 1, path = OUT .. "window/window.png", show_gui = true, daytime = 0,
   })
   return {
     pack = packs[1] and packs[1].id or nil,

@@ -402,13 +402,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         /// <summary>
         /// Handle angle of every mine frame, degrees, and the forward lean that goes with it: anims.mine's
-        /// tables, with the blow from frame 9 on leaned into further, since a human's longer body needs that
-        /// for the pick to reach the ground. In the blow and the dig (<see cref="FirstDigFrame"/> to
+        /// tables, with the wind-up peaking on frame 6 so that the swing comes down over frames 7 to 9 (faster
+        /// and faster) instead of in one frame, and the blow from frame 9 on leaned into further, since a
+        /// human's longer body needs that for the pick to reach the ground. In the blow and the dig (<see cref="FirstDigFrame"/> to
         /// <see cref="LastDigFrame"/>) the arms reach out and the angle is the one that puts the pick's point
         /// on the ground in front (<see cref="GroundAlpha"/>), as far ahead as the body allows.
         /// </summary>
-        private static readonly int[] MineAlpha = { -30, 5, 45, 90, 125, 148, 152, 75, -62, -66, -60, -48 };
-        private static readonly double[] MineLean = { 0.30, 0.22, 0.12, 0.03, -0.05, -0.09, -0.09, 0.15, 0.95, 0.98, 0.93, 0.60 };
+        private static readonly int[] MineAlpha = { -30, 5, 45, 95, 135, 155, 120, 45, -62, -66, -60, -48 };
+        private static readonly double[] MineLean = { 0.30, 0.22, 0.12, 0.03, -0.07, -0.10, 0.05, 0.45, 0.95, 0.98, 0.93, 0.60 };
         private const int FirstDigFrame = 8, LastDigFrame = 10;
 
         /// <summary>How far out the hands hold the pick in the blow, arm lengths.</summary>
