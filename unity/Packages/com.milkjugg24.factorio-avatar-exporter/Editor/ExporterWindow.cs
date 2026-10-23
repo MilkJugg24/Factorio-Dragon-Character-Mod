@@ -42,6 +42,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private string permissionNote;
         private string exported;
         private int appliedSize;
+        private List<string> edgeDrawers = new List<string>();
 
         private PosePreview preview;
         private string error;
@@ -83,6 +84,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         {
             Unload();
             error = null;
+            edgeDrawers.Clear();
             try
             {
                 EditorUtility.DisplayProgressBar("Factorio Avatar Exporter", "Loading " + source.name, 0.5f);
@@ -131,6 +133,21 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             if (error != null)
             {
                 EditorGUILayout.HelpBox(error, MessageType.Error);
+            }
+            if (edgeDrawers.Count > 0 && source != null &&
+                GUILayout.Button("Leave out " + string.Join(", ", edgeDrawers) + " and reload"))
+            {
+                foreach (string path in edgeDrawers)
+                {
+                    Transform t = source.transform.Find(path);
+                    if (t != null && !leaveOut.Contains(t.gameObject))
+                    {
+                        leaveOut.Add(t.gameObject);
+                    }
+                }
+                edgeDrawers.Clear();
+                Load();
+                GUIUtility.ExitGUI();
             }
             if (preview == null)
             {
@@ -429,13 +446,16 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             catch (InvalidOperationException e) when (e.Message.Contains("drew outside the bounds"))
             {
                 Debug.LogException(e);
-                List<string> suspects = preview.DrawnOutsideMeshes();
-                error = "Something on the avatar is drawn far outside its body, so the sprites would be cut off, and " +
-                    "nothing was saved. " + (suspects.Count > 0
-                        ? "It is probably one of these: " + string.Join("; ", suspects) + ". "
-                        : "") +
-                    "Find it in the preview (it's drawn there too), add it to Leave out of the sprites at the top, " +
-                    "press Reload avatar and export again. (" + e.Message + ")";
+                // the failing frame is still set up: find what draws on its edge
+                edgeDrawers = preview.EdgeDrawers();
+                List<string> suspects = edgeDrawers.Count > 0 ? edgeDrawers : preview.DrawnOutsideMeshes();
+                error = "Something on the avatar is drawn outside its body, so the sprites would be cut off, and " +
+                    "nothing was saved. " + (edgeDrawers.Count > 0
+                        ? "These parts draw at the edge of the picture: " + string.Join(", ", edgeDrawers) +
+                          ". Press the button below to leave them out of the sprites and reload, then export again."
+                        : (suspects.Count > 0 ? "It is probably one of these: " + string.Join("; ", suspects) + ". " : "") +
+                          "Find it in the preview (it's drawn there too), add it to Leave out of the sprites at the " +
+                          "top, press Reload avatar and export again.") + " (" + e.Message + ")";
             }
             catch (Exception e)
             {

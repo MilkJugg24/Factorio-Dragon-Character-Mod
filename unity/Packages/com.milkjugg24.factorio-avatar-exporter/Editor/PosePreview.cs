@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using MilkJugg24.FactorioAvatarExporter.Core;
+using UnityEditor;
 using UnityEngine;
 using AnimationInfo = MilkJugg24.FactorioAvatarExporter.Core.AnimationInfo;
 
@@ -238,6 +239,41 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// Exports the avatar as an avatar pack (<see cref="PackExport.Write"/>): every animation rendered
         /// with shadows, the zip written to the options' output folder.
         /// </summary>
+        /// <summary>
+        /// The avatar's objects that draw on the edge of the frame last rendered (as posed, turned and framed now),
+        /// as paths below the avatar: each renderer is drawn alone, and those that reach the edge are named. Such
+        /// an object draws past the canvas whatever its size, like an effect drawn at a fixed place on screen.
+        /// </summary>
+        public List<string> EdgeDrawers()
+        {
+            var found = new List<string>();
+            List<Renderer> shown = stage.Avatar.GetComponentsInChildren<Renderer>(false).Where(r => r.enabled).ToList();
+            try
+            {
+                foreach (Renderer r in shown)
+                {
+                    r.enabled = false;
+                }
+                foreach (Renderer r in shown)
+                {
+                    r.enabled = true;
+                    if (StageCamera.TouchesEdge(ImageConvert.ToImage8(camera.RenderFrame())))
+                    {
+                        found.Add(AnimationUtility.CalculateTransformPath(r.transform, stage.Avatar.transform));
+                    }
+                    r.enabled = false;
+                }
+            }
+            finally
+            {
+                foreach (Renderer r in shown)
+                {
+                    r.enabled = true;
+                }
+            }
+            return found.Distinct().ToList();
+        }
+
         /// <summary>What on the avatar may draw outside its measured meshes (<see cref="AvatarStage.DrawnOutsideMeshes"/>).</summary>
         public List<string> DrawnOutsideMeshes() => stage.DrawnOutsideMeshes();
 

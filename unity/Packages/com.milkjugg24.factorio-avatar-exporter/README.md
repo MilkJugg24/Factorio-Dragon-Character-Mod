@@ -173,8 +173,10 @@ it, and only share the pack with others if the author allows that too.
   report it with `report.txt`.
 - **"Something on the avatar is drawn far outside its body"** when exporting: a part of the avatar draws
   much further out than its meshes, such as a fake ground shadow, a particle effect or a very wide
-  outline, so the sprites would be cut off. The message names the likely parts. Drag them into **Leave
-  out of the sprites** (under the Avatar field), press **Reload avatar** and export again. The exporter
+  outline, or an effect drawn at a fixed place on screen, so the sprites would be cut off. The exporter
+  draws each part alone to find which ones reach the edge, names them, and offers a button that leaves
+  them out and reloads; then export again. You can also drag parts into **Leave out of the sprites**
+  (under the Avatar field) yourself and press **Reload avatar**. The exporter
   draws the game's own shadow, so a fake shadow on the avatar isn't needed in Factorio.
 - **Pink or light-blue patches:** a shader is missing or wasn't compiled yet. Make sure the avatar looks
   right in the Scene view first, and try again.
