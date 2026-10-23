@@ -1,0 +1,101 @@
+   0.001 2026-10-23 12:22:50; Factorio 2.1.23 (build 87750, win64, steam, space-age)
+   0.001 Operating system: Windows 11 (build 26200) 
+   0.001 Program arguments: "C:\Program Files (x86)\Steam\steamapps\common\Factorio\bin\x64\factorio.exe" "--config" "C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\server\config\config.ini" "--mod-directory" "C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\server-mods" "--start-server" "C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\save\mp-test.zip" "--server-settings" "C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\server-settings.json" "--rcon-port" "27015" "--rcon-password" <private> "--port" "34197" 
+   0.005 Config path: C:/Users/MilkJ/AppData/Local/Temp/avatar-mp/server/config/config.ini
+   0.005 Read data path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/data
+   0.005 Write data path: C:/Users/MilkJ/AppData/Local/Temp/avatar-mp/server [308084/475835MB]
+   0.005 Binaries path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/bin
+   0.015 System info: [CPU: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz, 12 cores, RAM: 11090/32612 MB, page: 11225/34660 MB, virtual: 4283/134217727 MB, extended virtual: 0 MB]
+   0.031 Memory info:
+   0.031  [0]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.031  [1]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.053 Running in headless mode
+   0.053 Audio is disabled
+   0.055 Info ModManager.cpp:455: FeatureFlag: expansion, expansion-shaders, freezing, quality, rail-bridges, segmented-units, space-travel, spoiling
+   0.058 Loading mod settings avatar-characters 0.3.1 (settings.lua)
+   0.061 Loading mod core 0.0.0 (data.lua)
+   0.080 Loading mod base 2.1.23 (data.lua)
+   0.335 Loading mod elevated-rails 2.1.23 (data.lua)
+   0.364 Loading mod recycler 2.1.23 (data.lua)
+   0.378 Loading mod quality 2.1.23 (data.lua)
+   0.387 Loading mod space-age 2.1.23 (data.lua)
+   0.840 Loading mod avatar-characters 0.3.1 (data.lua)
+   0.852 Loading mod avatar-bundle-test-server 1.0.1 (data.lua)
+   0.865 Loading mod base 2.1.23 (data-updates.lua)
+   0.879 Loading mod recycler 2.1.23 (data-updates.lua)
+   0.900 Loading mod space-age 2.1.23 (data-updates.lua)
+   0.913 Loading mod avatar-characters 0.3.1 (data-final-fixes.lua)
+   1.018 Checksum for core: 3668028660
+   1.018 Checksum of base: 3864816957
+   1.018 Checksum of elevated-rails: 1429039930
+   1.018 Checksum of recycler: 3293728126
+   1.019 Checksum of quality: 3330349790
+   1.019 Checksum of space-age: 3787586506
+   1.019 Checksum of avatar-characters: 2360450080
+   1.019 Checksum of avatar-bundle-test-server: 509344408
+   1.548 Prototype list checksum: 4264067166
+   1.608 Info PlayerData.cpp:566: Cloud player-data.json unavailable
+   1.608 Info PlayerData.cpp:582: Local player-data.json unavailable
+   1.610 Info GlobalContext.cpp:1346: Resetting config.
+   1.610 Factorio initialised
+   1.611 Info ServerSynchronizer.cpp:22: nextHeartbeatSequenceNumber(0) initialized Synchronizer nextTickClosureTick(0).
+   1.611 Info ServerMultiplayerManager.cpp:809: updateTick(18446744073709551615) changing state from(Ready) to(PreparedToHostGame)
+   1.611 Info ServerMultiplayerManager.cpp:809: updateTick(18446744073709551615) changing state from(PreparedToHostGame) to(CreatingGame)
+   1.612 Loading map C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\save\mp-test.zip: 815853 bytes.
+   1.697 Loading level.dat: 1024546 bytes.
+   1.697 Info Scenario.cpp:152: Map version 2.1.23-2
+   1.712 Blueprint storage "blueprint-storage-2.dat" was not found, trying to load previous version storage "blueprint-storage.dat"
+   1.712 Loading script.dat: 1281 bytes.
+   1.717 Checksum for script __level__/control.lua: 2385776952
+   1.720 Checksum for script __avatar-characters__/control.lua: 199544188
+   1.721 Info UDPSocket.cpp:38: Opening socket at (IP ADDR:({0.0.0.0:34197}))
+   1.722 Hosting game at IP ADDR:({0.0.0.0:34197})
+   1.722 Info ServerMultiplayerManager.cpp:809: updateTick(0) changing state from(CreatingGame) to(InGame)
+   1.722 Info RemoteCommandProcessor.cpp:119: Starting RCON interface at IP ADDR:({0.0.0.0:27015})
+   7.594 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57239})
+  13.841 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57240})
+  66.656 ConnectionRequestReplyConfirm (type(ConnectionRequestReplyConfirm) ) from(IP ADDR:({127.0.0.1:57993}))
+  66.656 Info ServerRouter.cpp:465: Replying to connectionRequest for address(IP ADDR:({127.0.0.1:57993})).
+  66.656 Info ServerSynchronizer.cpp:594: nextHeartbeatSequenceNumber(3893) adding peer(1)
+  66.673 Info ServerMultiplayerManager.cpp:809: updateTick(3896) changing state from(InGame) to(InGameSavingMap)
+  66.756 Info ServerMultiplayerManager.cpp:1038: UpdateTick(3896) Serving map(C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\server\temp\mp-save-0.zip) for peer(1) size(821981) auxiliary(109) crc(4055764970)
+  66.756 Info ServerMultiplayerManager.cpp:809: updateTick(3896) changing state from(InGameSavingMap) to(InGame)
+  67.156 Info ServerMultiplayerManager.cpp:977: updateTick(3919) received stateChanged peerID(1) oldState(Ready) newState(ConnectedWaitingForMap)
+  67.173 Info ServerMultiplayerManager.cpp:977: updateTick(3920) received stateChanged peerID(1) oldState(ConnectedWaitingForMap) newState(ConnectedDownloadingMap)
+  67.290 Info ServerMultiplayerManager.cpp:977: updateTick(3927) received stateChanged peerID(1) oldState(ConnectedDownloadingMap) newState(ConnectedLoadingMap)
+  67.439 Info ServerMultiplayerManager.cpp:977: updateTick(3936) received stateChanged peerID(1) oldState(ConnectedLoadingMap) newState(TryingToCatchUp)
+  67.506 Info ServerMultiplayerManager.cpp:977: updateTick(3940) received stateChanged peerID(1) oldState(TryingToCatchUp) newState(WaitingForCommandToStartSendingTickClosures)
+  67.506 Info InputActionHandler.cpp:5065: UpdateTick (3940) processed PlayerJoinGame peerID(1) playerIndex(0) mode(create) 
+  67.556 Info ServerMultiplayerManager.cpp:977: updateTick(3943) received stateChanged peerID(1) oldState(WaitingForCommandToStartSendingTickClosures) newState(InGame)
+ 122.734 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57246})
+ 130.961 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57247})
+ 157.941 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57250})
+ 219.947 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57252})
+ 252.855 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57254})
+ 316.925 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57255})
+ 373.068 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57256})
+ 414.092 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57257})
+ 457.549 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57258})
+ 465.398 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57259})
+ 490.973 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57260})
+ 511.556 Info ServerMultiplayerManager.cpp:1085: Disconnect notification for peer (1)
+ 511.556 Info ServerSynchronizer.cpp:613: nextHeartbeatSequenceNumber(30588) removing peer(1).
+ 511.806 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57264})
+ 548.089 ConnectionRequestReplyConfirm (type(ConnectionRequestReplyConfirm) ) from(IP ADDR:({127.0.0.1:60893}))
+ 548.089 Info ServerRouter.cpp:465: Replying to connectionRequest for address(IP ADDR:({127.0.0.1:60893})).
+ 548.089 Info ServerSynchronizer.cpp:594: nextHeartbeatSequenceNumber(32751) adding peer(2)
+ 548.107 Info ServerMultiplayerManager.cpp:809: updateTick(32771) changing state from(InGame) to(InGameSavingMap)
+ 548.206 Info ServerMultiplayerManager.cpp:1038: UpdateTick(32771) Serving map(C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\server\temp\mp-save-1.zip) for peer(2) size(1492150) auxiliary(109) crc(4207028814)
+ 548.206 Info ServerMultiplayerManager.cpp:809: updateTick(32771) changing state from(InGameSavingMap) to(InGame)
+ 548.572 Info ServerMultiplayerManager.cpp:977: updateTick(32792) received stateChanged peerID(2) oldState(Ready) newState(ConnectedWaitingForMap)
+ 548.572 Info ServerMultiplayerManager.cpp:977: updateTick(32792) received stateChanged peerID(2) oldState(ConnectedWaitingForMap) newState(ConnectedDownloadingMap)
+ 548.722 Info ServerMultiplayerManager.cpp:977: updateTick(32801) received stateChanged peerID(2) oldState(ConnectedDownloadingMap) newState(ConnectedLoadingMap)
+ 548.889 Info ServerMultiplayerManager.cpp:977: updateTick(32811) received stateChanged peerID(2) oldState(ConnectedLoadingMap) newState(TryingToCatchUp)
+ 548.940 Info ServerMultiplayerManager.cpp:977: updateTick(32814) received stateChanged peerID(2) oldState(TryingToCatchUp) newState(WaitingForCommandToStartSendingTickClosures)
+ 548.940 Info InputActionHandler.cpp:5065: UpdateTick (32814) processed PlayerJoinGame peerID(2) playerIndex(0) mode(connect) 
+ 548.989 Info ServerMultiplayerManager.cpp:977: updateTick(32817) received stateChanged peerID(2) oldState(WaitingForCommandToStartSendingTickClosures) newState(InGame)
+ 551.315 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57276})
+ 551.519 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57277})
+ 559.209 Info RemoteCommandProcessor.cpp:236: New RCON connection from IP ADDR:({127.0.0.1:57278})
+ 559.239 Info AppManager.cpp:424: Saving game as C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\save\mp-test.zip
+ 559.340 Info AppManagerStates.cpp:2131: Saving finished

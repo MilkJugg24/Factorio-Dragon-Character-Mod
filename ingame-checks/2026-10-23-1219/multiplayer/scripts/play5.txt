@@ -1,0 +1,36 @@
+# a per-tick driver (removed again at the end: console handlers are not saved, so a later join would desync)
+/sc script.on_nth_tick(1, function() local d = storage.mp_drive; if not d then return end; local p = game.get_player(1); if not (p and p.connected and p.character) then return end; if d.walk then p.walking_state = {walking = true, direction = d.walk} end; if d.shoot and storage.mp_target and storage.mp_target.valid then storage.mp_target.teleport({p.position.x, p.position.y - 12}); storage.mp_target.health = storage.mp_target.max_health; p.shooting_state = {state = defines.shooting.shooting_enemies, position = storage.mp_target.position} end; if d.mine and d.mine.valid then p.selected = d.mine; if not p.mining_state.mining then p.mining_state = {mining = true, position = d.mine.position} end end; if game.tick >= d.stop then p.walking_state = {walking = false, direction = d.walk or defines.direction.south}; p.shooting_state = {state = defines.shooting.not_shooting, position = p.position}; storage.mp_drive = nil end end); rcon.print("driver on")
+/sc local p = game.get_player(1); p.character.get_inventory(defines.inventory.character_armor).clear(); p.character.selected_gun_index = 2; local am = p.character.get_inventory(defines.inventory.character_ammo); if not am[2].valid_for_read then am[1].count = math.max(1, am[1].count - 20); am[2].set_stack{name = "firearm-magazine", count = 20} end; local c = p.position; local t = {}; for x = -20, 30 do for y = -14, 6 do t[#t + 1] = {name = "lab-dark-2", position = {c.x + x, c.y + y}} end end; p.surface.set_tiles(t); rcon.print("at " .. serpent.line(p.position) .. ", gun " .. p.character.selected_gun_index .. ", flying " .. tostring(p.character.is_flying))
+# run west 2 s
+/sc local p = game.get_player(1); storage.mp_x = p.position.x; storage.mp_drive = {walk = defines.direction.west, stop = game.tick + 120}
+#sleep 1
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 2, path = "mp/50-run.png", daytime = 0, force_render = true}
+#sleep 1.5
+/sc local p = game.get_player(1); rcon.print("ran " .. string.format("%.2f", storage.mp_x - p.position.x) .. " tiles west as " .. p.character.name)
+# run east while shooting north, 2 s
+/sc local p = game.get_player(1); storage.mp_target = p.surface.create_entity{name = "character", position = {p.position.x, p.position.y - 12}, force = "enemy"}; local a = p.character.get_inventory(defines.inventory.character_ammo)[2]; storage.mp_rounds = a.valid_for_read and (a.count * 10 + a.ammo - 10) or 0; storage.mp_x = p.position.x; storage.mp_drive = {walk = defines.direction.east, shoot = true, stop = game.tick + 120}
+#sleep 1
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 2, path = "mp/51-run-shoot.png", daytime = 0, force_render = true}
+#sleep 1.5
+/sc local p = game.get_player(1); local a = p.character.get_inventory(defines.inventory.character_ammo)[2]; local now = a.valid_for_read and (a.count * 10 + a.ammo - 10) or 0; rcon.print("shot " .. (storage.mp_rounds - now) .. " rounds, ran " .. string.format("%.2f", p.position.x - storage.mp_x) .. " tiles"); if storage.mp_target.valid then storage.mp_target.destroy() end
+# mine an ore 1.5 tiles east for 3 s
+/sc local p = game.get_player(1); local o = p.surface.create_entity{name = "iron-ore", position = {p.position.x + 1.5, p.position.y}, amount = 50}; storage.mp_iron = p.get_item_count("iron-ore"); storage.mp_drive = {mine = o, stop = game.tick + 180}
+#sleep 1
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 2, path = "mp/52-mine.png", daytime = 0, force_render = true}
+#sleep 2.5
+/sc local p = game.get_player(1); p.mining_state = {mining = false}; rcon.print("mined iron ore " .. storage.mp_iron .. " -> " .. p.get_item_count("iron-ore"))
+# fly with mech armor across an 8-tile lake, 3 s
+/sc local p = game.get_player(1); p.character.get_inventory(defines.inventory.character_armor).insert{name = "mech-armor"}; local c = p.position; local t = {}; for x = 3, 11 do for y = -14, 6 do t[#t + 1] = {name = "water", position = {c.x + x, c.y + y}} end end; p.surface.set_tiles(t); storage.mp_x = c.x; storage.mp_drive = {walk = defines.direction.east, stop = game.tick + 150}
+#sleep 0.5
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 2, path = "mp/53-take-off.png", daytime = 0, force_render = true}; rcon.print("flying " .. tostring(p.character.is_flying))
+#sleep 0.7
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 2, path = "mp/54-fly.png", daytime = 0, force_render = true}; rcon.print("flying " .. tostring(p.character.is_flying))
+#sleep 2.5
+/sc local p = game.get_player(1); rcon.print("after the lake: flying " .. tostring(p.character.is_flying) .. ", moved " .. string.format("%.2f", p.position.x - storage.mp_x) .. ", on " .. p.surface.get_tile(p.position.x, p.position.y).name)
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 2, path = "mp/55-landed.png", daytime = 0, force_render = true}
+# driver off before anyone reconnects
+/sc script.on_nth_tick(1, nil); storage.mp_drive = nil; rcon.print("driver off")
+/c game.print(game.players[1].character.name)
+/sc local p = game.get_player(1); rcon.print("character " .. p.character.name .. ", main " .. serpent.line(p.get_main_inventory().get_contents()) .. ", guns " .. serpent.line(p.character.get_inventory(defines.inventory.character_guns).get_contents()) .. ", ammo " .. serpent.line(p.character.get_inventory(defines.inventory.character_ammo).get_contents()) .. ", armor " .. serpent.line(p.character.get_inventory(defines.inventory.character_armor).get_contents()))
+#sleep 1
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 1, path = "mp/56-chat.png", daytime = 0, force_render = true}

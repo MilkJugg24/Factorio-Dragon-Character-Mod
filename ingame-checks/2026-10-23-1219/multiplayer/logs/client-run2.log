@@ -1,0 +1,142 @@
+   0.001 2026-10-23 12:31:33; Factorio 2.1.23 (build 87750, win64, steam, space-age)
+   0.001 Operating system: Windows 11 (build 26200) 
+   0.000 Initializing Steam API.
+   0.001 Program arguments: "C:\Program Files (x86)\Steam\steamapps\common\Factorio\bin\x64\factorio.exe" "--config" "C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\client\config\config.ini" "--mod-directory" "C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\client-mods" "--mp-connect" "localhost:34197" "--disable-audio" "--window-size" "1280x720" 
+   0.001 Config path: C:/Users/MilkJ/AppData/Local/Temp/avatar-mp/client/config/config.ini
+   0.001 Read data path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/data
+   0.001 Write data path: C:/Users/MilkJ/AppData/Local/Temp/avatar-mp/client [307994/475835MB]
+   0.001 Binaries path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/bin
+   0.012 System info: [CPU: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz, 12 cores, RAM: 10921/32612 MB, page: 11306/34660 MB, virtual: 4368/134217727 MB, extended virtual: 0 MB]
+   0.053 Memory info:
+   0.053  [0]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.053  [1]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.080 Display options: [FullScreen: true] [VSync: true] [UIScale: automatic (100.0%)] [Native DPI: true] [Screen: 4294967295] [Special: lmw] [Lang: en]
+   0.247 Video driver: windows
+   0.247 Available displays: 1
+   0.247  [0]: \\.\DISPLAY1 - Intel(R) UHD Graphics 630 {0x05, [0,0], 1920x1080, 32bit, 144Hz}
+   0.293 [Direct3D11] Display: 4294967295, Output: 0, DisplayAdapter: 0, RenderingAdapter: -1; d3dcompiler_47.dll
+   1.891 Initialised Direct3D[0]: NVIDIA GeForce RTX 2060; id: 10de-1f11; driver: nvldumdx.dll 32.0.16.1047
+   1.892   D3D Feature Level: 11.1, DXGI 1.5+, SwapChain: 3,flip-discard,-,-,-,none
+   1.892   [Local Video Memory] Budget: 5187MB, CurrentUsage: 5MB, Reservation: 0/2721MB
+   1.892   [Non-Local Vid.Mem.] Budget: 15538MB, CurrentUsage: 0MB, Reservation: 0/7897MB
+   1.892   Tiled resources: Tier 2
+   1.892   Unified Memory Architecture: No
+   1.892   BGR 565 Supported: Yes
+   1.892   MaximumFrameLatency: 3, GPUThreadPriority: 0
+   1.892 Graphics settings preset: very-high
+   1.892   Dedicated video memory size 5955 MB
+   1.930 Desktop composition is active.
+   1.930 Graphics options: [Graphics quality: high] [Video memory usage: all] [DXT: high-quality]
+   1.930                   [Max threads (load/render): 32/12] [Max texture size: 0] [Tex.Stream.: false] [Rotation quality: normal] [Other: STDCWTl] [B:0,C:0,S:100]
+   1.930 Audio is disabled
+   2.064 Logitech LED Controller initialized.
+   2.352 SteelSeries GameSense Controller initialized.
+   2.354 Info ModManager.cpp:455: FeatureFlag: expansion, expansion-shaders, freezing, quality, rail-bridges, segmented-units, space-travel, spoiling
+   2.358 Loading mod settings avatar-characters 0.3.1 (settings.lua)
+   2.361 Loading mod core 0.0.0 (data.lua)
+   2.386 Loading mod base 2.1.23 (data.lua)
+   2.669 Loading mod elevated-rails 2.1.23 (data.lua)
+   2.699 Loading mod recycler 2.1.23 (data.lua)
+   2.715 Loading mod quality 2.1.23 (data.lua)
+   2.726 Loading mod space-age 2.1.23 (data.lua)
+   3.216 Loading mod avatar-characters 0.3.1 (data.lua)
+   3.229 Loading mod avatar-bundle-test-server 1.0.1 (data.lua)
+   3.243 Loading mod base 2.1.23 (data-updates.lua)
+   3.261 Loading mod recycler 2.1.23 (data-updates.lua)
+   3.300 Loading mod space-age 2.1.23 (data-updates.lua)
+   3.316 Loading mod avatar-characters 0.3.1 (data-final-fixes.lua)
+   3.430 Checksum for core: 3668028660
+   3.430 Checksum of base: 3864816957
+   3.431 Checksum of elevated-rails: 1429039930
+   3.431 Checksum of recycler: 3293728126
+   3.431 Checksum of quality: 3330349790
+   3.431 Checksum of space-age: 3787586506
+   3.431 Checksum of avatar-characters: 2360450080
+   3.431 Checksum of avatar-bundle-test-server: 509344408
+   3.994 Prototype list checksum: 4264067166
+   4.056 Info PlayerData.cpp:564: Cloud player-data.json available
+   4.060 Post-data load graphics options: [Light occlusion: YES]
+   4.558 Initial atlas bitmap size is 16384
+   4.573 Created an atlas bitmap (size 16384x16384) [none]
+   4.593 Created an atlas bitmap (size 16384x16380) [none]
+   4.614 Created an atlas bitmap (size 16384x16376) [none]
+   4.616 Created an atlas bitmap (size 16384x14932) [none]
+   4.617 Created an atlas bitmap (size 16384x16000) [low-object]
+   4.620 Created an atlas bitmap (size 16384x16324) [corpse-decay]
+   4.621 Created an atlas bitmap (size 4096x2804) [corpse-decay]
+   4.621 Created an atlas bitmap (size 16384x9336) [decal]
+   4.621 Created an atlas bitmap (size 16384x5956) [none]
+   4.622 Created an atlas bitmap (size 8192x2800) [none]
+   4.622 Created an atlas bitmap (size 16384x3436) [procession-cover, linear-minification, linear-magnification]
+   4.622 Created an atlas bitmap (size 4096x1392) [none]
+   4.622 Created an atlas bitmap (size 1676x79) [not-compressed]
+   4.623 Created an atlas bitmap (size 16384x4368) [mipmap, linear-minification, linear-magnification, linear-mip-level]
+   4.623 Created an atlas bitmap (size 4096x3040) [smoke, mipmap, linear-minification, linear-magnification]
+   4.632 Created an atlas bitmap (size 16384x16368) [terrain, mipmap, linear-minification, linear-mip-level]
+   4.633 Created an atlas bitmap (size 16384x10752) [terrain, mipmap, linear-minification, linear-mip-level]
+   4.633 Created an atlas bitmap (size 8192x6080) [terrain-effect-map, mipmap, linear-minification, linear-mip-level]
+   4.633 Created an atlas bitmap (size 8192x2800) [mipmap]
+   4.634 Created an atlas bitmap (size 8192x4544) [mipmap]
+   4.634 Created an atlas bitmap (size 8192x3408) [mipmap]
+   4.634 Created an atlas bitmap (size 3504x768) [mipmap]
+   4.634 Created an atlas bitmap (size 4096x3152) [mipmap]
+   4.635 Created an atlas bitmap (size 4096x3152) [mipmap]
+   4.635 Created an atlas bitmap (size 4096x3152) [mipmap]
+   4.635 Created an atlas bitmap (size 8192x3984) [icon, not-compressed, mipmap, linear-minification, linear-magnification, linear-mip-level, ]
+   4.638 Created an atlas bitmap (size 16384x10268) [alpha-mask]
+   4.659 Created an atlas bitmap (size 16384x16384) [shadow, linear-magnification, alpha-mask]
+   4.665 Created an atlas bitmap (size 16384x16352) [shadow, linear-magnification, alpha-mask]
+   4.666 Created an atlas bitmap (size 16384x5936) [shadow, linear-magnification, alpha-mask]
+   4.666 Created an atlas bitmap (size 8192x5216) [shadow, mipmap, linear-magnification, alpha-mask]
+   4.666 Created an atlas bitmap (size 4096x336) [icon-background, not-compressed, mipmap, linear-minification, linear-magnification, linear-mip-level, ]
+   4.681 Loading 3D bitmaps: 20
+   4.696 Texture processor created (4096). GPU accelerated compression Supported: yes, Enabled: yes/yes. Test passed. YCoCgDXT PSNR: 35.83, BC3 PSNR: 33.82
+   4.731 Parallel sprite loader initialized (threads: 11, bitmaps: 8843)
+  24.417 Sprites loaded
+  24.590 Generated mipmaps (4) for atlas [4] of size 16384x16000   
+  24.633 Generated mipmaps (3) for atlas [13] of size 16384x4368   
+  24.645 Generated mipmaps (3) for atlas [14] of size 4096x3040   
+  24.668 Generated mipmaps (3) for atlas [15] of size 16384x16368   
+  24.680 Generated mipmaps (3) for atlas [16] of size 16384x10752   
+  24.692 Generated mipmaps (3) for atlas [17] of size 8192x6080   
+  24.759 Generated mipmaps (3) for atlas [18] of size 8192x2800   
+  24.814 Generated mipmaps (3) for atlas [19] of size 8192x4544   
+  24.825 Generated mipmaps (3) for atlas [20] of size 8192x3408   
+  24.838 Generated mipmaps (3) for atlas [21] of size 3504x768   
+  24.848 Generated mipmaps (3) for atlas [22] of size 4096x3152   
+  24.885 Generated mipmaps (3) for atlas [23] of size 4096x3152   
+  24.896 Generated mipmaps (3) for atlas [24] of size 4096x3152   
+  24.907 Generated mipmaps (5) for atlas [25] of size 8192x3984   
+  24.920 Generated mipmaps (3) for atlas [30] of size 8192x5216   
+  24.964 Custom mipmaps uploaded (3518)
+  24.996 Estimated VRAM usage for textures: 3877.03 MB (Atlases: 3777.20 MB, Textures: 99.82 MB)
+  24.997 Real VRAM usage for the whole program: 4164.82 MB
+  25.000 Info GlobalContext.cpp:1346: Resetting config.
+  25.000 Custom inputs active: 1
+  25.458 Factorio initialised
+  25.873 Steam Storage Quota: 23446/23841
+  25.881 Joining game IP ADDR:({127.0.0.1:34197})
+  25.881 Info UDPSocket.cpp:44: Opening socket
+  25.881 Info ClientMultiplayerManager.cpp:610: UpdateTick(18446744073709551615) changing state from(Ready) to(Connecting)
+  26.362 Info ClientSynchronizer.cpp:27: Initialized Synchronizer local peer(1) latency(32).
+  26.363 Info ClientMultiplayerManager.cpp:610: UpdateTick(18446744073709551615) changing state from(Connecting) to(ConnectedWaitingForMap)
+  26.363 Info ClientRouter.cpp:228: ConnectionAccepted
+  26.363 Info ClientMultiplayerManager.cpp:749: Received mapReadyForDownload
+  26.363 Downloading file C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\client\temp\mp-download.zip (1492150 B, auxiliary 109 B, 2968 blocks)
+  26.365 Info ClientMultiplayerManager.cpp:610: UpdateTick(18446744073709551615) changing state from(ConnectedWaitingForMap) to(ConnectedDownloadingMap)
+  26.485 Finished download (0 s, 1.4 MB, 12.5 MB/s)
+  26.513 Info ClientMultiplayerManager.cpp:729: updateTick(18446744073709551615) map download finished creating scenario
+  26.517 Info ClientMultiplayerManager.cpp:610: UpdateTick(18446744073709551615) changing state from(ConnectedDownloadingMap) to(ConnectedLoadingMap)
+  26.517 Loading map C:\Users\MilkJ\AppData\Local\Temp\avatar-mp\client\temp\mp-download.zip: 1492150 bytes.
+  26.605 Loading level.dat: 2507529 bytes.
+  26.605 Info Scenario.cpp:152: Map version 2.1.23-2
+  26.643 Loading blueprint storage: Local timestamp -1, Cloud timestamp -1
+  26.643 Blueprint storage "blueprint-storage-2.dat" was not found, trying to load previous version storage "blueprint-storage.dat"
+  26.643 Loading blueprint storage: Local timestamp -1, Cloud timestamp -1
+  26.644 Loading script.dat: 1489 bytes.
+  26.648 Checksum for script __level__/control.lua: 2385776952
+  26.651 Checksum for script __avatar-characters__/control.lua: 199544188
+  26.669 Info ClientMultiplayerManager.cpp:610: UpdateTick(32771) changing state from(ConnectedLoadingMap) to(TryingToCatchUp)
+  26.742 Info ClientMultiplayerManager.cpp:610: UpdateTick(32813) changing state from(TryingToCatchUp) to(WaitingForCommandToStartSendingTickClosures)
+  26.785 Info ClientMultiplayerManager.cpp:610: UpdateTick(32813) changing state from(WaitingForCommandToStartSendingTickClosures) to(InGame)
+  26.802 Info InputActionHandler.cpp:5065: UpdateTick (32814) processed PlayerJoinGame peerID(2) playerIndex(0) mode(connect) 

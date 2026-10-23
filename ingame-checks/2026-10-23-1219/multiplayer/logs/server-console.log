@@ -1,0 +1,5 @@
+=== Log opened 2026-10-23 12:32:35 ===
+2026-10-23 12:33:02 [JOIN] MilkJugg24 joined the game
+2026-10-23 12:33:05 [COMMAND] <server> (command): game.print(game.players[1].character.name)
+2026-10-23 12:35:11 [JOIN] MilkJugg24 joined the game
+=== Log closed 2026-10-23 12:36:28 ===

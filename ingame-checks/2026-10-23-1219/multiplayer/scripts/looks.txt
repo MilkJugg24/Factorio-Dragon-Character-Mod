@@ -1,0 +1,23 @@
+# who is connected, as what
+/sc local p = game.get_player(1); rcon.print(p.name .. " connected=" .. tostring(p.connected) .. " character=" .. tostring(p.character and p.character.name) .. " screen=" .. p.display_resolution.width .. "x" .. p.display_resolution.height .. " packs=" .. serpent.line(remote.call("avatar-characters", "get_avatar_packs")))
+/sc remote.call("avatar-characters", "open_window", 1); rcon.print("window open: " .. tostring(game.get_player(1).gui.screen["avatar_characters_frame"] ~= nil))
+#sleep 1
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 1, path = "mp/01-window-engineer.png", daytime = 0}
+#sleep 1
+/sc rcon.print("generic: " .. tostring(remote.call("avatar-characters", "set_appearance", 1, {avatar = "harness-generic"})) .. " -> " .. game.get_player(1).character.name)
+#sleep 1
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 1, path = "mp/02-window-generic.png", daytime = 0}
+#sleep 1
+/sc rcon.print("chibi: " .. tostring(remote.call("avatar-characters", "set_appearance", 1, {avatar = "harness-chibi"})) .. " -> " .. game.get_player(1).character.name)
+#sleep 1
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 1, path = "mp/03-window-chibi.png", daytime = 0}
+#sleep 1
+/sc rcon.print("engineer: " .. tostring(remote.call("avatar-characters", "set_appearance", 1, {avatar = false})) .. " -> " .. game.get_player(1).character.name)
+#sleep 1
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 1, path = "mp/04-window-engineer-again.png", daytime = 0}
+#sleep 1
+/sc rcon.print("chibi again: " .. tostring(remote.call("avatar-characters", "set_appearance", 1, {avatar = "harness-chibi"})) .. " -> " .. game.get_player(1).character.name)
+#sleep 1
+/sc local p = game.get_player(1); game.take_screenshot{player = p, by_player = p, show_gui = true, resolution = {p.display_resolution.width, p.display_resolution.height}, zoom = 1, path = "mp/05-window-chibi-again.png", daytime = 0}
+#sleep 1
+/sc local p = game.get_player(1); local f = p.gui.screen["avatar_characters_frame"]; if f then f.destroy() end; p.opened = nil; rcon.print("window closed; character " .. p.character.name)
