@@ -293,7 +293,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 Color ambient = lighting.AmbientColor * lighting.AmbientStrength;
                 RenderSettings.ambientLight = new Color(ambient.r, ambient.g, ambient.b, 1);
                 RenderSettings.defaultReflectionMode = DefaultReflectionMode.Custom;
+#pragma warning disable 618 // customReflectionTexture, its replacement in 2022, isn't in older Unity
                 RenderSettings.customReflection = Surroundings;
+#pragma warning restore 618
                 RenderSettings.reflectionIntensity = lighting.ReflectionStrength;
                 camera.Render();
             }

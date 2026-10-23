@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -20,6 +21,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         private static readonly Color Anchor = new Color(1f, 0.85f, 0.2f);
 
         [SerializeField] private GameObject source;
+        [SerializeField] private List<GameObject> leaveOut = new List<GameObject>();
         [SerializeField] private int animationIndex;
         [SerializeField] private int row = 4;
         [SerializeField] private int frame;
@@ -91,10 +93,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     packTitle = source.name;
                     packId = "";
                     sizePercent = 100;
+                    leaveOut.Clear();
                     permission = false;
                     permissionNote = "";
                 }
-                preview = PosePreview.Load(source, HeightTiles(sizePercent));
+                preview = PosePreview.Load(source, HeightTiles(sizePercent), LeaveOutPaths());
                 appliedSize = sizePercent;
                 preview.SetLighting(lighting);
                 exported = null;
@@ -124,6 +127,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     Load();
                 }
             }
+            LeaveOutGUI();
             if (error != null)
             {
                 EditorGUILayout.HelpBox(error, MessageType.Error);
@@ -194,6 +198,46 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             PackGUI();
             EditorGUILayout.EndScrollView();
         }
+
+        /// <summary>
+        /// Objects of the avatar to hide in the sprites, such as a fake ground shadow or a particle effect; they
+        /// apply when the avatar is (re)loaded.
+        /// </summary>
+        private void LeaveOutGUI()
+        {
+            EditorGUILayout.LabelField(new GUIContent("Leave out of the sprites", "Parts of the avatar the sprites " +
+                "shouldn't show, such as a fake ground shadow (the exporter draws the game's own) or effects. Drag " +
+                "them in from the avatar, then press Reload avatar."), EditorStyles.miniBoldLabel);
+            for (int i = 0; i < leaveOut.Count; i++)
+            {
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    leaveOut[i] = (GameObject)EditorGUILayout.ObjectField(leaveOut[i], typeof(GameObject), true);
+                    if (GUILayout.Button("Remove", GUILayout.Width(70)))
+                    {
+                        leaveOut.RemoveAt(i);
+                        GUIUtility.ExitGUI();
+                    }
+                }
+            }
+            var added = (GameObject)EditorGUILayout.ObjectField("Add", null, typeof(GameObject), true);
+            if (added != null && !leaveOut.Contains(added))
+            {
+                if (source != null && added.transform.IsChildOf(source.transform) && added != source)
+                {
+                    leaveOut.Add(added);
+                }
+                else
+                {
+                    error = added.name + " isn't part of the avatar: drag in an object from inside it.";
+                }
+            }
+        }
+
+        private List<string> LeaveOutPaths() => leaveOut
+            .Where(o => o != null && source != null && o.transform.IsChildOf(source.transform) && o != source)
+            .Select(o => AnimationUtility.CalculateTransformPath(o.transform, source.transform))
+            .ToList();
 
         private static readonly string[] LightingModes = { "Factorio style", "Custom" };
 
@@ -381,6 +425,17 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             catch (OperationCanceledException)
             {
                 Debug.Log("Factorio Avatar Exporter: export cancelled; nothing was written");
+            }
+            catch (InvalidOperationException e) when (e.Message.Contains("drew outside the bounds"))
+            {
+                Debug.LogException(e);
+                List<string> suspects = preview.DrawnOutsideMeshes();
+                error = "Something on the avatar is drawn far outside its body, so the sprites would be cut off, and " +
+                    "nothing was saved. " + (suspects.Count > 0
+                        ? "It is probably one of these: " + string.Join("; ", suspects) + ". "
+                        : "") +
+                    "Find it in the preview (it's drawn there too), add it to Leave out of the sprites at the top, " +
+                    "press Reload avatar and export again. (" + e.Message + ")";
             }
             catch (Exception e)
             {

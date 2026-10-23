@@ -80,9 +80,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// <summary>Lights the avatar for the preview and the export (<see cref="StageCamera.SetLighting"/>).</summary>
         public void SetLighting(StageLighting lighting) => camera.SetLighting(lighting);
 
-        public static PosePreview Load(GameObject source, double heightTiles = Conventions.EngineerHeight)
+        public static PosePreview Load(GameObject source, double heightTiles = Conventions.EngineerHeight,
+            IEnumerable<string> leaveOut = null)
         {
-            AvatarStage stage = AvatarStage.Load(source, heightTiles);
+            AvatarStage stage = AvatarStage.Load(source, heightTiles, leaveOut);
             try
             {
                 return new PosePreview(stage);
@@ -237,6 +238,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// Exports the avatar as an avatar pack (<see cref="PackExport.Write"/>): every animation rendered
         /// with shadows, the zip written to the options' output folder.
         /// </summary>
+        /// <summary>What on the avatar may draw outside its measured meshes (<see cref="AvatarStage.DrawnOutsideMeshes"/>).</summary>
+        public List<string> DrawnOutsideMeshes() => stage.DrawnOutsideMeshes();
+
         public PackExportResult ExportPack(PackOptions options, Action<ExportProgress> progress, CancellationToken cancel)
         {
             using (var renderer = new StageRenderer(stage, camera))

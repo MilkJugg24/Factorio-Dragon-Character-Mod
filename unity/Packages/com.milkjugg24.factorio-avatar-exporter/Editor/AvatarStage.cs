@@ -66,12 +66,17 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// Copies <paramref name="source"/> (a prefab or a scene object with a humanoid Animator) into a new
         /// preview scene and measures it. Throws <see cref="ArgumentException"/> when it is not a humanoid.
         /// </summary>
-        public static AvatarStage Load(GameObject source, double heightTiles = Conventions.EngineerHeight)
+        /// <param name="leaveOut">
+        /// Paths below <paramref name="source"/> (as <see cref="AnimationUtility.CalculateTransformPath"/> gives
+        /// them) of objects to hide in the copy, such as a fake ground shadow.
+        /// </param>
+        public static AvatarStage Load(GameObject source, double heightTiles = Conventions.EngineerHeight,
+            IEnumerable<string> leaveOut = null)
         {
             var stage = new AvatarStage(EditorSceneManager.NewPreviewScene()) { HeightTiles = heightTiles };
             try
             {
-                stage.Build(source);
+                stage.Build(source, leaveOut ?? Enumerable.Empty<string>());
                 return stage;
             }
             catch
@@ -81,7 +86,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
         }
 
-        private void Build(GameObject source)
+        private void Build(GameObject source, IEnumerable<string> leaveOut)
         {
             var pivot = new GameObject("Pivot");
             SceneManager.MoveGameObjectToScene(pivot, Scene);
@@ -105,6 +110,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 if (t != null)
                 {
                     bones.Add(bone, t);
+                }
+            }
+            foreach (string path in leaveOut)
+            {
+                Transform hidden = Avatar.transform.Find(path);
+                if (hidden != null)
+                {
+                    hidden.gameObject.SetActive(false);
+                    Notes.Add("left out of the sprites: " + path);
                 }
             }
             Dictionary<Transform, Transform> constrained = ParentConstraintSources();
@@ -710,6 +724,54 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 bounds = bounds.Encapsulate(ToCore(w) * Rig.TilesPerMeter);
             }
             return bounds;
+        }
+
+        /// <summary>
+        /// What on the avatar may draw outside its measured meshes, as posed now: particles, lines and trails
+        /// (rendered, but not measured), renderers whose own bounds reach well past the meshes, and materials
+        /// whose shaders are named for shadows or outlines. One line each; empty when nothing is suspect.
+        /// </summary>
+        public List<string> DrawnOutsideMeshes()
+        {
+            var found = new List<string>();
+            List<Vector3> points = MeshPoints();
+            if (points.Count == 0)
+            {
+                return found;
+            }
+            var meshes = new Bounds(Pivot.TransformPoint(points[0]), Vector3.zero);
+            foreach (Vector3 p in points)
+            {
+                meshes.Encapsulate(Pivot.TransformPoint(p));
+            }
+            const float slack = 0.3f; // meters
+            meshes.Expand(2 * slack);
+            foreach (Renderer renderer in Avatar.GetComponentsInChildren<Renderer>(false))
+            {
+                if (!renderer.enabled)
+                {
+                    continue;
+                }
+                string path = AnimationUtility.CalculateTransformPath(renderer.transform, Avatar.transform);
+                if (!(renderer is SkinnedMeshRenderer) && !(renderer is MeshRenderer))
+                {
+                    found.Add($"{path} ({renderer.GetType().Name}: drawn, but not measured)");
+                }
+                else if (!meshes.Contains(renderer.bounds.min) || !meshes.Contains(renderer.bounds.max))
+                {
+                    found.Add($"{path} (reaches {renderer.bounds.size.magnitude:0.0} m across)");
+                }
+                foreach (Material material in renderer.sharedMaterials)
+                {
+                    string shader = material != null && material.shader != null ? material.shader.name : "";
+                    string lower = shader.ToLowerInvariant();
+                    if (lower.Contains("shadow") || lower.Contains("outline"))
+                    {
+                        found.Add($"{path} (shader {shader})");
+                    }
+                }
+            }
+            return found.Distinct().ToList();
         }
 
         public static Vec3 ToCore(Vector3 v) => UnitySpace.ToCore(v.x, v.y, v.z);

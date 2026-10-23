@@ -171,6 +171,11 @@ it, and only share the pack with others if the author allows that too.
   The report lists every part and what it follows; please report the line of a part that still floats.
 - **Pose check over 1 px** (shown under the preview): the posing doesn't fit your rig exactly; please
   report it with `report.txt`.
+- **"Something on the avatar is drawn far outside its body"** when exporting: a part of the avatar draws
+  much further out than its meshes, such as a fake ground shadow, a particle effect or a very wide
+  outline, so the sprites would be cut off. The message names the likely parts. Drag them into **Leave
+  out of the sprites** (under the Avatar field), press **Reload avatar** and export again. The exporter
+  draws the game's own shadow, so a fake shadow on the avatar isn't needed in Factorio.
 - **Pink or light-blue patches:** a shader is missing or wasn't compiled yet. Make sure the avatar looks
   right in the Scene view first, and try again.
 - **The pack doesn't show up in Factorio:** check that both zips are in the `mods` folder, still zipped,
