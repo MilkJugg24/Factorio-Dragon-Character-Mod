@@ -608,7 +608,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         {
             var points = new List<Vector3>();
             Matrix4x4 toPivot = Pivot.worldToLocalMatrix;
-            ForEachMesh(false, (mesh, toWorld) =>
+            ForEachMesh((mesh, toWorld) =>
             {
                 Matrix4x4 m = toPivot * toWorld;
                 foreach (Vector3 v in mesh.vertices)
@@ -621,8 +621,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
         /// <summary>
         /// Fills <paramref name="shadow"/> with the ground shadow of the avatar as posed now, facing
-        /// <paramref name="orientation"/> (mirrored when <paramref name="mirrored"/>): every triangle of the
-        /// shadow-casting renderers flattened onto the ground (world y = 0) along Core's shadow light
+        /// <paramref name="orientation"/> (mirrored when <paramref name="mirrored"/>): every triangle of every
+        /// visible renderer flattened onto the ground (world y = 0) along Core's shadow light
         /// (<see cref="PlanarShadow"/>), in world space. Leaves the pivot facing north.
         /// </summary>
         public void BakeShadow(Mesh shadow, double orientation, bool mirrored)
@@ -640,7 +640,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
             var vertices = new List<Vector3>();
             var triangles = new List<int>();
-            ForEachMesh(true, (mesh, toWorld) =>
+            ForEachMesh((mesh, toWorld) =>
             {
                 int start = vertices.Count;
                 Matrix4x4 m = project * place * toWorld;
@@ -670,17 +670,18 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
         /// <summary>
         /// Calls <paramref name="visit"/> with every enabled mesh of the avatar as posed now and its matrix to
-        /// world space (skinned meshes baked; particles, lines and trails left out). With
-        /// <paramref name="castersOnly"/>, only renderers that cast shadows.
+        /// world space (skinned meshes baked; particles, lines and trails left out). Renderers count whatever their
+        /// Cast Shadows setting: avatars often turn it off for VRChat's world lighting, and the sprite's shadow
+        /// is of the whole avatar.
         /// </summary>
-        private void ForEachMesh(bool castersOnly, Action<Mesh, Matrix4x4> visit)
+        private void ForEachMesh(Action<Mesh, Matrix4x4> visit)
         {
             var baked = new Mesh();
             try
             {
                 foreach (Renderer renderer in Avatar.GetComponentsInChildren<Renderer>(false))
                 {
-                    if (!renderer.enabled || (castersOnly && renderer.shadowCastingMode == ShadowCastingMode.Off))
+                    if (!renderer.enabled)
                     {
                         continue;
                     }
