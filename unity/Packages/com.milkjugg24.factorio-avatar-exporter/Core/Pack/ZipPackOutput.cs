@@ -8,7 +8,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     /// <summary>
     /// Writes a pack as a mod zip (save it as <see cref="PackNaming.ZipFileName"/>). The zip is
     /// deterministic, so the same pack always gives the same bytes: every file sits under
-    /// "dragon-avatar-&lt;id&gt;_&lt;version&gt;/", entries are in ordinal path order with the fixed
+    /// "avatar-pack-&lt;id&gt;_&lt;version&gt;/", entries are in ordinal path order with the fixed
     /// time <see cref="EntryTime"/>, and there are no folder entries.
     /// </summary>
     public sealed class ZipPackOutput : IPackOutput

@@ -1,5 +1,5 @@
 """Checks an avatar pack (a folder or a mod zip) against docs/avatar-pack-format.md: the same
-rules dragon-character enforces when the game loads, plus the sheet sizes and other things only
+rules avatar-characters enforces when the game loads, plus the sheet sizes and other things only
 the graphics files can tell. Used by `tools/validate_sprites.py --pack`.
 """
 
@@ -97,11 +97,11 @@ class Checker:
                       f' or "{name}"')
         dependency_ok = False
         for dep in info.get("dependencies") or []:
-            m = re.fullmatch(r"\s*dragon-character\s*>=\s*(\d+)\.(\d+)\.(\d+)\s*", dep) if isinstance(dep, str) else None
+            m = re.fullmatch(r"\s*avatar-characters\s*>=\s*(\d+)\.(\d+)\.(\d+)\s*", dep) if isinstance(dep, str) else None
             if m and tuple(int(g) for g in m.groups()) >= spec.MIN_MAIN_VERSION:
                 dependency_ok = True
         if not dependency_ok:
-            self.error('info.json: dependencies must include "dragon-character >= 0.2.0"')
+            self.error('info.json: dependencies must include "avatar-characters >= 0.1.0"')
         return name
 
     def check_data_lua(self):

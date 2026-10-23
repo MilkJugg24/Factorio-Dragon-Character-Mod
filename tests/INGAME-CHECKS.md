@@ -1,9 +1,8 @@
 # In-game checks (screenshots from the real game)
 
 The headless tests check that the mod loads and swaps characters, but a headless server draws
-nothing. These checks run the real game on a Windows PC and screenshot the engineer, the dragon (and
-one outfit variant) and every avatar pack side by side, idling, running, running with a gun, mining,
-flying with mech armor and dying. The game plays everything by itself and closes when done.
+nothing. These checks run the real game on a Windows PC and screenshot the engineer and every avatar
+pack side by side, idling, running, running with a gun, mining, flying with mech armor and dying. The game plays everything by itself and closes when done.
 
 ## Running them
 
@@ -20,7 +19,7 @@ Options:
 
 - `-Factorio <folder>`: the Factorio install, if not `C:\Program Files (x86)\Steam\steamapps\common\Factorio`;
 - `-Pack <zip or folder>, ...`: avatar packs to show (for example one from the exporter's pack harness or
-  from Unity); without it a synthetic test pack is made;
+  from Unity); without it a synthetic test pack and the pack harness's stick figure are made;
 - `-NoSpaceAge`: leave the DLC off.
 
 A Factorio window opens for a few minutes and closes again. Don't touch it while it plays (the game's
@@ -34,9 +33,10 @@ settings are not touched: the game runs from a temporary folder.
 | File | What it is |
 | --- | --- |
 | `REPORT.md` | Every scene with its GIF, and what each character did (distance walked, shots fired, ore mined, flight, corpse), with anything wrong marked **problem**. |
-| `<scene>.gif` | The scene at the game's real speed, every character in its own labelled lane. Compare the dragon's legs with the engineer's. |
+| `<scene>.gif` | The scene at the game's real speed, every character in its own labelled lane. Compare each avatar's legs with the engineer's. |
 | `<scene>-strip.png` | The same frames side by side. |
 | `<scene>/` | The raw screenshots (64 pixels per tile, the sprites' own resolution). |
+| `window/window.png` | The avatar window, opened for the game's player after it became the first avatar pack. |
 | `manifest.json`, `factorio.log` | The raw results and the game's log. |
 
 ## Sending them to Claude

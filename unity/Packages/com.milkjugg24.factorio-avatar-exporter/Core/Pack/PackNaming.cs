@@ -11,7 +11,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     {
         private const string FallbackId = "avatar";
         private const string CorpsePrefix = "corpse-";
-        private const string InfoTitlePrefix = "Dragon Character avatar: ";
+        private const string InfoTitlePrefix = "Avatar pack: ";
         private const string Ellipsis = "…";
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             return true;
         }
 
-        /// <summary>The pack's mod name, mod-data and character prototype name: "dragon-avatar-&lt;id&gt;".</summary>
+        /// <summary>The pack's mod name, mod-data and character prototype name: "avatar-pack-&lt;id&gt;".</summary>
         public static string ModName(string id)
         {
             if (!IsValidId(id))
@@ -129,7 +129,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             return PackFormat.ModPrefix + id;
         }
 
-        /// <summary>The single folder in the pack's zip: "dragon-avatar-&lt;id&gt;_&lt;version&gt;".</summary>
+        /// <summary>The single folder in the pack's zip: "avatar-pack-&lt;id&gt;_&lt;version&gt;".</summary>
         public static string ZipRootFolder(string id, string version)
         {
             if (!IsValidVersion(version))
@@ -139,7 +139,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             return ModName(id) + "_" + version;
         }
 
-        /// <summary>The file name Factorio expects for the pack's zip: "dragon-avatar-&lt;id&gt;_&lt;version&gt;.zip".</summary>
+        /// <summary>The file name Factorio expects for the pack's zip: "avatar-pack-&lt;id&gt;_&lt;version&gt;.zip".</summary>
         public static string ZipFileName(string id, string version) => ZipRootFolder(id, version) + ".zip";
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         }
 
         /// <summary>
-        /// The info.json title for a pack title (spec.info_title): "Dragon Character avatar: " + title,
+        /// The info.json title for a pack title (spec.info_title): "Avatar pack: " + title,
         /// cut at a character boundary and ended with "…" when it is longer than
         /// <see cref="PackFormat.InfoTitleMaxBytes"/> bytes of UTF-8.
         /// </summary>

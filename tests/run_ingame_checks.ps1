@@ -4,14 +4,14 @@ Plays the in-game screenshot checks in the real game and collects the results. S
 
 .DESCRIPTION
 Starts Factorio with the mod from this repository, the screenshot test mod
-(tests/dragon-character-screenshots) and avatar packs, in its own temporary folder (your saves, mods
+(tests/avatar-characters-screenshots) and avatar packs, in its own temporary folder (your saves, mods
 and settings are not touched). The game plays the scenes by itself and closes when they are done,
 in a few minutes. The screenshots, manifest.json, the game log, GIFs and REPORT.md end up in -Out.
 
 .EXAMPLE
 powershell -ExecutionPolicy Bypass -File tests\run_ingame_checks.ps1
 .EXAMPLE
-powershell -ExecutionPolicy Bypass -File tests\run_ingame_checks.ps1 -Pack build\harness\dragon-avatar-harness-generic_1.0.0.zip
+powershell -ExecutionPolicy Bypass -File tests\run_ingame_checks.ps1 -Pack build\harness\avatar-pack-harness-generic_1.0.0.zip
 #>
 param(
     # The Factorio install folder (the one holding bin\ and data\).
@@ -38,7 +38,7 @@ $python = @("py", "python", "python3") | Where-Object { Get-Command $_ -ErrorAct
 $pyArgs = @(if ($python -eq "py") { "-3" })
 
 
-$work = Join-Path ([IO.Path]::GetTempPath()) ("dragon-checks-" + [guid]::NewGuid().ToString("N").Substring(0, 8))
+$work = Join-Path ([IO.Path]::GetTempPath()) ("avatar-checks-" + [guid]::NewGuid().ToString("N").Substring(0, 8))
 $mods = Join-Path $work "mods"
 New-Item -ItemType Directory -Force -Path $mods, (PathOf $work "config") | Out-Null
 Write-Host "== working in $work"
@@ -48,8 +48,8 @@ $config = PathOf $work "config" "config.ini"
 "[path]`r`nread-data=__PATH__executable__/../../data`r`nwrite-data=$($work -replace '\\', '/')`r`n" |
     Set-Content -Encoding ASCII $config
 
-Copy-Item -Recurse (Join-Path $repo "dragon-character") (Join-Path $mods "dragon-character")
-Copy-Item -Recurse (PathOf $repo "tests" "dragon-character-screenshots") (Join-Path $mods "dragon-character-screenshots")
+Copy-Item -Recurse (Join-Path $repo "avatar-characters") (Join-Path $mods "avatar-characters")
+Copy-Item -Recurse (PathOf $repo "tests" "avatar-characters-screenshots") (Join-Path $mods "avatar-characters-screenshots")
 if ($Pack.Count -gt 0) {
     foreach ($p in $Pack) { Copy-Item -Recurse (Resolve-Path $p) $mods }
 } else {
@@ -94,7 +94,7 @@ Write-Host "== playing the scenes (the game window opens and closes by itself)"
 # without the test's arguments; with Factorio's app id in the environment it runs as started.
 $env:SteamAppId = "427520"
 $env:SteamGameId = "427520"
-$done = PathOf $work "script-output" "dragon-checks" "done.txt"
+$done = PathOf $work "script-output" "avatar-checks" "done.txt"
 $game = Start-Process -FilePath $exe -PassThru -ArgumentList ($common + @(
     "--load-game", (Quote $save), "--disable-audio", "--window-size", "1280x720"))
 $deadline = (Get-Date).AddMinutes($TimeoutMinutes)
@@ -103,7 +103,7 @@ Start-Sleep -Seconds 3 # the last screenshots are written after done.txt is queu
 if (-not $game.HasExited) { Stop-Process -Id $game.Id -Force }
 
 New-Item -ItemType Directory -Force -Path $Out | Out-Null
-$results = PathOf $work "script-output" "dragon-checks"
+$results = PathOf $work "script-output" "avatar-checks"
 if (Test-Path $results) { Copy-Item -Recurse -Force (Join-Path $results "*") $Out }
 Copy-Item -Force (Join-Path $work "factorio-current.log") (Join-Path $Out "factorio.log") -ErrorAction SilentlyContinue
 if (-not (Test-Path (Join-Path $Out "done.txt"))) {

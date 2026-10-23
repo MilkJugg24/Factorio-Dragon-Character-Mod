@@ -1,17 +1,17 @@
 # Avatar pack format (version 1)
 
-An **avatar pack** is a small Factorio mod that adds one extra look to the
-Dragon Character mod (`dragon-character` 0.2.0 or newer). The pack only ships
-sprite sheets and a description of them. `dragon-character` reads that
+An **avatar pack** is a small Factorio mod that adds one look to the Avatar
+Characters mod (`avatar-characters` 0.1.0 or newer). The pack only ships
+sprite sheets and a description of them. `avatar-characters` reads that
 description, creates the character and corpse prototypes, and offers the look
-in its customization window.
+in its avatar window, where each player picks their own.
 
 A Unity avatar exporter that writes packs automatically is in development.
 Anything that follows this document works, including hand-drawn packs. To
 check a pack before loading it in the game:
 
 ```sh
-python3 tools/validate_sprites.py --pack path/to/dragon-avatar-<id>_<version>.zip
+python3 tools/validate_sprites.py --pack path/to/avatar-pack-<id>_<version>.zip
 ```
 
 `tools/avatar_pack/make_test_pack.py` writes a synthetic example pack.
@@ -21,17 +21,17 @@ python3 tools/validate_sprites.py --pack path/to/dragon-avatar-<id>_<version>.zi
 | Thing | Name |
 | --- | --- |
 | Pack id | `<id>`: lowercase letters, digits and `-`; starts with a letter or digit; at most 35 characters; must not start with `corpse-` |
-| Mod name (`info.json`) | `dragon-avatar-<id>` |
-| Zip file | `dragon-avatar-<id>_<version>.zip`, containing one folder `dragon-avatar-<id>_<version>/` (or `dragon-avatar-<id>/`) |
-| mod-data prototype | `dragon-avatar-<id>`, with `data_type = "dragon-character.avatar-pack"` |
-| Character prototype (created by dragon-character) | `dragon-avatar-<id>` |
-| Corpse prototype (created by dragon-character) | `dragon-avatar-corpse-<id>` |
-| GUI sprite (created by dragon-character from `icon`) | `dragon-character-avatar-<id>` |
+| Mod name (`info.json`) | `avatar-pack-<id>` |
+| Zip file | `avatar-pack-<id>_<version>.zip`, containing one folder `avatar-pack-<id>_<version>/` (or `avatar-pack-<id>/`) |
+| mod-data prototype | `avatar-pack-<id>`, with `data_type = "avatar-characters.avatar-pack"` |
+| Character prototype (created by avatar-characters) | `avatar-pack-<id>` |
+| Corpse prototype (created by avatar-characters) | `avatar-pack-corpse-<id>` |
+| GUI sprite (created by avatar-characters from `icon`) | `avatar-characters-pack-<id>` |
 
 ## Files
 
 ```
-dragon-avatar-<id>_<version>/
+avatar-pack-<id>_<version>/
   info.json
   data.lua
   prototypes/avatar-pack.lua
@@ -47,13 +47,13 @@ dragon-avatar-<id>_<version>/
 
 ```json
 {
-  "name": "dragon-avatar-<id>",
+  "name": "avatar-pack-<id>",
   "version": "1.0.0",
-  "title": "Dragon Character avatar: <title>",
+  "title": "Avatar pack: <title>",
   "author": "<author>",
   "factorio_version": "2.0",
   "description": "...",
-  "dependencies": ["dragon-character >= 0.2.0"]
+  "dependencies": ["avatar-characters >= 0.1.0"]
 }
 ```
 
@@ -69,8 +69,8 @@ local pack = require("prototypes.avatar-pack")
 data:extend({
   {
     type = "mod-data",
-    name = "dragon-avatar-" .. pack.id,
-    data_type = "dragon-character.avatar-pack",
+    name = "avatar-pack-" .. pack.id,
+    data_type = "avatar-characters.avatar-pack",
     data = pack,
   },
 })
@@ -87,7 +87,7 @@ return {
   title = "Mika",                -- shown in the customization window, at most 80 characters
   author = "someone",            -- optional
   generator = { name = "factorio-avatar-exporter", version = "1.0.0" },  -- optional
-  icon = { filename = "__dragon-avatar-mika__/graphics/icon.png", size = 64 },
+  icon = { filename = "__avatar-pack-mika__/graphics/icon.png", size = 64 },
   pixels_per_tile = 64,          -- 64 (sprites drawn at scale 0.5) or 32 (scale 1)
   tintable = false,              -- true: every animation has a "mask" layer tinted with the player colour
   flight = true,                 -- true: the flight animations below are all present
@@ -104,11 +104,11 @@ return {
       frame_count = 8,
       layers = {
         base = {
-          filename = "__dragon-avatar-mika__/graphics/idle-base.png",
+          filename = "__avatar-pack-mika__/graphics/idle-base.png",
           width = 92, height = 150, shift = { 0.0, -1.03125 },
         },
         shadow = {
-          filename = "__dragon-avatar-mika__/graphics/idle-shadow.png",
+          filename = "__avatar-pack-mika__/graphics/idle-shadow.png",
           width = 140, height = 70, shift = { 0.6, 0.05 },
         },
       },
@@ -119,8 +119,8 @@ return {
       layers = {
         base = {
           filenames = {
-            "__dragon-avatar-mika__/graphics/run-gun-base-1.png",
-            "__dragon-avatar-mika__/graphics/run-gun-base-2.png",
+            "__avatar-pack-mika__/graphics/run-gun-base-1.png",
+            "__avatar-pack-mika__/graphics/run-gun-base-2.png",
           },
           lines_per_file = 13,
           width = 110, height = 300, shift = { 0.0, -1.2 },
@@ -166,12 +166,12 @@ return {
   `distance_per_frame / animation_speed` tiles (the `run` animation speed), so
   one run cycle covers `run frames x distance_per_frame / animation_speed`
   tiles. The vanilla engineer's covers 22 x 0.13 / 0.6 = 4.77 tiles, and so
-  does the dragon's (12 x 0.238 / 0.6). To keep the engineer's pace, use
+  does a 12-frame cycle at the default 0.238. To keep the engineer's pace, use
   `distance_per_frame = 4.77 x animation_speed / run frames`; changing the
   `run` animation speed without it changes the pace.
 - Timing fields a pack leaves out get these defaults, which scale with its own
-  frame counts (for 12-frame `run` and `mine` animations, like the dragon's,
-  they are 9, `{ 1 }` and `{ 7 }`):
+  frame counts (for 12-frame `run` and `mine` animations they are 9, `{ 1 }`
+  and `{ 7 }`):
 
   | Field | Default |
   | --- | --- |
@@ -234,8 +234,8 @@ to the west.
 
 ## Rendering conventions
 
-Packs look right next to the dragon and vanilla entities when rendered the same
-way as `tools/dragon_render`:
+Packs look right next to vanilla entities when rendered this way (the exporter
+does):
 
 - **World:** x east, y south, z up, in tiles.
 - **Camera:** orthographic, looking north and 45 degrees down. Screen-space
@@ -250,7 +250,7 @@ way as `tools/dragon_render`:
 
 ## Validation
 
-`dragon-character` refuses to load (with an error naming the pack and the
+`avatar-characters` refuses to load (with an error naming the pack and the
 problem) when a pack:
 
 - has a `format_version` it does not support, or no `format_version`;
@@ -272,12 +272,12 @@ delete every character using it, together with the items they carry.
 
 Characters and corpses using a pack's look stop existing when the pack is
 removed, and Factorio deletes them **with their items** when the save loads.
-Before removing a pack from a save, an admin runs `/dragon-revert-all <id>`,
-which turns everyone using it back into the dragon.
+Before removing a pack from a save, an admin runs `/avatar-revert-all <id>`,
+which turns everyone using it back into the engineer.
 
 ## Versioning
 
 New optional fields do not change `format_version`. A change in meaning bumps
-`format_version` and the minimum `dragon-character` version in `info.json`, so
-an old `dragon-character` reports the missing dependency instead of
+`format_version` and the minimum `avatar-characters` version in `info.json`, so
+an old `avatar-characters` reports the missing dependency instead of
 misreading the pack.

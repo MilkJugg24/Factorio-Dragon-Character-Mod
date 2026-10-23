@@ -54,11 +54,8 @@ class LuaTableTests(unittest.TestCase):
 
     def test_round_trips(self):
         value = {"t": "竜" * 30 + '"\\\n\x01', "list": [1, 2.5, "x"], "end": 1, "with space": [{"q": 1}],
-                 "long": ["__dragon-avatar-test__/graphics/fly-gun-base-%d.png" % i for i in range(3)]}
+                 "long": ["__avatar-pack-test__/graphics/fly-gun-base-%d.png" % i for i in range(3)]}
         self.assertEqual(lua_table.loads(lua_table.dumps(value)), value)
-        with open(os.path.join(REPO, "dragon-character", "prototypes", "sprite-data.lua"), encoding="utf-8") as fh:
-            sprite_data = lua_table.loads(fh.read())
-        self.assertEqual(lua_table.loads(lua_table.dumps(sprite_data)), sprite_data)
 
 
 class PackCheckTests(unittest.TestCase):
@@ -69,14 +66,14 @@ class PackCheckTests(unittest.TestCase):
         cls.work = tempfile.mkdtemp()
         subprocess.run([sys.executable, MAKE_PACK, "--out", cls.work, "--id", "edge", "--max-sheet", "1024",
                         "--zip"], check=True, stdout=subprocess.DEVNULL)
-        cls.source = os.path.join(cls.work, "dragon-avatar-edge")
+        cls.source = os.path.join(cls.work, "avatar-pack-edge")
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.work)
 
     def copy(self):
-        path = os.path.join(tempfile.mkdtemp(dir=self.work), "dragon-avatar-edge")
+        path = os.path.join(tempfile.mkdtemp(dir=self.work), "avatar-pack-edge")
         shutil.copytree(self.source, path)
         return path
 
@@ -93,7 +90,7 @@ class PackCheckTests(unittest.TestCase):
 
     def test_generated_pack_and_zip_pass(self):
         self.assertEqual(self.errors(self.source), [])
-        self.assertEqual(self.errors(os.path.join(self.work, "dragon-avatar-edge_1.0.0.zip")), [])
+        self.assertEqual(self.errors(os.path.join(self.work, "avatar-pack-edge_1.0.0.zip")), [])
 
     def test_empty_tables_are_tables(self):
         path = self.copy()
@@ -131,7 +128,7 @@ class PackCheckTests(unittest.TestCase):
 
     def test_malformed_icon_is_reported(self):
         path = self.copy()
-        self.edit(path, lambda d: d.update(icon="__dragon-avatar-edge__/graphics/icon.png"))
+        self.edit(path, lambda d: d.update(icon="__avatar-pack-edge__/graphics/icon.png"))
         self.assertIn("needs an icon with a filename and a size", self.errors(path))
 
     def test_unreadable_png_is_reported(self):

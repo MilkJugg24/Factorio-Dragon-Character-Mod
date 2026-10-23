@@ -1,8 +1,8 @@
 {
   "name": "com.milkjugg24.factorio-avatar-exporter",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "displayName": "Factorio Avatar Exporter",
-  "description": "Turns a humanoid avatar into an avatar pack for the Dragon Character Factorio mod. This version previews the avatar posed in every animation (Tools > Factorio Avatar Exporter > Exporter); writing the pack comes next.",
+  "description": "Turns a humanoid avatar into an avatar pack for the Avatar Characters Factorio mod. This version previews the avatar posed in every animation (Tools > Factorio Avatar Exporter > Exporter); writing the pack comes next.",
   "unity": "2022.3",
   "author": {
     "name": "MilkJugg24"

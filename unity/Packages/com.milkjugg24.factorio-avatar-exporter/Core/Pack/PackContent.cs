@@ -15,7 +15,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>The pack id (<see cref="PackNaming.IsValidId"/>; <see cref="PackNaming.DeriveId"/> makes one).</summary>
         public string Id { get; set; }
 
-        /// <summary>Shown in the customization window; 1 to 80 characters on one line.</summary>
+        /// <summary>Shown in the avatar window; 1 to 80 characters on one line.</summary>
         public string Title { get; set; }
 
         /// <summary>The pack's author; optional (null or empty leaves it out).</summary>
@@ -48,7 +48,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>animation_speed overrides by animation name; animations not listed keep their default speed.</summary>
         public Dictionary<string, double> AnimationSpeeds { get; } = new Dictionary<string, double>(StringComparer.Ordinal);
 
-        /// <summary>The square picture in the customization window (usually 64 x 64).</summary>
+        /// <summary>The square picture in the avatar window (usually 64 x 64).</summary>
         public Image8 Icon { get; set; }
 
         /// <summary>The 144 x 144 picture in Factorio's mod list.</summary>

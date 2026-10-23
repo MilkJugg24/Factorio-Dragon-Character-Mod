@@ -3,7 +3,7 @@
 
     python3 tools/ingame_contact_sheet.py ingame-checks/<date>
 
-Reads <folder>/manifest.json (written by tests/dragon-character-screenshots) and writes, per scene:
+Reads <folder>/manifest.json (written by tests/avatar-characters-screenshots) and writes, per scene:
 
 - <scene>.gif: the screenshots as an animation at the game's real speed, every subject at once,
   each lane labelled; runs of solo scenes (shooting, mining) are stacked so they play together;
@@ -120,7 +120,7 @@ def problems(run):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("folder", help="the copied script-output/dragon-checks folder")
+    parser.add_argument("folder", help="the copied script-output/avatar-checks folder")
     args = parser.parse_args()
     folder = args.folder
     with open(os.path.join(folder, "manifest.json"), encoding="utf-8") as f:
@@ -154,6 +154,17 @@ def main():
                 report.append(f"- {s.get('label')}: {facts or 'no results'}")
             for problem in problems(run):
                 report.append(f"- **problem:** {problem}")
+        report.append("")
+    window = manifest.get("window")
+    if window:
+        report += ["## The avatar window", ""]
+        if os.path.exists(os.path.join(folder, "window", "window.png")):
+            report += ["![the avatar window](window/window.png)", ""]
+        report.append("- " + ", ".join(f"{k}: {v}" for k, v in sorted(window.items())))
+        if window.get("window_open") is False:
+            report.append("- **problem:** the window did not open")
+        if window.get("pack") and window.get("character") != "avatar-pack-" + window["pack"]:
+            report.append(f"- **problem:** the player is {window.get('character')}, not the pack's character")
         report.append("")
     with open(os.path.join(folder, "REPORT.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(report))

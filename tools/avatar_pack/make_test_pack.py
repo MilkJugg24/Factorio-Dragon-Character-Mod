@@ -1,4 +1,4 @@
-"""Writes a synthetic avatar pack (docs/avatar-pack-format.md) for testing dragon-character
+"""Writes a synthetic avatar pack (docs/avatar-pack-format.md) for testing avatar-characters
 without the Unity exporter.
 
 Every frame is a coloured stand-in figure labelled with its direction (row) and frame number,
@@ -9,8 +9,8 @@ pair, so the row order can be checked in the game.
     python3 tools/avatar_pack/make_test_pack.py --out build/packs --id test --flight --tint --zip
     python3 tools/avatar_pack/make_test_pack.py --out build/packs --id broken --broken missing-anim
 
-The pack is written to <out>/dragon-avatar-<id>/ (a folder Factorio loads as is), and with
---zip also to <out>/dragon-avatar-<id>_<version>.zip. With --broken, the pack has one
+The pack is written to <out>/avatar-pack-<id>/ (a folder Factorio loads as is), and with
+--zip also to <out>/avatar-pack-<id>_<version>.zip. With --broken, the pack has one
 deliberate mistake and the expected error is printed as "EXPECTED-ERROR: <text>".
 """
 
@@ -42,7 +42,7 @@ GUN_ROWS = [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2), (1, 3), (2, 0), (2, 
 AIR_HEIGHT = 0.42  # tiles
 SHADOW_ALPHA = 128
 
-# kind -> (description, expected error text from dragon-character)
+# kind -> (description, expected error text from avatar-characters)
 BROKEN = {
     "format-version": ("format_version 99", "uses avatar pack format 99"),
     "missing-anim": ("no mine animation", 'is missing the required "mine" animation'),
@@ -150,7 +150,7 @@ class Painter:
         body = [cx - self.px(22), top, cx + self.px(22), bottom]
         colour = hue_color(anim)
         if self.tint:
-            # the tinted mask covers the body; the base below it is dark, like the dragon's
+            # the tinted mask covers the body; the base below it is dark
             d.rounded_rectangle(body, radius=self.px(14), fill=(60, 60, 60, 255))
             md.rounded_rectangle(body, radius=self.px(14), fill=(235, 235, 235, 255))
             md.rounded_rectangle([body[0] + self.px(6), body[1] + self.px(6), body[2] - self.px(6),
@@ -267,7 +267,7 @@ def write_icon(path, size, tint, title):
 
 
 def build(args):
-    mod_name = f"dragon-avatar-{args.id}"
+    mod_name = f"avatar-pack-{args.id}"
     flight = args.flight or args.broken == "partial-flight"
     tint = args.tint or args.broken == "missing-mask"
     max_sheet = 1024 if args.broken == "bad-split" else args.max_sheet
@@ -356,15 +356,15 @@ def build(args):
         "title": info_title(args.title),
         "author": args.author,
         "factorio_version": "2.0",
-        "description": "Synthetic avatar pack for testing Dragon Character.",
-        "dependencies": ["dragon-character >= 0.2.0"],
+        "description": "Synthetic avatar pack for testing Avatar Characters.",
+        "dependencies": ["avatar-characters >= 0.1.0"],
     }
     with open(os.path.join(folder, "info.json"), "w", newline="\n") as fh:
         json.dump(info, fh, indent=2)
         fh.write("\n")
     with open(os.path.join(folder, "locale", "en", "locale.cfg"), "w", newline="\n") as fh:
-        fh.write(f"[mod-name]\n{mod_name}=Dragon Character avatar: {args.title}\n\n"
-                 f"[mod-description]\n{mod_name}=Synthetic avatar pack for testing Dragon Character.\n")
+        fh.write(f"[mod-name]\n{mod_name}=Avatar pack: {args.title}\n\n"
+                 f"[mod-description]\n{mod_name}=Synthetic avatar pack for testing Avatar Characters.\n")
     with open(os.path.join(folder, "README.txt"), "w", newline="\n") as fh:
         fh.write("Synthetic avatar pack written by tools/avatar_pack/make_test_pack.py.\n"
                  "It is not made from a real avatar and may be shared freely.\n")

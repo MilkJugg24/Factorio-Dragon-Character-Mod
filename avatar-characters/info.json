@@ -1,0 +1,12 @@
+{
+  "name": "avatar-characters",
+  "version": "0.1.0",
+  "title": "Avatar Characters",
+  "author": "MilkJugg24",
+  "factorio_version": "2.0",
+  "description": "Lets every player pick their own look from the installed avatar packs: your VRChat or other humanoid avatar, turned into a pack with the Factorio Avatar Exporter for Unity. Press the avatar button in the shortcut bar (or Ctrl + Shift + A) to choose. Without packs, everyone stays the engineer.",
+  "dependencies": [
+    "base >= 2.0.0",
+    "? space-age"
+  ]
+}

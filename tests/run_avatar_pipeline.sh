@@ -32,10 +32,10 @@ trap 'rm -rf "$WORK"' EXIT
 echo "== building the pack with the harness ($RIG rig)"
 dotnet run --project "$REPO/unity/dotnet/PackHarness" -c Release -- \
   --out "$WORK" --id "harness-$RIG" --title "Harness $RIG" --rig "$RIG" --zip
-ZIP="$(ls "$WORK"/dragon-avatar-harness-"$RIG"_*.zip)"
+ZIP="$(ls "$WORK"/avatar-pack-harness-"$RIG"_*.zip)"
 
 echo "== checking it"
-python3 "$REPO/tools/validate_sprites.py" --pack "$WORK/dragon-avatar-harness-$RIG" "$ZIP"
+python3 "$REPO/tools/validate_sprites.py" --pack "$WORK/avatar-pack-harness-$RIG" "$ZIP"
 
 echo "== loading it in Factorio"
 "$REPO/tests/run_headless.sh" "$FACTORIO_DIR" "${HEADLESS_ARGS[@]+"${HEADLESS_ARGS[@]}"}" --pack "$ZIP"

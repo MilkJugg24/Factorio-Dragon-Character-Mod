@@ -23,36 +23,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Imaging
         }
 
         [Test]
-        public void QuantizeMatchesPythonToU8()
-        {
-            // tie points, their neighbours one ulp away, and out-of-range values
-            var values = new List<double> { -1.0, -1e-300, 0.0, 1.0, 1.0 + 1e-15, 3.0 };
-            for (int k = 0; k < 256; k++)
-            {
-                double half = (k + 0.5) / 255.0;
-                values.AddRange(new[] { k / 255.0, half, Math.BitDecrement(half), Math.BitIncrement(half) });
-            }
-            var rng = new Random(41);
-            for (int i = 0; i < 500; i++)
-            {
-                values.Add(rng.NextDouble());
-            }
-            string text = string.Join(" ", values.Select(v => v.ToString("R", CultureInfo.InvariantCulture)));
-            string output = PythonTools.Run(
-                "import sys; sys.path.insert(0, sys.argv[1])\n" +
-                "import numpy as np\n" +
-                "from tools.dragon_render.sheets import to_u8\n" +
-                "print(' '.join(str(b) for b in to_u8(np.array([float(v) for v in sys.argv[2].split()]))))",
-                PythonTools.RepoRoot, text);
-            byte[] expected = output.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(byte.Parse).ToArray();
-            Assert.That(expected.Length, Is.EqualTo(values.Count));
-            for (int i = 0; i < values.Count; i++)
-            {
-                Assert.That(ImageConvert.Quantize(values[i]), Is.EqualTo(expected[i]), $"value {values[i]:R}");
-            }
-        }
-
-        [Test]
         public void ToImage8UnpremultipliesAndEncodesSrgb()
         {
             var image = new ImageF(3, 1);

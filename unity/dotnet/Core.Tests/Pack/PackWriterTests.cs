@@ -103,7 +103,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 {
                     "name", "version", "title", "author", "factorio_version", "description", "dependencies",
                 }));
-                Assert.That(info.GetProperty("name").GetString(), Is.EqualTo("dragon-avatar-test-avatar"));
+                Assert.That(info.GetProperty("name").GetString(), Is.EqualTo("avatar-pack-test-avatar"));
                 Assert.That(info.GetProperty("version").GetString(), Is.EqualTo("2.3.4"));
                 Assert.That(info.GetProperty("title").GetString(), Is.EqualTo(PackNaming.InfoTitle(content.Title)));
                 Assert.That(Encoding.UTF8.GetByteCount(info.GetProperty("title").GetString()), Is.LessThanOrEqualTo(100));
@@ -111,7 +111,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 Assert.That(info.GetProperty("factorio_version").GetString(), Is.EqualTo("2.0"));
                 StringAssert.Contains("Test Model", info.GetProperty("description").GetString());
                 Assert.That(info.GetProperty("dependencies").EnumerateArray().Select(d => d.GetString()),
-                    Is.EqualTo(new[] { "dragon-character >= 0.2.0" }));
+                    Is.EqualTo(new[] { "avatar-characters >= 0.1.0" }));
             }
             content.Author = null;
             using (JsonDocument doc = JsonDocument.Parse(Write(content).Files[PackFiles.InfoJson]))
@@ -158,7 +158,7 @@ print(json.dumps(lua_table.loads(sys.stdin.read())))
                 Assert.That(d.GetProperty("author").GetString(), Is.EqualTo("Tester"));
                 Assert.That(d.GetProperty("generator").GetProperty("name").GetString(), Is.EqualTo("factorio-avatar-exporter"));
                 Assert.That(d.GetProperty("generator").GetProperty("version").GetString(), Is.EqualTo("0.1.0"));
-                Assert.That(d.GetProperty("icon").GetProperty("filename").GetString(), Is.EqualTo("__dragon-avatar-test-avatar__/graphics/icon.png"));
+                Assert.That(d.GetProperty("icon").GetProperty("filename").GetString(), Is.EqualTo("__avatar-pack-test-avatar__/graphics/icon.png"));
                 Assert.That(d.GetProperty("icon").GetProperty("size").GetInt32(), Is.EqualTo(64));
                 Assert.That(d.GetProperty("pixels_per_tile").GetInt32(), Is.EqualTo(64));
                 Assert.That(d.GetProperty("tintable").GetBoolean(), Is.True);
@@ -188,7 +188,7 @@ print(json.dumps(lua_table.loads(sys.stdin.read())))
                         Assert.That(l.GetProperty("height").GetInt32(), Is.EqualTo(s.FrameHeight));
                         Assert.That(l.GetProperty("shift")[0].GetDouble(), Is.EqualTo(s.ShiftX));
                         Assert.That(l.GetProperty("shift")[1].GetDouble(), Is.EqualTo(s.ShiftY));
-                        string prefix = "__dragon-avatar-test-avatar__/graphics/" + animation.Key + "-" + layer.Key;
+                        string prefix = "__avatar-pack-test-avatar__/graphics/" + animation.Key + "-" + layer.Key;
                         if (s.LinesPerFile.HasValue)
                         {
                             Assert.That(l.TryGetProperty("filename", out _), Is.False);
@@ -228,16 +228,16 @@ print(json.dumps(lua_table.loads(sys.stdin.read())))
             MemoryPackOutput output = Write(content);
             string locale = output.Text(PackFiles.Locale);
             Assert.That(locale, Is.EqualTo(
-                "[mod-name]\ndragon-avatar-test-avatar=Dragon Character avatar: Test Avatar\n\n" +
-                "[mod-description]\ndragon-avatar-test-avatar=" + PackDocuments.ModDescription(content) + "\n"));
+                "[mod-name]\navatar-pack-test-avatar=Avatar pack: Test Avatar\n\n" +
+                "[mod-description]\navatar-pack-test-avatar=" + PackDocuments.ModDescription(content) + "\n"));
             string readme = output.Text(PackFiles.Readme);
             Assert.That(readme, Does.StartWith("Test Avatar\n"));
             StringAssert.Contains("Author:         Tester\n", readme);
             StringAssert.Contains("Source avatar:  Test Model\n", readme);
             StringAssert.Contains("Made with:      factorio-avatar-exporter 0.1.0\n", readme);
             StringAssert.Contains("Permission\n----------\nCC BY 4.0 by Someone.\nAttribution: see their page.\n", readme);
-            StringAssert.Contains("dragon-avatar-test-avatar_1.0.0.zip", readme);
-            StringAssert.Contains("\n    /dragon-revert-all test-avatar\n", readme);
+            StringAssert.Contains("avatar-pack-test-avatar_1.0.0.zip", readme);
+            StringAssert.Contains("\n    /avatar-revert-all test-avatar\n", readme);
             content.Author = null;
             Assert.That(PackDocuments.Readme(content), Does.Not.Contain("Author:"));
         }

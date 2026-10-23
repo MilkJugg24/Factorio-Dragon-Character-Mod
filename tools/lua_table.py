@@ -1,4 +1,4 @@
-"""Reads and writes Lua table literals, such as dragon-character/prototypes/sprite-data.lua
+"""Reads and writes Lua table literals, such as an avatar pack's prototypes/avatar-pack.lua
 and an avatar pack's prototypes/avatar-pack.lua.
 
 Only data is supported, no code: an optional leading `return`, then a value made of

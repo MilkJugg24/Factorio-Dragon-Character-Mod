@@ -102,13 +102,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
             }
         }
 
-        [Test]
-        public void GoldensAreUpToDateWithThePythonRenderer()
-        {
-            (int exitCode, string output) = Python.Run(RepoRoot.Find(), "-m", "tools.dragon_render.export_goldens", "--check");
-            Assert.That(exitCode, Is.EqualTo(0), output);
-        }
-
         private static string Key(string body, string animation, int frame, double t, double move) =>
             FormattableString.Invariant($"{body}/{animation}/{frame}/{t:R}/{move:R}");
 

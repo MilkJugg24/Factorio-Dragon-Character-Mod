@@ -26,7 +26,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public int FrameCount { get; }
         /// <summary>Looping animations sample t = frame / frames; one-shot ones frame / (frames - 1).</summary>
         public bool Loop { get; }
-        /// <summary>The animation_speed dragon-character uses unless the pack overrides it.</summary>
+        /// <summary>The animation_speed avatar-characters uses unless the pack overrides it.</summary>
         public double DefaultSpeed { get; }
         /// <summary>Part of the flight set (needs <c>flight = true</c>).</summary>
         public bool InAir { get; }

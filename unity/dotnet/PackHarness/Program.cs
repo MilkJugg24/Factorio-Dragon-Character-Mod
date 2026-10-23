@@ -15,7 +15,7 @@ namespace MilkJugg24.FactorioAvatarExporter.PackHarness
     ///       [--rig generic|chibi|minimal|dragon] [--height METERS] [--ppt 64|32] [--supersampling N]
     ///       [--no-flight] [--zip]
     ///
-    /// Writes DIR/dragon-avatar-ID/ and, with --zip, DIR/dragon-avatar-ID_VERSION.zip.
+    /// Writes DIR/avatar-pack-ID/ and, with --zip, DIR/avatar-pack-ID_VERSION.zip.
     /// </summary>
     public static class Program
     {

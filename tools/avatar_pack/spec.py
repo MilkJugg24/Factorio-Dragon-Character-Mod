@@ -1,21 +1,22 @@
 """Constants of the avatar pack format (docs/avatar-pack-format.md).
 
-Keep in sync with dragon-character/scripts/pack-format.lua; tests/run_headless.sh --test-packs
+Keep in sync with avatar-characters/scripts/pack-format.lua; tests/run_headless.sh --test-packs
 and --broken-packs check that both accept the same packs and reject the same mistakes.
 """
 
 import math
 import re
 
-DATA_TYPE = "dragon-character.avatar-pack"
+MAIN_MOD = "avatar-characters"
+DATA_TYPE = "avatar-characters.avatar-pack"
 SUPPORTED_VERSION = 1
-MOD_PREFIX = "dragon-avatar-"
+MOD_PREFIX = "avatar-pack-"
 ID_PATTERN = re.compile(r"[a-z0-9][a-z0-9-]*")
 MAX_ID_LENGTH = 35
 MAX_TITLE_LENGTH = 80
 MAX_SHEET_SIZE = 4096
 MAX_FRAMES = 255  # Factorio's limit for one animation
-MIN_MAIN_VERSION = (0, 2, 0)
+MIN_MAIN_VERSION = (0, 1, 0)
 # Factorio 2.0 aborts on start, without a message, when a mod's info.json title is longer
 INFO_TITLE_MAX_BYTES = 100
 
@@ -43,8 +44,8 @@ DATA_LUA = '''local pack = require("prototypes.avatar-pack")
 data:extend({
   {
     type = "mod-data",
-    name = "dragon-avatar-" .. pack.id,
-    data_type = "dragon-character.avatar-pack",
+    name = "avatar-pack-" .. pack.id,
+    data_type = "avatar-characters.avatar-pack",
     data = pack,
   },
 })
@@ -53,7 +54,7 @@ data:extend({
 
 def info_title(title):
     """The info.json title for a pack title, shortened to Factorio's limit if needed."""
-    text = f"Dragon Character avatar: {title}"
+    text = f"Avatar pack: {title}"
     if len(text.encode("utf-8")) <= INFO_TITLE_MAX_BYTES:
         return text
     ellipsis = "\u2026"

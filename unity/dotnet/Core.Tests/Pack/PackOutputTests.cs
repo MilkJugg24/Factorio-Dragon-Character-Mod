@@ -21,7 +21,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 output.Write("info.json", Hello);
                 output.Write("graphics/idle-base.png", new byte[] { 1, 2, 3 });
                 output.Complete();
-                string folder = Path.Combine(temp.Path, "dragon-avatar-mika");
+                string folder = Path.Combine(temp.Path, "avatar-pack-mika");
                 Assert.That(output.PackDirectory, Is.EqualTo(folder));
                 Assert.That(File.ReadAllBytes(Path.Combine(folder, "info.json")), Is.EqualTo(Hello));
                 Assert.That(File.ReadAllBytes(Path.Combine(folder, "graphics", "idle-base.png")), Is.EqualTo(new byte[] { 1, 2, 3 }));
@@ -33,7 +33,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         {
             using (var temp = new TempDirectory())
             {
-                string folder = Path.Combine(temp.Path, "dragon-avatar-mika");
+                string folder = Path.Combine(temp.Path, "avatar-pack-mika");
                 Directory.CreateDirectory(Path.Combine(folder, "graphics"));
                 File.WriteAllText(Path.Combine(folder, "graphics", "stale.png"), "old");
 
@@ -46,7 +46,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 output.Complete();
                 Assert.That(Directory.GetFiles(folder, "*", SearchOption.AllDirectories).Select(Path.GetFileName), Is.EqualTo(new[] { "info.json" }));
 
-                File.WriteAllText(Path.Combine(temp.Path, "dragon-avatar-file"), "not a folder");
+                File.WriteAllText(Path.Combine(temp.Path, "avatar-pack-file"), "not a folder");
                 Assert.Throws<IOException>(() => new DirectoryPackOutput(temp.Path, true).Begin("file", "1.0.0"));
             }
         }
@@ -111,10 +111,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
             {
                 Assert.That(archive.Entries.Select(e => e.FullName), Is.EqualTo(new[]
                 {
-                    "dragon-avatar-mika_1.2.3/README.txt",
-                    "dragon-avatar-mika_1.2.3/graphics/idle-base.png",
-                    "dragon-avatar-mika_1.2.3/info.json",
-                    "dragon-avatar-mika_1.2.3/prototypes/avatar-pack.lua",
+                    "avatar-pack-mika_1.2.3/README.txt",
+                    "avatar-pack-mika_1.2.3/graphics/idle-base.png",
+                    "avatar-pack-mika_1.2.3/info.json",
+                    "avatar-pack-mika_1.2.3/prototypes/avatar-pack.lua",
                 }));
                 foreach (ZipArchiveEntry entry in archive.Entries)
                 {
@@ -122,10 +122,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 }
                 using (var reader = new MemoryStream())
                 {
-                    archive.GetEntry("dragon-avatar-mika_1.2.3/info.json").Open().CopyTo(reader);
+                    archive.GetEntry("avatar-pack-mika_1.2.3/info.json").Open().CopyTo(reader);
                     Assert.That(reader.ToArray(), Is.EqualTo(Hello));
                 }
-                ZipArchiveEntry png = archive.GetEntry("dragon-avatar-mika_1.2.3/graphics/idle-base.png");
+                ZipArchiveEntry png = archive.GetEntry("avatar-pack-mika_1.2.3/graphics/idle-base.png");
                 Assert.That(png.CompressedLength, Is.LessThan(png.Length), "compressed");
             }
         }

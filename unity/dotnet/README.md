@@ -14,8 +14,10 @@ and test them with NUnit.
 dotnet test unity/dotnet/Core.Tests          # needs the .NET 8 SDK
 ```
 
-Cross-checks against the Python tools are skipped unless `python3` has numpy and Pillow; the dragon
-goldens also need numba.
+Cross-checks against the Python tools are skipped unless `python3` has numpy and Pillow.
+
+Several comments cite `tools/dragon_render`, the Python renderer of the archived Dragon Character mod
+that Core's math, camera and sheets were ported from. It is on the `archive/dragon-character` branch.
 
 | Project | What it is |
 | --- | --- |
@@ -40,7 +42,7 @@ How Core is organised:
 | `Math/`, `Spec/` | Vectors and rotations, the animation table, coordinate conventions. |
 | `Rig/` | Measures the avatar's humanoid rig; synthetic rigs for tests. |
 | `Pose/Humanoid/` | Turns joint targets into bone rotations (`HumanoidPoseBuilder`) and poses every animation (`HumanoidAnimations`). |
-| `Pose/Dragon/` | Literal port of the dragon's posing code, checked against goldens from `tools/dragon_render`. |
+| `Pose/Dragon/` | Literal port of the archived dragon's posing code, checked against goldens from `tools/dragon_render`; the tests use it as a fixed pose source. |
 | `Camera/` | The sprite camera, the ground shadow projection and canvas planning. |
 | `Render/` | A software stick-figure renderer standing in for Unity. |
 | `Imaging/` | Difference matting, downsampling, sRGB, PNG reading and writing. |

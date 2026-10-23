@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Loads the mod in a headless Factorio server and runs the tests in
-# tests/dragon-character-test.
+# tests/avatar-characters-test.
 #
 #   tests/run_headless.sh /path/to/factorio [options]
 #
@@ -45,8 +45,8 @@ fail() {
 # new_mods_dir DIR: the mod, the test mod and a mod-list that enables every mod in DIR
 new_mods_dir() {
   mkdir -p "$1"
-  cp -r "$REPO/dragon-character" "$1/dragon-character"
-  cp -r "$REPO/tests/dragon-character-test" "$1/dragon-character-test"
+  cp -r "$REPO/avatar-characters" "$1/avatar-characters"
+  cp -r "$REPO/tests/avatar-characters-test" "$1/avatar-characters-test"
 }
 
 # write_mod_list DIR: enables base, the DLC (or not) and every mod in DIR
@@ -92,7 +92,7 @@ if [ "$BROKEN_PACKS" = true ]; then
     new_mods_dir "$dir/mods"
     expected="$(python3 "$MAKE_PACK" --out "$dir/mods" --id broken --broken "$kind" | sed -n 's/^EXPECTED-ERROR: //p')"
     [ -n "$expected" ] || fail "no expected error for $kind"
-    if python3 "$REPO/tools/validate_sprites.py" --pack "$dir/mods/dragon-avatar-broken" > "$dir/validate.log" 2>&1; then
+    if python3 "$REPO/tools/validate_sprites.py" --pack "$dir/mods/avatar-pack-broken" > "$dir/validate.log" 2>&1; then
       fail "BROKEN-PACK $kind: tools/validate_sprites.py accepted it"
     fi
     grep -qF "$expected" "$dir/validate.log" \
@@ -116,8 +116,8 @@ if [ "$TEST_PACKS" = true ]; then
   # installed as a zip only, like a downloaded pack
   python3 "$MAKE_PACK" --out "$WORK/packs" --id small --title "$(printf '竜%.0s' $(seq 30))" --ppt 32 \
     --default-timing --frames run=6,mine=8 --zip > /dev/null
-  cp "$WORK/packs/dragon-avatar-small_1.0.0.zip" "$MODS/"
-  PACK_NAMES+=(dragon-avatar-test dragon-avatar-small_1.0.0.zip)
+  cp "$WORK/packs/avatar-pack-small_1.0.0.zip" "$MODS/"
+  PACK_NAMES+=(avatar-pack-test avatar-pack-small_1.0.0.zip)
 fi
 for pack in "${PACKS[@]+"${PACKS[@]}"}"; do
   cp -r "$pack" "$MODS/"
@@ -131,13 +131,13 @@ write_mod_list "$MODS"
 "$FACTORIO" --mod-directory "$MODS" --create "$WORK/test.zip" > "$WORK/create.log" 2>&1 \
   || { cat "$WORK/create.log"; exit 1; }
 if [ "$TEST_PACKS" = true ]; then
-  run_benchmark "$MODS" "$WORK/test.zip" "$WORK/run.log" "DRAGON-TEST: PASS (with avatar packs)"
-  # remove the packs from the save, as a player would after /dragon-revert-all
+  run_benchmark "$MODS" "$WORK/test.zip" "$WORK/run.log" "AVATAR-TEST: PASS (with avatar packs)"
+  # remove the packs from the save, as a player would after /avatar-revert-all
   for name in "${PACK_NAMES[@]}"; do
     rm -rf "${MODS:?}/$name"
   done
   write_mod_list "$MODS"
-  run_benchmark "$MODS" "$WORK/test.zip" "$WORK/removed.log" "DRAGON-TEST: PASS (avatar packs removed)"
+  run_benchmark "$MODS" "$WORK/test.zip" "$WORK/removed.log" "AVATAR-TEST: PASS (avatar packs removed)"
 else
-  run_benchmark "$MODS" "$WORK/test.zip" "$WORK/run.log" "DRAGON-TEST: PASS"
+  run_benchmark "$MODS" "$WORK/test.zip" "$WORK/run.log" "AVATAR-TEST: PASS"
 fi

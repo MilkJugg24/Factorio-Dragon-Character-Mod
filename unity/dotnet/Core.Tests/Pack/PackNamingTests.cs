@@ -92,9 +92,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         [Test]
         public void ModAndZipNames()
         {
-            Assert.That(PackNaming.ModName("mika"), Is.EqualTo("dragon-avatar-mika"));
-            Assert.That(PackNaming.ZipRootFolder("mika", "1.2.3"), Is.EqualTo("dragon-avatar-mika_1.2.3"));
-            Assert.That(PackNaming.ZipFileName("mika", "1.2.3"), Is.EqualTo("dragon-avatar-mika_1.2.3.zip"));
+            Assert.That(PackNaming.ModName("mika"), Is.EqualTo("avatar-pack-mika"));
+            Assert.That(PackNaming.ZipRootFolder("mika", "1.2.3"), Is.EqualTo("avatar-pack-mika_1.2.3"));
+            Assert.That(PackNaming.ZipFileName("mika", "1.2.3"), Is.EqualTo("avatar-pack-mika_1.2.3.zip"));
             Assert.Throws<ArgumentException>(() => PackNaming.ModName("Mika"));
             Assert.Throws<ArgumentException>(() => PackNaming.ZipRootFolder("mika", "1.2"));
             Assert.Throws<ArgumentException>(() => PackNaming.ZipFileName("corpse-x", "1.0.0"));
@@ -114,19 +114,19 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         [Test]
         public void InfoTitleFitsFactoriosByteLimit()
         {
-            Assert.That(PackNaming.InfoTitle("Mika"), Is.EqualTo("Dragon Character avatar: Mika"));
-            // 25 bytes of prefix + 75 = exactly 100
-            string fits = new string('x', 75);
-            Assert.That(PackNaming.InfoTitle(fits), Is.EqualTo("Dragon Character avatar: " + fits));
-            string cut = PackNaming.InfoTitle(new string('x', 76));
-            Assert.That(cut, Is.EqualTo("Dragon Character avatar: " + new string('x', 72) + "…"));
+            Assert.That(PackNaming.InfoTitle("Mika"), Is.EqualTo("Avatar pack: Mika"));
+            // 13 bytes of prefix + 87 = exactly 100
+            string fits = new string('x', 87);
+            Assert.That(PackNaming.InfoTitle(fits), Is.EqualTo("Avatar pack: " + fits));
+            string cut = PackNaming.InfoTitle(new string('x', 88));
+            Assert.That(cut, Is.EqualTo("Avatar pack: " + new string('x', 84) + "…"));
             Assert.That(Encoding.UTF8.GetByteCount(cut), Is.EqualTo(100));
-            // 3-byte characters: 72 bytes after the prefix hold 24 of them
+            // 3-byte characters: 84 bytes after the prefix hold 28 of them
             string japanese = PackNaming.InfoTitle(new string('ミ', 40));
-            Assert.That(japanese, Is.EqualTo("Dragon Character avatar: " + new string('ミ', 24) + "…"));
+            Assert.That(japanese, Is.EqualTo("Avatar pack: " + new string('ミ', 28) + "…"));
             // one ASCII character shifts the cut into the middle of a character, which is dropped
             string mixed = PackNaming.InfoTitle("a" + new string('ミ', 40));
-            Assert.That(mixed, Is.EqualTo("Dragon Character avatar: a" + new string('ミ', 23) + "…"));
+            Assert.That(mixed, Is.EqualTo("Avatar pack: a" + new string('ミ', 27) + "…"));
             Assert.That(Encoding.UTF8.GetByteCount(mixed), Is.EqualTo(98));
             Assert.Throws<ArgumentNullException>(() => PackNaming.InfoTitle(null));
         }

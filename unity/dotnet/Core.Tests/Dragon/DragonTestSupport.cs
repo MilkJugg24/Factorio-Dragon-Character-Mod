@@ -50,22 +50,22 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
         {
             string path = Path.Combine(TestContext.CurrentContext.TestDirectory, "Goldens", "dragon_poses.json");
             Assert.That(File.Exists(path), Is.True,
-                "missing " + path + "; run python3 -m tools.dragon_render.export_goldens");
+                "missing " + path + " (written by tools/dragon_render/export_goldens.py, on the archive/dragon-character branch)");
             return JsonDocument.Parse(File.ReadAllText(path));
         }
     }
 
     internal static class RepoRoot
     {
-        /// <summary>The repository root: the first parent of the test directory with dragon-character/info.json.</summary>
+        /// <summary>The repository root: the first parent of the test directory with avatar-characters/info.json.</summary>
         public static string Find()
         {
             var dir = new DirectoryInfo(TestContext.CurrentContext.TestDirectory);
-            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "dragon-character", "info.json")))
+            while (dir != null && !File.Exists(Path.Combine(dir.FullName, "avatar-characters", "info.json")))
             {
                 dir = dir.Parent;
             }
-            Assert.That(dir, Is.Not.Null, "repository root (with dragon-character/info.json) not found");
+            Assert.That(dir, Is.Not.Null, "repository root (with avatar-characters/info.json) not found");
             return dir.FullName;
         }
     }

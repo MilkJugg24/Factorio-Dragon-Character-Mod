@@ -1,17 +1,17 @@
-# Publishes a GitHub release with the installable mod zip.
+# Publishes a GitHub release of the Avatar Characters mod with its installable zip.
 #
 # Runs by itself after CI passes on main: it publishes a release when the version is new and does
 # nothing when that version is already released, so bumping the version is all a release takes.
 #
-# Otherwise either push a version tag (e.g. v0.1.0), or run this workflow by hand from
-# the Actions tab ("Run workflow"), which creates the tag v<version> from
-# dragon-character/info.json. A pushed tag must match that version.
-name: Release
+# Otherwise either push a tag avatar-characters-v<version> (e.g. avatar-characters-v0.1.0), or run
+# this workflow by hand from the Actions tab ("Run workflow"), which creates that tag from the version
+# in avatar-characters/info.json. A pushed tag must match that version.
+name: Mod release
 
 on:
   push:
     tags:
-      - "v*"
+      - "avatar-characters-v*"
   workflow_run:
     workflows: [CI]
     types: [completed]
@@ -36,15 +36,15 @@ jobs:
       - name: Work out the release tag
         id: tag
         run: |
-          version=$(python3 -c "import json; print(json.load(open('dragon-character/info.json'))['version'])")
+          version=$(python3 -c "import json; print(json.load(open('avatar-characters/info.json'))['version'])")
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            if [ "${GITHUB_REF_NAME#v}" != "$version" ]; then
+            if [ "${GITHUB_REF_NAME#avatar-characters-v}" != "$version" ]; then
               echo "Tag $GITHUB_REF_NAME does not match info.json version $version"
               exit 1
             fi
             tag="$GITHUB_REF_NAME"
           else
-            tag="v$version"
+            tag="avatar-characters-v$version"
           fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
@@ -60,7 +60,7 @@ jobs:
             echo "Release $TAG already exists; bump the version in info.json to publish a new one."
             exit 0
           fi
-          zip=$(ls build/dragon-character_*.zip)
+          zip=$(ls build/avatar-characters_*.zip)
           cat > notes.md <<NOTES
           Download **$(basename "$zip")** below and drop it, still zipped, into your Factorio \`mods\` folder:
 
@@ -68,9 +68,16 @@ jobs:
           - Linux: \`~/.factorio/mods\`
           - macOS: \`~/Library/Application Support/factorio/mods\`
 
-          Requires Factorio 2.0. Space Age is optional (it adds wing-flapping flight with mech armor).
+          Requires Factorio 2.0; Space Age is optional. On its own the mod changes nothing: add avatar packs
+          (mods named \`avatar-pack-<name>\`, made with the Factorio Avatar Exporter for Unity, see the
+          **Avatar Exporter** releases) and every player picks their look in the avatar window
+          (shortcut bar, or Ctrl + Shift + A). In multiplayer, every player needs the same packs.
+
+          Before removing a pack (or this mod) from a save, an admin runs \`/avatar-revert-all\`; see the
+          README in the repository.
           NOTES
           gh release create "$TAG" "$zip" \
             --target "$COMMIT" \
-            --title "Dragon Character $TAG" \
+            --title "Avatar Characters ${TAG#avatar-characters-v}" \
+            --prerelease \
             --notes-file notes.md

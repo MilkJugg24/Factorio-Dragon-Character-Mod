@@ -1,0 +1,12 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.1.0
+Date: 2026-10-23
+  Features:
+    - First version. Every player picks their own look from the installed avatar packs (mods named
+      avatar-pack-<id>, made with the Factorio Avatar Exporter for Unity), or stays the engineer.
+    - /avatar-revert-all [pack id] turns everyone back into the engineer, or only those using one
+      pack, so the mod or a pack can be removed without losing characters.
+    - Remote interface "avatar-characters" for other mods.
+  Info:
+    - Grew out of the Dragon Character mod (0.2.2), without the dragon. Avatar packs made for it
+      (dragon-avatar-<id>) need to be exported again.

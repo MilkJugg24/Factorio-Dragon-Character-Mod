@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Plays the in-game screenshot scenes (tests/dragon-character-screenshots) in a headless Factorio,
+# Plays the in-game screenshot scenes (tests/avatar-characters-screenshots) in a headless Factorio,
 # which takes no screenshots and has no player, and checks what the scenes did: everyone walked,
 # flew over the water (with Space Age) and left a corpse. Guards the scenes that
 # tests/run_ingame_checks.ps1 plays in the real game.
@@ -14,7 +14,7 @@ WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
 mkdir -p "$WORK/mods" "$WORK/config"
-cp -r "$REPO/dragon-character" "$REPO/tests/dragon-character-screenshots" "$WORK/mods/"
+cp -r "$REPO/avatar-characters" "$REPO/tests/avatar-characters-screenshots" "$WORK/mods/"
 python3 "$REPO/tools/avatar_pack/make_test_pack.py" --out "$WORK/mods" --id test --flight --tint > /dev/null
 python3 - "$WORK/mods" "$DLC" <<'PY'
 import json, os, sys
@@ -31,9 +31,9 @@ printf '[path]\nread-data=__PATH__executable__/../../data\nwrite-data=%s\n' "$WO
 FACTORIO=("$FACTORIO_DIR/bin/x64/factorio" --config "$WORK/config/config.ini" --mod-directory "$WORK/mods")
 "${FACTORIO[@]}" --create "$WORK/checks.zip" > "$WORK/create.log" 2>&1 || { cat "$WORK/create.log"; exit 1; }
 "${FACTORIO[@]}" --benchmark "$WORK/checks.zip" --benchmark-ticks 1800 > "$WORK/run.log" 2>&1 || true
-grep -q "DRAGON-CHECKS: DONE" "$WORK/run.log" || { cat "$WORK/run.log"; echo "the scenes did not finish" >&2; exit 1; }
+grep -q "AVATAR-CHECKS: DONE" "$WORK/run.log" || { cat "$WORK/run.log"; echo "the scenes did not finish" >&2; exit 1; }
 
-python3 - "$WORK/script-output/dragon-checks/manifest.json" "$DLC" <<'PY'
+python3 - "$WORK/script-output/avatar-checks/manifest.json" "$DLC" <<'PY'
 import json, sys
 manifest, dlc = json.load(open(sys.argv[1])), sys.argv[2] == "true"
 problems = []
@@ -50,7 +50,7 @@ for run in manifest["runs"]:
         if name == "corpse" and not s.get("corpse"):
             problems.append(f"{name}: {label} left no corpse")
 labels = {s.get("label") for run in manifest["runs"] for s in run["subjects"]}
-for expected in ("engineer", "dragon", "test"):
+for expected in ("engineer", "test"):
     if expected not in labels:
         problems.append(f"no {expected} in the scenes")
 if problems:

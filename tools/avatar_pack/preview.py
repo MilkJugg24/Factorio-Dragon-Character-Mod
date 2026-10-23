@@ -6,7 +6,7 @@ the sprites: each frame at its shift from the entity position, the shadow under 
 the mask layer tinted with the player colour, and the animation's speed. Sheet rows are labelled
 with their direction (and the gun/moving pair for run-gun and fly-gun).
 
-    python3 tools/avatar_pack/preview.py path/to/dragon-avatar-mika_1.0.0.zip --out build/preview
+    python3 tools/avatar_pack/preview.py path/to/avatar-pack-mika_1.0.0.zip --out build/preview
     python3 tools/avatar_pack/preview.py path/to/pack --animation run --zoom 2
 """
 

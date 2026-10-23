@@ -14,7 +14,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public static string ModDescription(PackContent content)
         {
             CheckContent(content);
-            return "Adds the look \"" + content.Title + "\" to Dragon Character; choose it in the dragon customization window. " +
+            return "Adds the look \"" + content.Title + "\" to " + PackFormat.MainModTitle + "; choose it in the avatar window. " +
                 "Made from the avatar \"" + content.SourceAvatar + "\" with " + Generator(content) + ". " +
                 "Read README.txt before removing this mod from a save.";
         }
@@ -60,7 +60,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             var text = new StringBuilder();
             text.Append(content.Title).Append('\n');
             text.Append('\n');
-            text.Append("An avatar pack for the Factorio mod Dragon Character: one more look for its customization window.\n");
+            text.Append("An avatar pack for the Factorio mod ").Append(PackFormat.MainModTitle)
+                .Append(": one more look its players can choose.\n");
             text.Append('\n');
             text.Append("Mod:            ").Append(modName).Append(' ').Append(content.Version).Append('\n');
             if (!string.IsNullOrEmpty(content.Author))
@@ -76,9 +77,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             Section(text, "Installing");
             text.Append("Put ").Append(PackNaming.ZipFileName(content.Id, content.Version))
                 .Append(" (or the ").Append(modName).Append(" folder) into Factorio's mods folder\n");
-            text.Append("and enable it together with Dragon Character ").Append(PackFormat.MinDragonCharacterVersion)
-                .Append(" or newer. Then pick \"").Append(content.Title).Append("\" in the\n");
-            text.Append("dragon customization window (shortcut bar, or Ctrl + Shift + D).\n");
+            text.Append("and enable it together with ").Append(PackFormat.MainModTitle).Append(' ')
+                .Append(PackFormat.MinMainModVersion).Append(" or newer. Then pick \"").Append(content.Title).Append("\" in the\n");
+            text.Append("avatar window (shortcut bar, or Ctrl + Shift + A). In multiplayer, every player needs this\n");
+            text.Append("pack too, the same version.\n");
             text.Append('\n');
             Section(text, "Removing");
             text.Append("Characters and corpses using this look stop existing when the pack is removed, and Factorio\n");
@@ -87,7 +89,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             text.Append('\n');
             text.Append("    ").Append(PackFormat.RevertCommand).Append(' ').Append(content.Id).Append('\n');
             text.Append('\n');
-            text.Append("which turns everyone using it back into the dragon.\n");
+            text.Append("which turns everyone using it back into the engineer.\n");
             return text.ToString();
         }
 

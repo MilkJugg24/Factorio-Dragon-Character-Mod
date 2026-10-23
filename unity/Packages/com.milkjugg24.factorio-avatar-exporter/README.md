@@ -1,9 +1,10 @@
 # Factorio Avatar Exporter (Unity package)
 
-Turns a humanoid avatar (a VRChat avatar, for example) into an avatar pack for the Dragon Character
-Factorio mod. Work in progress: this version **previews your avatar posed in every animation** of an
-avatar pack. Writing the pack itself comes next. It also still has the **rendering spike**, the first test
-of whether avatars render cleanly for sprites.
+Turns a humanoid avatar (a VRChat avatar, for example) into an avatar pack for the Avatar Characters
+Factorio mod, so you can play as your avatar (every player picks their own). Work in progress: this
+version **previews your avatar posed in every animation** of an avatar pack. Writing the pack itself
+comes next. It also still has the **rendering spike**, the first test of whether avatars render
+cleanly for sprites.
 
 - `Core/`: everything that decides what to draw and writes the pack. It has no Unity references and is
   developed and tested outside Unity (see `unity/dotnet/README.md`).

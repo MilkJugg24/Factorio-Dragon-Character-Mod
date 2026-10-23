@@ -1,5 +1,5 @@
-# Checks every push and pull request: the exporter Core's tests, the Python tools' tests, the dragon
-# sprites, and the mod itself in a headless Factorio (base game and Space Age, with avatar packs).
+# Checks every push and pull request: the exporter Core's tests, the Python tools' tests, and the
+# Avatar Characters mod in a headless Factorio (base game and Space Age, with avatar packs).
 # The mod zip and the exporter's .unitypackage are kept as build artifacts of each run.
 name: CI
 
@@ -46,8 +46,6 @@ jobs:
         run: pip install numpy pillow
       - name: Python tool tests
         run: python3 -m unittest discover -s tests -p "test_*.py"
-      - name: Dragon sprites
-        run: python3 tools/validate_sprites.py
       - name: Download headless Factorio
         run: |
           mkdir -p "$RUNNER_TEMP/factorio-dl"
@@ -69,4 +67,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: mod-zip
-          path: build/dragon-character_*.zip
+          path: build/avatar-characters_*.zip

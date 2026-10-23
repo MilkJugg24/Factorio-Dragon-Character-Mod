@@ -5,14 +5,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 {
     /// <summary>
     /// Constants of the avatar pack format (docs/avatar-pack-format.md); the same values as
-    /// tools/avatar_pack/spec.py and dragon-character/scripts/pack-format.lua.
+    /// tools/avatar_pack/spec.py and avatar-characters/scripts/pack-format.lua.
     /// </summary>
     public static class PackFormat
     {
         public const int FormatVersion = 1;
 
-        /// <summary>Prefix of the pack's mod name and mod-data prototype: "dragon-avatar-&lt;id&gt;".</summary>
-        public const string ModPrefix = "dragon-avatar-";
+        /// <summary>Prefix of the pack's mod name and mod-data prototype: "avatar-pack-&lt;id&gt;".</summary>
+        public const string ModPrefix = "avatar-pack-";
 
         public const int MaxIdLength = 35;
 
@@ -25,7 +25,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>Most frames of one animation (Factorio's limit).</summary>
         public const int MaxFrames = 255;
 
-        /// <summary>Largest icon size dragon-character accepts, px.</summary>
+        /// <summary>Largest icon size avatar-characters accepts, px.</summary>
         public const int MaxIconSize = 512;
 
         /// <summary>Size of thumbnail.png, the picture in Factorio's mod list, px.</summary>
@@ -37,19 +37,25 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// </summary>
         public const int InfoTitleMaxBytes = 100;
 
-        /// <summary>Largest timing.distance_per_frame dragon-character accepts, tiles.</summary>
+        /// <summary>Largest timing.distance_per_frame avatar-characters accepts, tiles.</summary>
         public const double MaxDistancePerFrame = 2.0;
 
         public const string FactorioVersion = "2.0";
 
-        /// <summary>The first dragon-character version that loads packs of this format.</summary>
-        public const string MinDragonCharacterVersion = "0.2.0";
+        /// <summary>The Factorio mod that loads avatar packs.</summary>
+        public const string MainMod = "avatar-characters";
+
+        /// <summary>Its title in Factorio's mod list.</summary>
+        public const string MainModTitle = "Avatar Characters";
+
+        /// <summary>The first avatar-characters version that loads packs of this format.</summary>
+        public const string MinMainModVersion = "0.1.0";
 
         /// <summary>The info.json dependency every pack declares.</summary>
-        public const string Dependency = "dragon-character >= " + MinDragonCharacterVersion;
+        public const string Dependency = MainMod + " >= " + MinMainModVersion;
 
-        /// <summary>The chat command that turns every character using a pack back into the dragon.</summary>
-        public const string RevertCommand = "/dragon-revert-all";
+        /// <summary>The chat command that turns every character using a pack back into the engineer.</summary>
+        public const string RevertCommand = "/avatar-revert-all";
 
         /// <summary>The data.lua of every pack, byte for byte (DATA_LUA in spec.py).</summary>
         public const string DataLua =
@@ -57,8 +63,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             "data:extend({\n" +
             "  {\n" +
             "    type = \"mod-data\",\n" +
-            "    name = \"dragon-avatar-\" .. pack.id,\n" +
-            "    data_type = \"dragon-character.avatar-pack\",\n" +
+            "    name = \"avatar-pack-\" .. pack.id,\n" +
+            "    data_type = \"avatar-characters.avatar-pack\",\n" +
             "    data = pack,\n" +
             "  },\n" +
             "})\n";
