@@ -149,6 +149,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 Load();
                 GUIUtility.ExitGUI();
             }
+
             if (preview == null)
             {
                 EditorGUILayout.HelpBox("Pick your avatar (the object with the VRChat avatar descriptor, or its prefab) " +
@@ -435,7 +436,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 exported = $"Saved {result.ZipPath}. Put it, still zipped, in Factorio's mods folder together with the " +
                     "Avatar Characters mod, start Factorio and choose " + $"\"{options.Title.Trim()}\" in the avatar window " +
                     "(shortcut bar, or Ctrl + Shift + A). README.md in Assets/FactorioAvatarExporter has every step. " +
-                    $"A report and preview images are in {options.PreviewFolder}.";
+                    $"A report and preview images are in {options.PreviewFolder}." + (result.CutOff.Count > 0
+                        ? $" Something reached the edge of the picture in {result.CutOff.Count} frames and was cut off " +
+                          $"there (the first: {result.CutOff[0]}); look at the preview images to see whether anything " +
+                          "visible is missing."
+                        : "");
                 Debug.Log("Factorio Avatar Exporter:\n" + result.Report);
                 EditorUtility.RevealInFinder(result.ZipPath);
             }
@@ -447,15 +452,16 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 Debug.LogException(e);
                 // the failing frame is still set up: find what draws on its edge
-                edgeDrawers = preview.EdgeDrawers();
+                edgeDrawers = preview.EdgeDrawers() ?? new List<string>();
                 List<string> suspects = edgeDrawers.Count > 0 ? edgeDrawers : preview.DrawnOutsideMeshes();
-                error = "Something on the avatar is drawn outside its body, so the sprites would be cut off, and " +
+                error = "Something on the avatar reaches past the edge of the picture, so it would be cut off, and " +
                     "nothing was saved. " + (edgeDrawers.Count > 0
-                        ? "These parts draw at the edge of the picture: " + string.Join(", ", edgeDrawers) +
-                          ". Press the button below to leave them out of the sprites and reload, then export again."
-                        : (suspects.Count > 0 ? "It is probably one of these: " + string.Join("; ", suspects) + ". " : "") +
-                          "Find it in the preview (it's drawn there too), add it to Leave out of the sprites at the " +
-                          "top, press Reload avatar and export again.") + " (" + e.Message + ")";
+                        ? "Found by switching the avatar's parts on one at a time: " + string.Join(", ", edgeDrawers) +
+                          ". Leave them out of the sprites with the button below, then export again."
+                        : (suspects.Count > 0 ? "It may be one of these: " + string.Join("; ", suspects) + ". " : "") +
+                          "Find it in the preview, add it to Leave out of the sprites at the top and press Reload " +
+                          "avatar.") + " (" + e.Message + ")";
+                Debug.LogWarning("Factorio Avatar Exporter: " + error);
             }
             catch (Exception e)
             {

@@ -241,36 +241,65 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// </summary>
         /// <summary>
         /// The avatar's objects that draw on the edge of the frame last rendered (as posed, turned and framed now),
-        /// as paths below the avatar: each renderer is drawn alone, and those that reach the edge are named. Such
-        /// an object draws past the canvas whatever its size, like an effect drawn at a fixed place on screen.
+        /// as paths below the avatar. Objects are switched on one at a time, siblings off, going down into
+        /// those that reach the edge, so renderers, UI canvases and anything else are found, down to the smallest
+        /// object that still reaches it. Such an object draws past the canvas whatever its size, like an effect or
+        /// a panel drawn at a fixed place on screen. Null when nothing reaches the edge now; empty when the
+        /// avatar's objects don't explain it.
         /// </summary>
         public List<string> EdgeDrawers()
         {
+            bool Touches() => StageCamera.TouchesEdge(ImageConvert.ToImage8(camera.RenderFrame()));
+            if (!Touches())
+            {
+                return null;
+            }
+            Transform root = stage.Avatar.transform;
             var found = new List<string>();
-            List<Renderer> shown = stage.Avatar.GetComponentsInChildren<Renderer>(false).Where(r => r.enabled).ToList();
-            try
+
+            void Search(Transform parent, int depth)
             {
-                foreach (Renderer r in shown)
+                List<GameObject> children = parent.Cast<Transform>().Select(t => t.gameObject).Where(g => g.activeSelf).ToList();
+                foreach (GameObject child in children)
                 {
-                    r.enabled = false;
+                    child.SetActive(false);
                 }
-                foreach (Renderer r in shown)
+                try
                 {
-                    r.enabled = true;
-                    if (StageCamera.TouchesEdge(ImageConvert.ToImage8(camera.RenderFrame())))
+                    if (parent != root && Touches())
                     {
-                        found.Add(AnimationUtility.CalculateTransformPath(r.transform, stage.Avatar.transform));
+                        // the object itself, without its children
+                        found.Add(AnimationUtility.CalculateTransformPath(parent, root));
+                        return;
                     }
-                    r.enabled = false;
+                    foreach (GameObject child in children)
+                    {
+                        child.SetActive(true);
+                        if (Touches())
+                        {
+                            int before = found.Count;
+                            if (depth < 12)
+                            {
+                                Search(child.transform, depth + 1);
+                            }
+                            if (found.Count == before)
+                            {
+                                found.Add(AnimationUtility.CalculateTransformPath(child.transform, root));
+                            }
+                        }
+                        child.SetActive(false);
+                    }
                 }
-            }
-            finally
-            {
-                foreach (Renderer r in shown)
+                finally
                 {
-                    r.enabled = true;
+                    foreach (GameObject child in children)
+                    {
+                        child.SetActive(true);
+                    }
                 }
             }
+
+            Search(root, 0);
             return found.Distinct().ToList();
         }
 

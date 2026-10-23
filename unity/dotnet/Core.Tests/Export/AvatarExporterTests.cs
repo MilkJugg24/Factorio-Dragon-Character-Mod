@@ -246,6 +246,22 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
         }
 
         [Test]
+        public void AllowingCutOffExportsAndListsTheFramesThatReachTheEdge()
+        {
+            ExportSettings settings = Small();
+            settings.AllowCutOff = true;
+            var exporter = new AvatarExporter(GenericRig(), new ShrunkBoundsRenderer(), settings);
+            ExportedArt art = exporter.Render();
+            Assert.That(art.Animations, Does.ContainKey(AnimationSpec.Idle));
+            Assert.That(exporter.CutOff, Is.Not.Empty);
+            Assert.That(exporter.CutOff[0], Does.Contain("idle direction 1 frame 1 color pass"));
+
+            var strict = new AvatarExporter(GenericRig(), new StickFigureRenderer(), Small());
+            strict.Render();
+            Assert.That(strict.CutOff, Is.Empty);
+        }
+
+        [Test]
         public void WithoutAMarginFramesMayReachTheCanvasEdge()
         {
             // some of the stick figure's frames touch the edge of canvases without a margin

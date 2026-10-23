@@ -27,6 +27,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// </summary>
         public int CanvasMarginPixels { get; set; } = CanvasPlanner.DefaultMarginPixels;
 
+        /// <summary>
+        /// Let a render that reaches the edge of its canvas through, cut off there, instead of stopping the
+        /// export; <see cref="AvatarExporter.CutOff"/> lists those frames.
+        /// </summary>
+        public bool AllowCutOff { get; set; }
+
         public void Validate()
         {
             if (PixelsPerTile != 64 && PixelsPerTile != 32)
@@ -103,6 +109,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         private readonly IPoseSource poses;
         private readonly IFrameRenderer renderer;
         private readonly ExportSettings settings;
+        private readonly List<string> cutOff = new List<string>();
+
+        /// <summary>The frames that reached the edge of their canvas and were cut off (<see cref="ExportSettings.AllowCutOff"/>).</summary>
+        public IReadOnlyList<string> CutOff => cutOff;
 
         public AvatarExporter(IPoseSource poses, IFrameRenderer renderer, ExportSettings settings)
         {
@@ -377,6 +387,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 {
                     return;
                 }
+                if (owner.settings.AllowCutOff)
+                {
+                    if (TouchesEdge(image))
+                    {
+                        owner.cutOff.Add(what);
+                    }
+                    return;
+                }
                 for (int x = 0; x < image.Width; x++)
                 {
                     CheckEmpty(image, x, 0, what);
@@ -387,6 +405,25 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                     CheckEmpty(image, 0, y, what);
                     CheckEmpty(image, image.Width - 1, y, what);
                 }
+            }
+
+            private static bool TouchesEdge(Image8 image)
+            {
+                for (int x = 0; x < image.Width; x++)
+                {
+                    if (image.Alpha(x, 0) != 0 || image.Alpha(x, image.Height - 1) != 0)
+                    {
+                        return true;
+                    }
+                }
+                for (int y = 0; y < image.Height; y++)
+                {
+                    if (image.Alpha(0, y) != 0 || image.Alpha(image.Width - 1, y) != 0)
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             private static void CheckEmpty(Image8 image, int x, int y, string what)

@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.6.2";
+        public const string Version = "0.6.3";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -34,6 +34,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
         /// <summary>The file the pack's zip is saved as (the user chooses it; see <see cref="PackNaming.ZipFileName"/>).</summary>
         public string ZipPath;
+
+        /// <summary>
+        /// When something still reaches the edge of a frame on the retry with a tile more room, cut it off there
+        /// instead of stopping, as the preview does; report.txt and the result list those frames.
+        /// </summary>
+        public bool AllowCutOff = true;
 
         /// <summary>Where report.txt and preview sheets go.</summary>
         public string PreviewFolder;
@@ -67,6 +73,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     {
         public string ZipPath;
         public string Report;
+
+        /// <summary>Frames something reached the edge of and was cut off in (<see cref="PackOptions.AllowCutOff"/>).</summary>
+        public IReadOnlyList<string> CutOff = new string[0];
     }
 
     /// <summary>Helpers for writing avatar packs from the Editor.</summary>
@@ -111,10 +120,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             AvatarExporter exporter = null;
             ExportedArt art = null;
             var extra = new List<string>();
-            // the measured meshes plus some room; if a shader still draws further out (a wide outline), once more with more
+            // the measured meshes plus some room; if a shader still draws further out (a wide outline, a tuft drawn
+            // past its mesh), once more with a tile more, cutting off what still reaches the edge
             foreach (double padding in new[] { 0.25, 1.0 })
             {
                 renderer.PaddingTiles = padding;
+                settings.AllowCutOff = options.AllowCutOff && padding >= 1.0;
                 exporter = new AvatarExporter(poses, renderer, settings);
                 try
                 {
@@ -123,9 +134,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 }
                 catch (InvalidOperationException e) when (padding < 1.0 && e.Message.Contains("drew outside the bounds"))
                 {
-                    extra.Add("something was drawn past the measured meshes (a wide outline?); exported again with " +
-                        "more room around the avatar");
+                    extra.Add("something was drawn past the measured meshes (a wide outline, or a part drawn past its " +
+                        "mesh); exported again with a tile more room around the avatar");
                 }
+            }
+
+            if (exporter.CutOff.Count > 0)
+            {
+                extra.Add($"cut off at the edge of the picture in {exporter.CutOff.Count} frames (exported anyway), " +
+                    "first: " + string.Join("; ", exporter.CutOff.Take(5)));
             }
 
             var content = new PackContent
@@ -188,7 +205,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 $"{bytes / (10 * 1024 * 1024)} MB of video memory in the game)");
             report.AppendLine($"done in {clock.Elapsed.TotalSeconds:0} s");
             File.WriteAllText(Path.Combine(options.PreviewFolder, "report.txt"), report.ToString());
-            return new PackExportResult { ZipPath = zip, Report = report.ToString() };
+            return new PackExportResult { ZipPath = zip, Report = report.ToString(), CutOff = exporter.CutOff };
         }
 
         private sealed class SynchronousProgress : IProgress<ExportProgress>
