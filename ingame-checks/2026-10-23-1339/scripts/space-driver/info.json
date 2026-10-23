@@ -1,0 +1,1 @@
+{ "name": "space-driver", "version": "0.1.0", "title": "Space travel test driver", "author": "test", "factorio_version": "2.1", "dependencies": ["avatar-characters", "space-age"] }

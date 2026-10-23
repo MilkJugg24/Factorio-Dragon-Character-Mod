@@ -1,0 +1,15 @@
+[tick 120] packs installed: 12
+[tick 120] window open: true
+[tick 150] screenshot window-12
+[tick 210] created 12 characters
+[tick 270] screenshots 12-characters
+[tick 420] tick mark
+[tick 720] tick mark
+[tick 1020] tick mark
+[tick 1020] running starts
+[tick 1320] tick mark
+[tick 1620] tick mark
+[tick 1920] tick mark
+[tick 2220] tick mark
+[tick 2220] done
+[tick 2520] tick mark

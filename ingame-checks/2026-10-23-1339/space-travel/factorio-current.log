@@ -1,0 +1,169 @@
+   0.000 2026-10-23 13:40:00; Factorio 2.1.23 (build 87750, win64, steam, space-age)
+   0.001 Operating system: Windows 11 (build 26200) 
+   0.000 Initializing Steam API.
+   0.001 Program arguments: "C:\Program Files (x86)\Steam\steamapps\common\Factorio\bin\x64\factorio.exe" "--config" "C:\Users\MilkJ\AppData\Local\Temp\avatar-space\config\config.ini" "--mod-directory" "C:\Users\MilkJ\AppData\Local\Temp\avatar-space\mods" "--load-game" "C:\Users\MilkJ\AppData\Local\Temp\avatar-space\test.zip" "--disable-audio" "--window-size" "1280x720" 
+   0.001 Config path: C:/Users/MilkJ/AppData/Local/Temp/avatar-space/config/config.ini
+   0.001 Read data path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/data
+   0.001 Write data path: C:/Users/MilkJ/AppData/Local/Temp/avatar-space [307422/475835MB]
+   0.001 Binaries path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/bin
+   0.013 System info: [CPU: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz, 12 cores, RAM: 11022/32612 MB, page: 11450/34660 MB, virtual: 4370/134217727 MB, extended virtual: 0 MB]
+   0.043 Memory info:
+   0.044  [0]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.044  [1]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.068 Display options: [FullScreen: true] [VSync: true] [UIScale: automatic (100.0%)] [Native DPI: true] [Screen: 4294967295] [Special: lmw] [Lang: en]
+   1.412 Video driver: windows
+   1.412 Available displays: 1
+   1.412  [0]: \\.\DISPLAY1 - Intel(R) UHD Graphics 630 {0x05, [0,0], 1920x1080, 32bit, 144Hz}
+   1.455 [Direct3D11] Display: 4294967295, Output: 0, DisplayAdapter: 0, RenderingAdapter: -1; d3dcompiler_47.dll
+   2.532 Initialised Direct3D[0]: NVIDIA GeForce RTX 2060; id: 10de-1f11; driver: nvldumdx.dll 32.0.16.1047
+   2.532   D3D Feature Level: 11.1, DXGI 1.5+, SwapChain: 3,flip-discard,-,-,-,none
+   2.532   [Local Video Memory] Budget: 5187MB, CurrentUsage: 5MB, Reservation: 0/2721MB
+   2.532   [Non-Local Vid.Mem.] Budget: 15538MB, CurrentUsage: 0MB, Reservation: 0/7897MB
+   2.532   Tiled resources: Tier 2
+   2.533   Unified Memory Architecture: No
+   2.533   BGR 565 Supported: Yes
+   2.533   MaximumFrameLatency: 3, GPUThreadPriority: 0
+   2.533 Graphics settings preset: very-high
+   2.533   Dedicated video memory size 5955 MB
+   2.573 Desktop composition is active.
+   2.574 Graphics options: [Graphics quality: high] [Video memory usage: all] [DXT: high-quality]
+   2.574                   [Max threads (load/render): 32/12] [Max texture size: 0] [Tex.Stream.: false] [Rotation quality: normal] [Other: STDCWTl] [B:0,C:0,S:100]
+   2.574 Audio is disabled
+   2.716 Logitech LED Controller initialized.
+   2.980 SteelSeries GameSense Controller initialized.
+   2.982 Info ModManager.cpp:455: FeatureFlag: expansion, expansion-shaders, freezing, quality, rail-bridges, segmented-units, space-travel, spoiling
+   2.985 Loading mod settings avatar-characters 0.3.1 (settings.lua)
+   2.988 Loading mod core 0.0.0 (data.lua)
+   3.013 Loading mod base 2.1.23 (data.lua)
+   3.327 Loading mod elevated-rails 2.1.23 (data.lua)
+   3.360 Loading mod recycler 2.1.23 (data.lua)
+   3.377 Loading mod quality 2.1.23 (data.lua)
+   3.388 Loading mod space-age 2.1.23 (data.lua)
+   3.865 Loading mod avatar-characters 0.3.1 (data.lua)
+   3.879 Loading mod avatar-bundle-test-server 1.0.1 (data.lua)
+   3.894 Loading mod base 2.1.23 (data-updates.lua)
+   3.909 Loading mod recycler 2.1.23 (data-updates.lua)
+   3.934 Loading mod space-age 2.1.23 (data-updates.lua)
+   3.948 Loading mod avatar-characters 0.3.1 (data-final-fixes.lua)
+   4.070 Checksum for core: 3668028660
+   4.070 Checksum of base: 3864816957
+   4.070 Checksum of elevated-rails: 1429039930
+   4.070 Checksum of recycler: 3293728126
+   4.070 Checksum of quality: 3330349790
+   4.070 Checksum of space-age: 3787586506
+   4.070 Checksum of avatar-characters: 2360450080
+   4.070 Checksum of avatar-bundle-test-server: 509344408
+   4.070 Checksum of space-driver: 0
+   4.649 Prototype list checksum: 4264067166
+   4.715 Info PlayerData.cpp:564: Cloud player-data.json available
+   4.719 Post-data load graphics options: [Light occlusion: YES]
+   5.060 Crop bitmaps.
+   5.063 Parallel sprite loader initialized (threads: 12, bitmaps: 8843)
+  16.875 Initial atlas bitmap size is 16384
+  16.891 Created an atlas bitmap (size 16384x16384) [none]
+  16.911 Created an atlas bitmap (size 16384x16380) [none]
+  16.935 Created an atlas bitmap (size 16384x16376) [none]
+  16.936 Created an atlas bitmap (size 16384x14932) [none]
+  16.938 Created an atlas bitmap (size 16384x16000) [low-object]
+  16.942 Created an atlas bitmap (size 16384x16324) [corpse-decay]
+  16.942 Created an atlas bitmap (size 4096x2804) [corpse-decay]
+  16.942 Created an atlas bitmap (size 16384x9336) [decal]
+  16.943 Created an atlas bitmap (size 16384x5956) [none]
+  16.943 Created an atlas bitmap (size 8192x2800) [none]
+  16.944 Created an atlas bitmap (size 16384x3436) [procession-cover, linear-minification, linear-magnification]
+  16.944 Created an atlas bitmap (size 4096x1392) [none]
+  16.944 Created an atlas bitmap (size 1676x79) [not-compressed]
+  16.945 Created an atlas bitmap (size 16384x4368) [mipmap, linear-minification, linear-magnification, linear-mip-level]
+  16.945 Created an atlas bitmap (size 4096x3040) [smoke, mipmap, linear-minification, linear-magnification]
+  16.954 Created an atlas bitmap (size 16384x16368) [terrain, mipmap, linear-minification, linear-mip-level]
+  16.955 Created an atlas bitmap (size 16384x10752) [terrain, mipmap, linear-minification, linear-mip-level]
+  16.956 Created an atlas bitmap (size 8192x6080) [terrain-effect-map, mipmap, linear-minification, linear-mip-level]
+  16.956 Created an atlas bitmap (size 8192x2800) [mipmap]
+  16.957 Created an atlas bitmap (size 8192x4544) [mipmap]
+  16.957 Created an atlas bitmap (size 8192x3408) [mipmap]
+  16.957 Created an atlas bitmap (size 3504x768) [mipmap]
+  16.957 Created an atlas bitmap (size 4096x3152) [mipmap]
+  16.958 Created an atlas bitmap (size 4096x3152) [mipmap]
+  16.958 Created an atlas bitmap (size 4096x3152) [mipmap]
+  16.958 Created an atlas bitmap (size 8192x3984) [icon, not-compressed, mipmap, linear-minification, linear-magnification, linear-mip-level, ]
+  16.960 Created an atlas bitmap (size 16384x10268) [alpha-mask]
+  16.986 Created an atlas bitmap (size 16384x16384) [shadow, linear-magnification, alpha-mask]
+  16.991 Created an atlas bitmap (size 16384x16352) [shadow, linear-magnification, alpha-mask]
+  16.992 Created an atlas bitmap (size 16384x5936) [shadow, linear-magnification, alpha-mask]
+  16.992 Created an atlas bitmap (size 8192x5216) [shadow, mipmap, linear-magnification, alpha-mask]
+  16.992 Created an atlas bitmap (size 4096x336) [icon-background, not-compressed, mipmap, linear-minification, linear-magnification, linear-mip-level, ]
+  16.992 Loading 3D bitmaps: 20
+  17.009 Texture processor created (4096). GPU accelerated compression Supported: yes, Enabled: yes/yes. Test passed. YCoCgDXT PSNR: 35.83, BC3 PSNR: 33.82
+  17.045 Parallel sprite loader initialized (threads: 11, bitmaps: 8843)
+  37.214 Sprites loaded
+  37.389 Generated mipmaps (4) for atlas [4] of size 16384x16000   
+  37.434 Generated mipmaps (3) for atlas [13] of size 16384x4368   
+  37.445 Generated mipmaps (3) for atlas [14] of size 4096x3040   
+  37.488 Generated mipmaps (3) for atlas [15] of size 16384x16368   
+  37.500 Generated mipmaps (3) for atlas [16] of size 16384x10752   
+  37.511 Generated mipmaps (3) for atlas [17] of size 8192x6080   
+  37.577 Generated mipmaps (3) for atlas [18] of size 8192x2800   
+  37.632 Generated mipmaps (3) for atlas [19] of size 8192x4544   
+  37.644 Generated mipmaps (3) for atlas [20] of size 8192x3408   
+  37.656 Generated mipmaps (3) for atlas [21] of size 3504x768   
+  37.667 Generated mipmaps (3) for atlas [22] of size 4096x3152   
+  37.702 Generated mipmaps (3) for atlas [23] of size 4096x3152   
+  37.713 Generated mipmaps (3) for atlas [24] of size 4096x3152   
+  37.724 Generated mipmaps (5) for atlas [25] of size 8192x3984   
+  37.735 Generated mipmaps (3) for atlas [30] of size 8192x5216   
+  37.763 Custom mipmaps uploaded (3518)
+  37.795 Estimated VRAM usage for textures: 3877.03 MB (Atlases: 3777.20 MB, Textures: 99.82 MB)
+  37.795 Real VRAM usage for the whole program: 4164.82 MB
+  37.798 Info GlobalContext.cpp:1346: Resetting config.
+  37.798 Custom inputs active: 1
+  38.253 Factorio initialised
+  38.655 Steam Storage Quota: 23446/23841
+  38.663 Loading map C:\Users\MilkJ\AppData\Local\Temp\avatar-space\test.zip: 454518 bytes.
+  38.755 Loading level.dat: 614148 bytes.
+  38.755 Info Scenario.cpp:152: Map version 2.1.23-2
+  38.765 Loading blueprint storage: Local timestamp -1, Cloud timestamp -1
+  38.765 Blueprint storage "blueprint-storage-2.dat" was not found, trying to load previous version storage "blueprint-storage.dat"
+  38.765 Loading blueprint storage: Local timestamp -1, Cloud timestamp -1
+  38.765 Loading script.dat: 1344 bytes.
+  38.770 Checksum for script __level__/control.lua: 2385776952
+  38.772 Checksum for script __avatar-characters__/control.lua: 199544188
+  38.774 Checksum for script __space-driver__/control.lua: 719686848
+  41.166 Script @__space-driver__/control.lua:8: DRIVER: [tick 120, +0] set_appearance chibi -> nil
+  41.169 Script @__space-driver__/control.lua:8: DRIVER: [tick 120, +0] start: controller=character character=avatar-pack-harness-chibi surface=nauvis pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-chibi"} | items burner-mining-drill=1, iron-plate=45, stone-furnace=1, transport-belt=5, wood=1
+  42.168 Script @__space-driver__/control.lua:8: DRIVER: [tick 180, +60] screenshot 01-start-chibi
+  42.665 Script @__space-driver__/control.lua:8: DRIVER: [tick 210, +90] create_space_platform -> test, state 0
+  42.837 Script @__space-driver__/control.lua:8: DRIVER: [tick 210, +90] apply_starter_pack -> true [LuaEntity: space-platform-hub at [gps=0.0,0.0,platform-1]], hub true
+  47.783 Script @__space-driver__/control.lua:8: DRIVER: [tick 510, +390] enter_space_platform -> true true
+  48.783 Script @__space-driver__/control.lua:8: DRIVER: [tick 570, +450] game.print(character name) printed: avatar-pack-harness-chibi
+  48.786 Script @__space-driver__/control.lua:8: DRIVER: [tick 570, +450] on the platform: controller=remote character=avatar-pack-harness-chibi surface=platform-1 pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-chibi"}
+  48.808 Script @__space-driver__/control.lua:8: DRIVER: [tick 570, +450] screenshot 02-on-platform
+  49.284 Script @__space-driver__/control.lua:8: DRIVER: [tick 600, +480] window opened: true
+  49.783 Script @__space-driver__/control.lua:8: DRIVER: [tick 630, +510] set_appearance generic -> remote
+  49.785 Script @__space-driver__/control.lua:8: DRIVER: [tick 630, +510] after picking generic: controller=remote character=avatar-pack-harness-chibi surface=platform-1 pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-generic"}
+  50.285 Script @__space-driver__/control.lua:8: DRIVER: [tick 660, +540] screenshot 03-window-on-platform
+  51.283 Script @__space-driver__/control.lua:8: DRIVER: [tick 720, +600] window closed: true
+  51.783 Script @__space-driver__/control.lua:8: DRIVER: [tick 750, +630] leave_space_platform -> true nil | controller=remote character=avatar-pack-harness-chibi surface=platform-1 pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-generic"}
+  51.785 Script @__space-driver__/control.lua:8: DRIVER: [tick 750, +630] state change: controller=remote character=avatar-pack-harness-chibi surface=platform-1 pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-generic"}
+  52.786 Script @__space-driver__/control.lua:8: DRIVER: [tick 810, +690] screenshot 04-descent-01
+  53.787 Script @__space-driver__/control.lua:8: DRIVER: [tick 870, +750] screenshot 04-descent-02
+  54.785 Script @__space-driver__/control.lua:8: DRIVER: [tick 930, +810] screenshot 04-descent-03
+  55.787 Script @__space-driver__/control.lua:8: DRIVER: [tick 990, +870] screenshot 04-descent-04
+  56.786 Script @__space-driver__/control.lua:8: DRIVER: [tick 1050, +930] screenshot 04-descent-05
+  57.785 Script @__space-driver__/control.lua:8: DRIVER: [tick 1110, +990] screenshot 04-descent-06
+  58.785 Script @__space-driver__/control.lua:8: DRIVER: [tick 1170, +1050] screenshot 04-descent-07
+  59.786 Script @__space-driver__/control.lua:8: DRIVER: [tick 1230, +1110] screenshot 04-descent-08
+  60.786 Script @__space-driver__/control.lua:8: DRIVER: [tick 1290, +1170] screenshot 04-descent-09
+  61.785 Script @__space-driver__/control.lua:8: DRIVER: [tick 1350, +1230] screenshot 04-descent-10
+  62.785 Script @__space-driver__/control.lua:8: DRIVER: [tick 1410, +1290] screenshot 04-descent-11
+  63.786 Script @__space-driver__/control.lua:8: DRIVER: [tick 1470, +1350] screenshot 04-descent-12
+  66.283 Script @__space-driver__/control.lua:8: DRIVER: [tick 1620, +1500] after landing: controller=remote character=avatar-pack-harness-chibi surface=platform-1 pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-generic"} | items -
+  66.285 Script @__space-driver__/control.lua:8: DRIVER: [tick 1620, +1500] items before going up: burner-mining-drill=1, iron-plate=45, stone-furnace=1, transport-belt=5, wood=1
+  66.289 Script @__space-driver__/control.lua:8: DRIVER: [tick 1620, +1500] screenshot 05-landed
+  67.283 Script @__space-driver__/control.lua:8: DRIVER: [tick 1680, +1560] died: controller=ghost character=none surface=nauvis pod=false flying=nil pos=- appearance={avatar = "harness-generic"}, ticks_to_respawn 600
+  67.285 Script @__space-driver__/control.lua:8: DRIVER: [tick 1680, +1560] state change: controller=ghost character=none surface=nauvis pod=false flying=nil pos=- appearance={avatar = "harness-generic"}
+ 147.353 Script @__space-driver__/control.lua:8: DRIVER: [tick 1740, +1620] screenshot 06-dead
+ 156.516 Script @__space-driver__/control.lua:8: DRIVER: [tick 2290, +2170] state change: controller=character character=avatar-pack-harness-generic surface=nauvis pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-generic"}
+ 160.348 Script @__space-driver__/control.lua:8: DRIVER: [tick 2520, +2400] respawn check: controller=character character=avatar-pack-harness-generic surface=nauvis pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-generic"}, ticks_to_respawn nil
+ 165.349 Script @__space-driver__/control.lua:8: DRIVER: [tick 2820, +2700] after respawning: controller=character character=avatar-pack-harness-generic surface=nauvis pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-generic"} | items 
+ 165.354 Script @__space-driver__/control.lua:8: DRIVER: [tick 2820, +2700] screenshot 07-respawned
+ 166.353 Script @__space-driver__/control.lua:8: DRIVER: [tick 2880, +2760] done

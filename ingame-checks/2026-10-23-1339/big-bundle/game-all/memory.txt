@@ -1,0 +1,5 @@
+﻿14:08:11 working set 705 MB, private 5,020 MB, GPU dedicated 4,195 MB, GPU shared 89 MB
+14:08:19 working set 667 MB, private 4,894 MB, GPU dedicated 4,195 MB, GPU shared 89 MB
+14:08:26 working set 667 MB, private 4,894 MB, GPU dedicated 4,195 MB, GPU shared 89 MB
+14:08:33 working set 667 MB, private 4,894 MB, GPU dedicated 4,195 MB, GPU shared 89 MB
+14:08:41 working set 668 MB, private 4,894 MB, GPU dedicated 4,195 MB, GPU shared 89 MB

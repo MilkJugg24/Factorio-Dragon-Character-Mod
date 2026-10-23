@@ -1,0 +1,55 @@
+[tick 120, +0] set_appearance chibi -> nil
+[tick 120, +0] start: controller=character character=avatar-pack-harness-chibi on nauvis surface=nauvis pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-chibi"} | items burner-mining-drill=1, iron-plate=45, stone-furnace=1, transport-belt=5, wood=1
+[tick 180, +60] screenshot 01-start-chibi
+[tick 210, +90] create_space_platform -> test, state 0
+[tick 210, +90] apply_starter_pack -> true [LuaEntity: space-platform-hub at [gps=0.0,0.0,platform-1]], hub true
+[tick 510, +390] enter_space_platform -> true true
+[tick 570, +450] game.print(character name) printed: avatar-pack-harness-chibi
+[tick 570, +450] on the platform: controller=remote character=avatar-pack-harness-chibi on platform-1 surface=platform-1 pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-chibi"}
+[tick 570, +450] screenshot 02-on-platform
+[tick 600, +480] window opened: true
+[tick 630, +510] set_appearance generic -> remote
+[tick 630, +510] after picking generic: controller=remote character=avatar-pack-harness-chibi on platform-1 surface=platform-1 pod=false flying=false pos=(0.0, 0.0) appearance={avatar = "harness-generic"}
+[tick 660, +540] screenshot 03-window-on-platform
+[tick 720, +600] window closed: true
+[tick 750, +630] land_on_planet -> true true | controller=character character=avatar-pack-harness-chibi on platform-1 surface=platform-1 pod=true flying=false pos=(-1.8, 0.0) appearance={avatar = "harness-generic"}
+[tick 750, +630] state change: controller=character character=avatar-pack-harness-chibi on platform-1 surface=platform-1 pod=true flying=false pos=(-1.8, 0.0) appearance={avatar = "harness-generic"}
+[tick 795, +675] screenshot 04-descent-01 at {-2, 0} on platform-1
+[tick 840, +720] screenshot 04-descent-02 at {-2, -1} on platform-1
+[tick 885, +765] screenshot 04-descent-03 at {-2, -2} on platform-1
+[tick 930, +810] screenshot 04-descent-04 at {-2, -7} on platform-1
+[tick 975, +855] screenshot 04-descent-05 at {-3, -14} on platform-1
+[tick 1020, +900] screenshot 04-descent-06 at {-4, -24} on platform-1
+[tick 1065, +945] screenshot 04-descent-07 at {-7, -37} on platform-1
+[tick 1110, +990] screenshot 04-descent-08 at {-18, -47} on platform-1
+[tick 1155, +1035] screenshot 04-descent-09 at {-36, -45} on platform-1
+[tick 1200, +1080] screenshot 04-descent-10 at {-55, -35} on platform-1
+[tick 1245, +1125] screenshot 04-descent-11 at {-68, -26} on platform-1
+[tick 1250, +1130] state change: controller=character character=avatar-pack-harness-chibi on nauvis surface=nauvis pod=true flying=false pos=(120.0, -240.0) appearance={avatar = "harness-generic"}
+[tick 1290, +1170] screenshot 04-descent-12 at {94, -220} on nauvis
+[tick 1335, +1215] screenshot 04-descent-13 at {68, -197} on nauvis
+[tick 1380, +1260] screenshot 04-descent-14 at {45, -175} on nauvis
+[tick 1425, +1305] screenshot 04-descent-15 at {24, -153} on nauvis
+[tick 1470, +1350] screenshot 04-descent-16 at {10, -129} on nauvis
+[tick 1515, +1395] screenshot 04-descent-17 at {3, -101} on nauvis
+[tick 1560, +1440] screenshot 04-descent-18 at {0, -75} on nauvis
+[tick 1605, +1485] screenshot 04-descent-19 at {0, -53} on nauvis
+[tick 1650, +1530] screenshot 04-descent-20 at {0, -35} on nauvis
+[tick 1695, +1575] screenshot 04-descent-21 at {0, -20} on nauvis
+[tick 1740, +1620] screenshot 04-descent-22 at {0, -10} on nauvis
+[tick 1785, +1665] screenshot 04-descent-23 at {0, -4} on nauvis
+[tick 1830, +1710] screenshot 04-descent-24 at {0, -1} on nauvis
+[tick 1850, +1730] state change: controller=character character=avatar-pack-harness-generic on nauvis surface=nauvis pod=false flying=false pos=(-0.4, -0.4) appearance={avatar = "harness-generic"}
+[tick 1875, +1755] screenshot 04-descent-25 at {-1, -1} on nauvis
+[tick 1920, +1800] screenshot 04-descent-26 at {-1, -1} on nauvis
+[tick 1965, +1845] screenshot 04-descent-27 at {-1, -1} on nauvis
+[tick 2010, +1890] screenshot 04-descent-28 at {-1, -1} on nauvis
+[tick 2055, +1935] screenshot 04-descent-29 at {-1, -1} on nauvis
+[tick 2100, +1980] screenshot 04-descent-30 at {-1, -1} on nauvis
+[tick 2145, +2025] screenshot 04-descent-31 at {-1, -1} on nauvis
+[tick 2190, +2070] screenshot 04-descent-32 at {-1, -1} on nauvis
+[tick 2280, +2160] after landing: controller=character character=avatar-pack-harness-generic on nauvis surface=nauvis pod=false flying=false pos=(-0.4, -0.4) appearance={avatar = "harness-generic"} | items burner-mining-drill=1, iron-plate=45, stone-furnace=1, transport-belt=5, wood=1
+[tick 2280, +2160] items before going up: burner-mining-drill=1, iron-plate=45, stone-furnace=1, transport-belt=5, wood=1
+[tick 2280, +2160] screenshot 05-landed
+[tick 2340, +2220] died: controller=ghost character=none on - surface=nauvis pod=false flying=nil pos=- appearance={avatar = "harness-generic"}, ticks_to_respawn 600
+[tick 2340, +2220] state change: controller=ghost character=none on - surface=nauvis pod=false flying=nil pos=- appearance={avatar = "harness-generic"}

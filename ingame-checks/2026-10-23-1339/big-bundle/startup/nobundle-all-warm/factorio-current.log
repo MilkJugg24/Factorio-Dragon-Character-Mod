@@ -1,0 +1,115 @@
+   0.000 2026-10-23 14:04:27; Factorio 2.1.23 (build 87750, win64, steam, space-age)
+   0.000 Operating system: Windows 11 (build 26200) 
+   0.000 Initializing Steam API.
+   0.001 Program arguments: "C:\Program Files (x86)\Steam\steamapps\common\Factorio\bin\x64\factorio.exe" "--config" "C:\Users\MilkJ\AppData\Local\Temp\avatar-startup-nobundle-all\config\config.ini" "--mod-directory" "C:\Users\MilkJ\AppData\Local\Temp\avatar-startup-nobundle-all\mods" "--disable-audio" "--window-size" "1280x720" 
+   0.001 Config path: C:/Users/MilkJ/AppData/Local/Temp/avatar-startup-nobundle-all/config/config.ini
+   0.001 Read data path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/data
+   0.001 Write data path: C:/Users/MilkJ/AppData/Local/Temp/avatar-startup-nobundle-all [307084/475835MB]
+   0.001 Binaries path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/bin
+   0.013 System info: [CPU: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz, 12 cores, RAM: 10683/32612 MB, page: 11097/34660 MB, virtual: 4366/134217727 MB, extended virtual: 0 MB]
+   0.055 Memory info:
+   0.055  [0]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.055  [1]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.077 Display options: [FullScreen: true] [VSync: true] [UIScale: automatic (100.0%)] [Native DPI: true] [Screen: 4294967295] [Special: lmw] [Lang: en]
+   0.236 Video driver: windows
+   0.236 Available displays: 1
+   0.236  [0]: \\.\DISPLAY1 - Intel(R) UHD Graphics 630 {0x05, [0,0], 1920x1080, 32bit, 144Hz}
+   0.286 [Direct3D11] Display: 4294967295, Output: 0, DisplayAdapter: 0, RenderingAdapter: -1; d3dcompiler_47.dll
+   1.793 Initialised Direct3D[0]: NVIDIA GeForce RTX 2060; id: 10de-1f11; driver: nvldumdx.dll 32.0.16.1047
+   1.794   D3D Feature Level: 11.1, DXGI 1.5+, SwapChain: 3,flip-discard,-,-,-,none
+   1.794   [Local Video Memory] Budget: 5187MB, CurrentUsage: 5MB, Reservation: 0/2721MB
+   1.794   [Non-Local Vid.Mem.] Budget: 15538MB, CurrentUsage: 0MB, Reservation: 0/7897MB
+   1.794   Tiled resources: Tier 2
+   1.794   Unified Memory Architecture: No
+   1.794   BGR 565 Supported: Yes
+   1.794   MaximumFrameLatency: 3, GPUThreadPriority: 0
+   1.794 Graphics settings preset: very-high
+   1.794   Dedicated video memory size 5955 MB
+   1.828 Desktop composition is active.
+   1.829 Graphics options: [Graphics quality: high] [Video memory usage: all] [DXT: high-quality]
+   1.829                   [Max threads (load/render): 32/12] [Max texture size: 0] [Tex.Stream.: false] [Rotation quality: normal] [Other: STDCWTl] [B:0,C:0,S:100]
+   1.829 Audio is disabled
+   1.949 Logitech LED Controller initialized.
+   2.207 SteelSeries GameSense Controller initialized.
+   2.210 Info ModManager.cpp:455: FeatureFlag: expansion, expansion-shaders, freezing, quality, rail-bridges, segmented-units, space-travel, spoiling
+   2.214 Loading mod settings avatar-characters 0.3.1 (settings.lua)
+   2.217 Loading mod core 0.0.0 (data.lua)
+   2.241 Loading mod base 2.1.23 (data.lua)
+   2.515 Loading mod elevated-rails 2.1.23 (data.lua)
+   2.547 Loading mod recycler 2.1.23 (data.lua)
+   2.568 Loading mod quality 2.1.23 (data.lua)
+   2.584 Loading mod space-age 2.1.23 (data.lua)
+   3.070 Loading mod avatar-characters 0.3.1 (data.lua)
+   3.084 Loading mod base 2.1.23 (data-updates.lua)
+   3.098 Loading mod recycler 2.1.23 (data-updates.lua)
+   3.121 Loading mod space-age 2.1.23 (data-updates.lua)
+   3.135 Loading mod avatar-characters 0.3.1 (data-final-fixes.lua)
+   3.244 Checksum for core: 3668028660
+   3.245 Checksum of base: 3864816957
+   3.245 Checksum of elevated-rails: 1429039930
+   3.245 Checksum of recycler: 3293728126
+   3.245 Checksum of quality: 3330349790
+   3.245 Checksum of space-age: 3787586506
+   3.245 Checksum of avatar-characters: 2360450080
+   3.780 Prototype list checksum: 3197314328
+   3.841 Info PlayerData.cpp:564: Cloud player-data.json available
+   3.845 Post-data load graphics options: [Light occlusion: YES]
+   4.350 Initial atlas bitmap size is 16384
+   4.364 Created an atlas bitmap (size 16384x16384) [none]
+   4.383 Created an atlas bitmap (size 16384x16384) [none]
+   4.405 Created an atlas bitmap (size 16384x16380) [none]
+   4.407 Created an atlas bitmap (size 16384x14376) [none]
+   4.408 Created an atlas bitmap (size 16384x16000) [low-object]
+   4.411 Created an atlas bitmap (size 16384x16324) [corpse-decay]
+   4.411 Created an atlas bitmap (size 4096x2804) [corpse-decay]
+   4.412 Created an atlas bitmap (size 16384x9336) [decal]
+   4.412 Created an atlas bitmap (size 16384x5956) [none]
+   4.413 Created an atlas bitmap (size 8192x2800) [none]
+   4.413 Created an atlas bitmap (size 16384x3436) [procession-cover, linear-minification, linear-magnification]
+   4.414 Created an atlas bitmap (size 4096x1392) [none]
+   4.414 Created an atlas bitmap (size 1676x79) [not-compressed]
+   4.414 Created an atlas bitmap (size 16384x4368) [mipmap, linear-minification, linear-magnification, linear-mip-level]
+   4.414 Created an atlas bitmap (size 4096x3040) [smoke, mipmap, linear-minification, linear-magnification]
+   4.424 Created an atlas bitmap (size 16384x16368) [terrain, mipmap, linear-minification, linear-mip-level]
+   4.425 Created an atlas bitmap (size 16384x10752) [terrain, mipmap, linear-minification, linear-mip-level]
+   4.425 Created an atlas bitmap (size 8192x6080) [terrain-effect-map, mipmap, linear-minification, linear-mip-level]
+   4.425 Created an atlas bitmap (size 8192x2800) [mipmap]
+   4.425 Created an atlas bitmap (size 8192x4544) [mipmap]
+   4.426 Created an atlas bitmap (size 8192x3408) [mipmap]
+   4.426 Created an atlas bitmap (size 3504x768) [mipmap]
+   4.426 Created an atlas bitmap (size 4096x3152) [mipmap]
+   4.427 Created an atlas bitmap (size 4096x3152) [mipmap]
+   4.427 Created an atlas bitmap (size 4096x3152) [mipmap]
+   4.428 Created an atlas bitmap (size 8192x3984) [icon, not-compressed, mipmap, linear-minification, linear-magnification, linear-mip-level, ]
+   4.429 Created an atlas bitmap (size 16384x10268) [alpha-mask]
+   4.450 Created an atlas bitmap (size 16384x16384) [shadow, linear-magnification, alpha-mask]
+   4.455 Created an atlas bitmap (size 16384x16340) [shadow, linear-magnification, alpha-mask]
+   4.456 Created an atlas bitmap (size 16384x5124) [shadow, linear-magnification, alpha-mask]
+   4.456 Created an atlas bitmap (size 8192x5216) [shadow, mipmap, linear-magnification, alpha-mask]
+   4.456 Created an atlas bitmap (size 4096x336) [icon-background, not-compressed, mipmap, linear-minification, linear-magnification, linear-mip-level, ]
+   4.459 Loading 3D bitmaps: 20
+   4.471 Texture processor created (4096). GPU accelerated compression Supported: yes, Enabled: yes/yes. Test passed. YCoCgDXT PSNR: 35.83, BC3 PSNR: 33.82
+   4.505 Parallel sprite loader initialized (threads: 11, bitmaps: 8795)
+  23.360 Sprites loaded
+  23.529 Generated mipmaps (4) for atlas [4] of size 16384x16000   
+  23.572 Generated mipmaps (3) for atlas [13] of size 16384x4368   
+  23.584 Generated mipmaps (3) for atlas [14] of size 4096x3040   
+  23.606 Generated mipmaps (3) for atlas [15] of size 16384x16368   
+  23.619 Generated mipmaps (3) for atlas [16] of size 16384x10752   
+  23.631 Generated mipmaps (3) for atlas [17] of size 8192x6080   
+  23.697 Generated mipmaps (3) for atlas [18] of size 8192x2800   
+  23.753 Generated mipmaps (3) for atlas [19] of size 8192x4544   
+  23.766 Generated mipmaps (3) for atlas [20] of size 8192x3408   
+  23.777 Generated mipmaps (3) for atlas [21] of size 3504x768   
+  23.788 Generated mipmaps (3) for atlas [22] of size 4096x3152   
+  23.828 Generated mipmaps (3) for atlas [23] of size 4096x3152   
+  23.840 Generated mipmaps (3) for atlas [24] of size 4096x3152   
+  23.854 Generated mipmaps (5) for atlas [25] of size 8192x3984   
+  23.866 Generated mipmaps (3) for atlas [30] of size 8192x5216   
+  23.907 Custom mipmaps uploaded (3518)
+  23.939 Estimated VRAM usage for textures: 3857.74 MB (Atlases: 3757.92 MB, Textures: 99.82 MB)
+  23.939 Real VRAM usage for the whole program: 4148.82 MB
+  23.942 Info GlobalContext.cpp:1346: Resetting config.
+  23.943 Custom inputs active: 1
+  24.388 Factorio initialised
+  24.775 Steam Storage Quota: 23446/23841

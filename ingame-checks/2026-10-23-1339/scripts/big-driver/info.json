@@ -1,0 +1,1 @@
+{ "name": "big-driver", "version": "0.1.0", "title": "Big bundle test driver", "author": "test", "factorio_version": "2.1", "dependencies": ["avatar-characters"] }

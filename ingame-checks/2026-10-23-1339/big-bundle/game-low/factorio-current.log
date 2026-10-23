@@ -1,0 +1,237 @@
+   0.000 2026-10-23 14:09:46; Factorio 2.1.23 (build 87750, win64, steam, space-age)
+   0.001 Operating system: Windows 11 (build 26200) 
+   0.000 Initializing Steam API.
+   0.001 Program arguments: "C:\Program Files (x86)\Steam\steamapps\common\Factorio\bin\x64\factorio.exe" "--config" "C:\Users\MilkJ\AppData\Local\Temp\avatar-big-low\config\config.ini" "--mod-directory" "C:\Users\MilkJ\AppData\Local\Temp\avatar-big-low\mods" "--load-game" "C:\Users\MilkJ\AppData\Local\Temp\avatar-big-low\test.zip" "--disable-audio" "--window-size" "1280x720" 
+   0.001 Config path: C:/Users/MilkJ/AppData/Local/Temp/avatar-big-low/config/config.ini
+   0.001 Read data path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/data
+   0.001 Write data path: C:/Users/MilkJ/AppData/Local/Temp/avatar-big-low [306986/475835MB]
+   0.001 Binaries path: C:/Program Files (x86)/Steam/steamapps/common/Factorio/bin
+   0.012 System info: [CPU: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz, 12 cores, RAM: 10749/32612 MB, page: 11156/34660 MB, virtual: 4368/134217727 MB, extended virtual: 0 MB]
+   0.042 Memory info:
+   0.042  [0]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.042  [1]: SK Hynix HMA82GS6CJR8N-VK 16384 MB 2667 MHz 1.2 v 64|64
+   0.067 Display options: [FullScreen: true] [VSync: true] [UIScale: automatic (100.0%)] [Native DPI: true] [Screen: 4294967295] [Special: lmw] [Lang: en]
+   0.223 Video driver: windows
+   0.223 Available displays: 1
+   0.223  [0]: \\.\DISPLAY1 - Intel(R) UHD Graphics 630 {0x05, [0,0], 1920x1080, 32bit, 144Hz}
+   0.270 [Direct3D11] Display: 4294967295, Output: 0, DisplayAdapter: 0, RenderingAdapter: -1; d3dcompiler_47.dll
+   1.770 Initialised Direct3D[0]: NVIDIA GeForce RTX 2060; id: 10de-1f11; driver: nvldumdx.dll 32.0.16.1047
+   1.770   D3D Feature Level: 11.1, DXGI 1.5+, SwapChain: 3,flip-discard,-,-,-,none
+   1.770   [Local Video Memory] Budget: 5187MB, CurrentUsage: 5MB, Reservation: 0/2721MB
+   1.770   [Non-Local Vid.Mem.] Budget: 15538MB, CurrentUsage: 0MB, Reservation: 0/7897MB
+   1.770   Tiled resources: Tier 2
+   1.770   Unified Memory Architecture: No
+   1.770   BGR 565 Supported: Yes
+   1.770   MaximumFrameLatency: 3, GPUThreadPriority: 0
+   1.770 Graphics settings preset: very-high
+   1.770   Dedicated video memory size 5955 MB
+   1.807 Desktop composition is active.
+   1.807 Graphics options: [Graphics quality: high] [Video memory usage: low] [DXT: high-quality]
+   1.807                   [Max threads (load/render): 32/12] [Max texture size: 0] [Tex.Stream.: true] [Rotation quality: normal] [Other: STDCWTl] [B:0,C:0,S:100]
+   1.807 Audio is disabled
+   1.928 Logitech LED Controller initialized.
+   2.185 SteelSeries GameSense Controller initialized.
+   2.187 Info ModManager.cpp:455: FeatureFlag: expansion, expansion-shaders, freezing, quality, rail-bridges, segmented-units, space-travel, spoiling
+   2.190 Loading mod settings avatar-characters 0.3.1 (settings.lua)
+   2.193 Loading mod core 0.0.0 (data.lua)
+   2.218 Loading mod base 2.1.23 (data.lua)
+   2.512 Loading mod elevated-rails 2.1.23 (data.lua)
+   2.545 Loading mod recycler 2.1.23 (data.lua)
+   2.560 Loading mod quality 2.1.23 (data.lua)
+   2.570 Loading mod space-age 2.1.23 (data.lua)
+   3.047 Loading mod avatar-characters 0.3.1 (data.lua)
+   3.060 Loading mod avatar-bundle-big-server 1.0.0 (data.lua)
+   3.076 Loading mod base 2.1.23 (data-updates.lua)
+   3.091 Loading mod recycler 2.1.23 (data-updates.lua)
+   3.113 Loading mod space-age 2.1.23 (data-updates.lua)
+   3.130 Loading mod avatar-characters 0.3.1 (data-final-fixes.lua)
+   3.278 Checksum for core: 3668028660
+   3.279 Checksum of base: 3864816957
+   3.279 Checksum of elevated-rails: 1429039930
+   3.279 Checksum of recycler: 3293728126
+   3.279 Checksum of quality: 3330349790
+   3.279 Checksum of space-age: 3787586506
+   3.279 Checksum of avatar-characters: 2360450080
+   3.279 Checksum of avatar-bundle-big-server: 3886250982
+   3.279 Checksum of big-driver: 0
+   3.819 Prototype list checksum: 1192256849
+   3.880 Info PlayerData.cpp:564: Cloud player-data.json available
+   3.884 Post-data load graphics options: [Light occlusion: YES]
+   4.226 Crop bitmaps.
+   4.230 Parallel sprite loader initialized (threads: 12, bitmaps: 9083)
+  16.108 Initial atlas bitmap size is 16384
+  16.109 Created an atlas bitmap (size 8192x3684) [none]
+  16.110 Created an atlas bitmap (size 16384x7104) [low-object]
+  16.110 Created an atlas bitmap (size 16384x9336) [decal]
+  16.111 Created an atlas bitmap (size 16384x5956) [none]
+  16.111 Created an atlas bitmap (size 8192x2800) [none]
+  16.111 Created an atlas bitmap (size 16384x3436) [procession-cover, linear-minification, linear-magnification]
+  16.112 Created an atlas bitmap (size 4096x1392) [none]
+  16.112 Created an atlas bitmap (size 1676x79) [not-compressed]
+  16.112 Created an atlas bitmap (size 16384x4368) [mipmap, linear-minification, linear-magnification, linear-mip-level]
+  16.113 Created an atlas bitmap (size 4096x3040) [smoke, mipmap, linear-minification, linear-magnification]
+  16.122 Created an atlas bitmap (size 16384x16368) [terrain, mipmap, linear-minification, linear-mip-level]
+  16.122 Created an atlas bitmap (size 16384x10752) [terrain, mipmap, linear-minification, linear-mip-level]
+  16.123 Created an atlas bitmap (size 8192x6080) [terrain-effect-map, mipmap, linear-minification, linear-mip-level]
+  16.123 Created an atlas bitmap (size 8192x2800) [mipmap]
+  16.123 Created an atlas bitmap (size 8192x4544) [mipmap]
+  16.123 Created an atlas bitmap (size 8192x3408) [mipmap]
+  16.124 Created an atlas bitmap (size 3504x768) [mipmap]
+  16.124 Created an atlas bitmap (size 4096x3152) [mipmap]
+  16.124 Created an atlas bitmap (size 4096x3152) [mipmap]
+  16.124 Created an atlas bitmap (size 4096x3152) [mipmap]
+  16.125 Created an atlas bitmap (size 8192x4000) [icon, not-compressed, mipmap, linear-minification, linear-magnification, linear-mip-level, ]
+  16.127 Created an atlas bitmap (size 16384x10268) [alpha-mask]
+  16.149 Created an atlas bitmap (size 16384x16384) [shadow, linear-magnification, alpha-mask]
+  16.160 Created an atlas bitmap (size 16384x16384) [shadow, linear-magnification, alpha-mask]
+  16.161 Created an atlas bitmap (size 16384x9964) [shadow, linear-magnification, alpha-mask]
+  16.161 Created an atlas bitmap (size 8192x5216) [shadow, mipmap, linear-magnification, alpha-mask]
+  16.161 Created an atlas bitmap (size 4096x336) [icon-background, not-compressed, mipmap, linear-minification, linear-magnification, linear-mip-level, ]
+  16.170 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.181 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.191 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.201 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.210 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.220 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.229 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.239 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.249 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.259 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.268 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.278 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.287 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.296 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.305 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.314 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.324 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.332 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.342 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.351 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.360 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.370 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.379 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.387 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.396 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.405 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.413 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.422 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.431 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.440 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.447 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.456 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.463 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.471 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.479 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.486 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.493 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.500 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.508 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.515 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.522 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.530 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.537 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.544 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.551 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.558 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.566 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.573 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.581 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.588 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.596 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.603 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.610 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.617 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.624 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.631 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.638 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.645 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.652 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.659 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.665 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.672 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.679 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.685 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.692 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.698 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.705 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.711 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.718 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.724 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.730 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.737 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.743 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.749 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.756 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.762 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.769 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.776 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.782 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.789 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.796 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.802 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.808 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.813 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.819 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.826 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.830 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.834 Created a virtual atlas bitmap (size 4096x4096) [linear-magnification]
+  16.839 Created a virtual atlas bitmap (size 4096x4096) [linear-magnification]
+  16.844 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.849 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.854 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.860 Created a virtual atlas bitmap (size 4096x4096) [none]
+  16.861 Created a virtual atlas bitmap (size 4096x1024) [none]
+  16.861 Created virtual atlas pages 4096x4096x94
+  16.861 Created virtual atlas of size 65536x24576 with physical texture size 8192x8192
+  16.861 Loading 3D bitmaps: 20
+  16.875 Texture processor created (4096). GPU accelerated compression Supported: yes, Enabled: yes/yes. Test passed. YCoCgDXT PSNR: 35.83, BC3 PSNR: 33.82
+  16.910 Parallel sprite loader initialized (threads: 11, bitmaps: 9083)
+  40.512 Sprites loaded
+  40.608 Generated mipmaps (4) for atlas [1] of size 16384x7104   
+  40.652 Generated mipmaps (3) for atlas [8] of size 16384x4368   
+  40.663 Generated mipmaps (3) for atlas [9] of size 4096x3040   
+  40.707 Generated mipmaps (3) for atlas [10] of size 16384x16368   
+  40.739 Generated mipmaps (3) for atlas [11] of size 16384x10752   
+  40.751 Generated mipmaps (3) for atlas [12] of size 8192x6080   
+  40.821 Generated mipmaps (3) for atlas [13] of size 8192x2800   
+  40.883 Generated mipmaps (3) for atlas [14] of size 8192x4544   
+  40.895 Generated mipmaps (3) for atlas [15] of size 8192x3408   
+  40.907 Generated mipmaps (3) for atlas [16] of size 3504x768   
+  40.918 Generated mipmaps (3) for atlas [17] of size 4096x3152   
+  40.959 Generated mipmaps (3) for atlas [18] of size 4096x3152   
+  40.971 Generated mipmaps (3) for atlas [19] of size 4096x3152   
+  40.982 Generated mipmaps (5) for atlas [20] of size 8192x4000   
+  40.993 Generated mipmaps (3) for atlas [25] of size 8192x5216   
+  41.025 Custom mipmaps uploaded (3518)
+  42.289 Generated mipmaps for virtual atlas of size 65536x24576
+  42.327 Estimated VRAM usage for textures: 1907.97 MB (Atlases: 1808.14 MB, Textures: 99.82 MB)
+  42.327 Real VRAM usage for the whole program: 2179.82 MB
+  42.331 Info GlobalContext.cpp:1346: Resetting config.
+  42.331 Custom inputs active: 1
+  42.772 Factorio initialised
+  43.169 Steam Storage Quota: 23446/23841
+  43.175 Loading map C:\Users\MilkJ\AppData\Local\Temp\avatar-big-low\test.zip: 754688 bytes.
+  43.262 Loading level.dat: 931205 bytes.
+  43.262 Info Scenario.cpp:152: Map version 2.1.23-2
+  43.275 Loading blueprint storage: Local timestamp -1, Cloud timestamp -1
+  43.275 Blueprint storage "blueprint-storage-2.dat" was not found, trying to load previous version storage "blueprint-storage.dat"
+  43.276 Loading blueprint storage: Local timestamp -1, Cloud timestamp -1
+  43.276 Loading script.dat: 1342 bytes.
+  43.280 Checksum for script __level__/control.lua: 2385776952
+  43.283 Checksum for script __avatar-characters__/control.lua: 199544188
+  43.284 Checksum for script __big-driver__/control.lua: 3831769136
+  45.645 Script @__big-driver__/control.lua:7: DRIVER: [tick 120] packs installed: 12
+  45.651 Script @__big-driver__/control.lua:7: DRIVER: [tick 120] window open: true
+  46.148 Script @__big-driver__/control.lua:7: DRIVER: [tick 150] screenshot window-12
+  47.147 Script @__big-driver__/control.lua:7: DRIVER: [tick 210] created 12 characters
+  48.151 Script @__big-driver__/control.lua:7: DRIVER: [tick 270] screenshots 12-characters
+  50.645 Script @__big-driver__/control.lua:7: DRIVER: [tick 420] tick mark
+  55.646 Script @__big-driver__/control.lua:7: DRIVER: [tick 720] tick mark
+  60.646 Script @__big-driver__/control.lua:7: DRIVER: [tick 1020] tick mark
+  60.648 Script @__big-driver__/control.lua:7: DRIVER: [tick 1020] running starts
+  65.645 Script @__big-driver__/control.lua:7: DRIVER: [tick 1320] tick mark
+  70.645 Script @__big-driver__/control.lua:7: DRIVER: [tick 1620] tick mark
+  75.646 Script @__big-driver__/control.lua:7: DRIVER: [tick 1920] tick mark
+  80.645 Script @__big-driver__/control.lua:7: DRIVER: [tick 2220] tick mark
+  80.650 Script @__big-driver__/control.lua:7: DRIVER: [tick 2220] done
+  85.645 Script @__big-driver__/control.lua:7: DRIVER: [tick 2520] tick mark
