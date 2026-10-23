@@ -74,20 +74,25 @@ jobs:
           package="build/FactorioAvatarExporter_$EXPORTER.unitypackage"
           zip="build/avatar-characters_$MOD.zip"
           cat > notes.md <<NOTES
-          Two downloads:
+          ### Which file do I need?
 
-          - **$(basename "$package")**, for turning an avatar into an avatar pack. In Unity 2022.3 (your
-            VRChat project) choose **Assets ▸ Import Package ▸ Custom Package...**, pick the file and click
-            **Import**. It is installed in \`Assets/FactorioAvatarExporter\`; importing a newer version
-            updates it in place. Then open **Tools ▸ Factorio Avatar Exporter ▸ Exporter**.
-          - **$(basename "$zip")**, the Avatar Characters mod $MOD that every player needs. Drop it, still
-            zipped, into Factorio's \`mods\` folder together with the avatar packs:
-            Windows \`%APPDATA%\\Factorio\\mods\`, Linux \`~/.factorio/mods\`, macOS
-            \`~/Library/Application Support/factorio/mods\`. In multiplayer, everyone needs the same mods
-            and packs as the server.
+          | File | Who needs it |
+          | --- | --- |
+          | **$(basename "$zip")** | **Every player.** The Factorio mod: drop it, still zipped, into Factorio's \`mods\` folder together with the avatar packs. |
+          | **$(basename "$package")** | **Only whoever makes an avatar pack**, in Unity. |
 
-          Factorio 2.0; Space Age is optional. Before removing a pack or the mod from a save, an admin runs
-          \`/avatar-revert-all\` (see the README).
+          The **Source code** links under them are added to every release by GitHub. Players don't need them.
+
+          **Installing the mod (Avatar Characters $MOD):** Factorio's \`mods\` folder is
+          \`%APPDATA%\\Factorio\\mods\` on Windows, \`~/.factorio/mods\` on Linux and
+          \`~/Library/Application Support/factorio/mods\` on macOS. Factorio 2.0; Space Age is optional. In
+          multiplayer, everyone needs the same mods and packs as the server. Before removing a pack or the mod
+          from a save, an admin runs \`/avatar-revert-all\` (see the README).
+
+          **Installing the exporter:** in Unity 2022.3 (your VRChat project) choose **Assets ▸ Import Package ▸
+          Custom Package...**, pick the file and click **Import**. It is installed in
+          \`Assets/FactorioAvatarExporter\`; importing a newer version updates it in place. Then open
+          **Tools ▸ Factorio Avatar Exporter ▸ Exporter**.
           NOTES
           title="Factorio Avatar Exporter $EXPORTER (mod $MOD)"
           if ! gh release view "$TAG" > /dev/null 2>&1; then
@@ -109,9 +114,9 @@ jobs:
             gh release delete-asset "$TAG" "$old" --yes
             echo "removed $old from $TAG"
           done
-          if [ "$changed" = true ]; then
-            gh release edit "$TAG" --title "$title" --notes-file notes.md
-          else
+          # the notes and title follow this workflow's wording and the current mod version
+          gh release edit "$TAG" --title "$title" --notes-file notes.md
+          if [ "$changed" = false ]; then
             echo "Release $TAG already has both files; bump a version to publish a new one."
           fi
 
