@@ -53,6 +53,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         public HumanoidRig Rig { get; private set; }
         public double MetersPerTile { get; private set; }
 
+        /// <summary>How tall the avatar is drawn, tiles (<see cref="SetHeight"/>).</summary>
+        public double HeightTiles { get; private set; }
+
+        // the rest pose measured when loading, to measure the rig again for another height
+        private RigInput restPose;
+
         /// <summary>What was found and done, one line each, for reports.</summary>
         public List<string> Notes { get; } = new List<string>();
 
@@ -60,9 +66,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// Copies <paramref name="source"/> (a prefab or a scene object with a humanoid Animator) into a new
         /// preview scene and measures it. Throws <see cref="ArgumentException"/> when it is not a humanoid.
         /// </summary>
-        public static AvatarStage Load(GameObject source)
+        public static AvatarStage Load(GameObject source, double heightTiles = Conventions.EngineerHeight)
         {
-            var stage = new AvatarStage(EditorSceneManager.NewPreviewScene());
+            var stage = new AvatarStage(EditorSceneManager.NewPreviewScene()) { HeightTiles = heightTiles };
             try
             {
                 stage.Build(source);
@@ -119,10 +125,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 input.Bones.Add(bone.Key, ToCore(Pivot.InverseTransformPoint(bone.Value.position)));
             }
-            Rig = HumanoidRig.Measure(input);
-            MetersPerTile = 1 / Rig.TilesPerMeter;
-            Notes.Add($"height: {Rig.Height:0.000} m, drawn {Conventions.DefaultCharacterHeight} tiles tall " +
-                $"({MetersPerTile:0.000} m per tile); legs: {Rig.LegStyle}");
+            restPose = input;
+            SetHeight(HeightTiles);
+            Notes.Add($"height: {Rig.Height:0.000} m; legs: {Rig.LegStyle}");
             List<HumanBone> missing = HumanBones.Optional.Where(b => !bones.ContainsKey(b)).ToList();
             if (missing.Count > 0)
             {
@@ -197,6 +202,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// tiles), like Core's stick figure: the gun as a rod, the pickaxe as a handle with a head through the
         /// tip along Up, its point towards -Up.
         /// </summary>
+        /// <summary>Draws the avatar <paramref name="tiles"/> tall from now on: measures the rig again for that height.</summary>
+        public void SetHeight(double tiles)
+        {
+            HeightTiles = tiles;
+            Rig = HumanoidRig.Measure(restPose, tiles);
+            MetersPerTile = 1 / Rig.TilesPerMeter;
+        }
+
         private void PlaceProp(PropPose prop)
         {
             gun.SetActive(prop != null && prop.Kind == PropKind.Gun);
@@ -205,7 +218,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 return;
             }
-            double height = Conventions.DefaultCharacterHeight;
+            // thickness in proportion to the avatar, like the props' length
+            double height = Rig.HeadTopHeight;
             if (prop.Kind == PropKind.Gun)
             {
                 Span(gun.transform.GetChild(0), prop.Base, prop.Tip, StickFigure.GunRadius * height);

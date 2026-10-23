@@ -249,8 +249,9 @@ does):
   slightly south, above). The ground shadow is a projection onto the ground
   along `(-1.0, 0.2, 1.0)` (normalised; west, a little south, 44 degrees up),
   so shadows fall east and a little north, as long as the vanilla engineer's.
-- **Size:** a standing character is about 1.5 tiles tall on screen. In the
-  flight animations the body is raised 0.42 tiles off the ground.
+- **Size:** the exporter draws a standing character as tall as the vanilla
+  engineer, 1.7 tiles, unless its user picks another size (75% to 130%). In
+  the flight animations the body is raised 0.42 tiles off the ground.
 
 ## Bundles
 

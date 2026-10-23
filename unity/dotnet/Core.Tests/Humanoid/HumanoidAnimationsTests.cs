@@ -197,6 +197,37 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
             }
         }
 
+        [TestCaseSource(nameof(Rigs))]
+        public void ASizeScalesTheGroundAnimationsAndTheirPace(RigInput input)
+        {
+            // the exporter's Size in game measures the rig for another height: on the ground, everything scales
+            const double scale = 1.3;
+            var normal = new HumanoidAnimations(HumanoidRig.Measure(input, Conventions.EngineerHeight));
+            var tall = new HumanoidAnimations(HumanoidRig.Measure(input, Conventions.EngineerHeight * scale));
+            foreach (string animation in new[] { AnimationSpec.Idle, AnimationSpec.IdleGun, AnimationSpec.Run, AnimationSpec.RunGun,
+                AnimationSpec.Mine, AnimationSpec.Corpse })
+            {
+                AnimationInfo info = AnimationSpec.Get(animation);
+                for (int row = 0; row < Math.Min(info.DirectionCount, 3); row++)
+                {
+                    for (int f = 0; f < info.FrameCount; f++)
+                    {
+                        PoseResult a = Frame(normal, animation, f, row), b = Frame(tall, animation, f, row);
+                        foreach (KeyValuePair<string, Vec3> joint in a.Joints)
+                        {
+                            TestMath.AssertClose(b.Joints[joint.Key], joint.Value * scale, 1e-9, $"{animation} row {row + 1} frame {f + 1} {joint.Key}");
+                        }
+                        if (a.Prop != null)
+                        {
+                            TestMath.AssertClose(b.Prop.Tip, a.Prop.Tip * scale, 1e-9, $"{animation} frame {f + 1} prop");
+                        }
+                    }
+                }
+            }
+            // longer steps at the same speed: the feet don't slide
+            Assert.That(tall.Timing.DistancePerFrame, Is.EqualTo(normal.Timing.DistancePerFrame * scale).Within(1e-12));
+        }
+
         /// <summary>The point of the pick's head, as drawn (<see cref="StickFigure"/>).</summary>
         private static Vec3 PickPoint(PoseResult pose) =>
             pose.Prop.Tip - pose.Prop.Up * (StickFigure.PickHeadPoint * Vec3.Distance(pose.Prop.Base, pose.Prop.Tip));

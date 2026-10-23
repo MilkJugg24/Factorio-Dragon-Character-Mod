@@ -41,8 +41,17 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>Height of the body above its standing height in the flight animations, tiles.</summary>
         public const double FlyHeight = 0.42;
 
-        /// <summary>Default height of a standing character, tiles (the dragon is about this tall).</summary>
+        /// <summary>
+        /// Reference height of a standing character, tiles (the dragon is about this tall): the size Core's
+        /// proportions are given at.
+        /// </summary>
         public const double DefaultCharacterHeight = 1.5;
+
+        /// <summary>
+        /// How tall the vanilla engineer is drawn, tiles: 97 px from boots to the top of the head on screen in the
+        /// in-game checks, where a 1.5-tile figure measures 85 px. Avatars are drawn this tall at 100% size.
+        /// </summary>
+        public const double EngineerHeight = 1.7;
 
         /// <summary>The Python renderer's world space has y pointing south; Core's points north.</summary>
         public static Vec3 PythonWorldToWorld(Vec3 v) => new Vec3(v.X, -v.Y, v.Z);

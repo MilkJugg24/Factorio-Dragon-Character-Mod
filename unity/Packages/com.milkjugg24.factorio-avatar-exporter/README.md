@@ -39,6 +39,10 @@ a newer `.unitypackage` the same way.
    - **Author** (optional) and **Version** (start with 1.0.0).
    - **Resolution**: 64 pixels per tile is sharp, and right for almost everyone. 32 uses a quarter of
      the video memory, for very large servers or old computers.
+   - **Size in game**: how tall your avatar is drawn, compared with the engineer (100%), from 75% to
+     130%; the line under it gives the height in tiles. Only the picture changes: your character still
+     takes up the engineer's space and moves as fast, with longer or shorter steps. Every avatar starts
+     at 100%, whatever its height in VRChat, since VRChat avatars come in any size.
    - **Flight animations**: on, unless you never fly with mech armor.
    - Tick **I made this avatar, or its author allows me to use it this way**, and if you like, add a note
      (the avatar's license, or who gave permission). It goes into the pack's README.
@@ -129,7 +133,8 @@ using it are deleted together with their items.
 Each character uses video memory on every player's computer; `report.txt` says how much. It's less than
 you might fear, because the game compresses sprites. In a test, a bundle of 12 characters at 64 pixels per
 tile added about 120 MB of video memory and about a second of loading time, and the game ran at a full
-60 frames per second with all 12 on screen. Avatars with big wings or long hair take more.
+60 frames per second with all 12 on screen. Avatars with big wings or long hair take more, and so does a
+bigger **Size in game** (at 100%, about a quarter more than in that test).
 
 ## Updating your avatar
 
@@ -183,7 +188,7 @@ it, and only share the pack with others if the author allows that too.
 
 ## More about the exporter window
 
-- **Report** (under the Avatar field): height, how big it is drawn, leg style (plantigrade or
+- **Report** (under the Avatar field): height, leg style (plantigrade or
   digitigrade), optional bones it lacks, scripts removed from the copy, warnings about the rig, and which
   loose parts it held on to the body.
 - **Pose check:** how far the avatar's bones ended up from where the exporter meant to put them, in

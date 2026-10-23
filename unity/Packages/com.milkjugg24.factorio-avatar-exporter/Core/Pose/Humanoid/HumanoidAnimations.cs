@@ -422,10 +422,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             double alpha = MathUtil.Radians(MineAlpha[i]);
             double lean = MineLean[i];
             double raise = MathUtil.Smoothstep(40, 150, MineAlpha[i]);
-            // crouch and shift the weight forward into the blow
+            // knees a little bent, so the feet stay planted in the wide stance; crouch and shift the weight
+            // forward into the blow
             double crouch = MathUtil.Smoothstep(0.3, 0.6, lean);
             var pelvis = new Vec3(0, -0.02 * legScale + 0.06 * legScale * crouch,
-                rig.HipsHeight - 0.06 * rig.LegLength - 0.16 * rig.LegLength * crouch + 0.03 * legScale * raise);
+                rig.HipsHeight - 0.10 * rig.LegLength - 0.16 * rig.LegLength * crouch);
             double headPitch = 0.15 - 0.25 * (lean - 0.1);
             HumanoidPoseBuilder b = Torso(pelvis, lean, headPitch: headPitch);
             Quat chest = ChestFrame(lean);

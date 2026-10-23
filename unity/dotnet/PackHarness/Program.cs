@@ -12,7 +12,7 @@ namespace MilkJugg24.FactorioAvatarExporter.PackHarness
     /// software stick-figure renderer, so the whole pipeline can be tested without Unity.
     ///
     ///   dotnet run --project unity/dotnet/PackHarness -- --out DIR [--id ID] [--title TITLE]
-    ///       [--rig generic|chibi|minimal|dragon] [--height METERS] [--ppt 64|32] [--supersampling N]
+    ///       [--rig generic|chibi|minimal|dragon] [--height METERS] [--size PERCENT] [--ppt 64|32] [--supersampling N]
     ///       [--no-flight] [--zip]
     ///
     /// Writes DIR/avatar-pack-ID/ and, with --zip, DIR/avatar-pack-ID_VERSION.zip.
@@ -94,6 +94,12 @@ namespace MilkJugg24.FactorioAvatarExporter.PackHarness
             return 0;
         }
 
+        /// <summary>
+        /// How tall the figure is drawn, tiles: <see cref="Options.Size"/> of the engineer. The rig's own height in
+        /// meters (--height) doesn't change the picture, as in the exporter.
+        /// </summary>
+        private static double Tall(Options options) => Conventions.EngineerHeight * options.Size / 100;
+
         private static IPoseSource PoseSource(Options options)
         {
             switch (options.Rig)
@@ -101,11 +107,11 @@ namespace MilkJugg24.FactorioAvatarExporter.PackHarness
                 case "dragon":
                     return new DragonPoseSource(BodyShape.Male);
                 case "chibi":
-                    return new HumanoidAnimations(HumanoidRig.Measure(SyntheticRigs.Chibi(options.Height)));
+                    return new HumanoidAnimations(HumanoidRig.Measure(SyntheticRigs.Chibi(options.Height), Tall(options)));
                 case "minimal":
-                    return new HumanoidAnimations(HumanoidRig.Measure(SyntheticRigs.Generic(options.Height, null, true)));
+                    return new HumanoidAnimations(HumanoidRig.Measure(SyntheticRigs.Generic(options.Height, null, true), Tall(options)));
                 default:
-                    return new HumanoidAnimations(HumanoidRig.Measure(SyntheticRigs.Generic(options.Height)));
+                    return new HumanoidAnimations(HumanoidRig.Measure(SyntheticRigs.Generic(options.Height), Tall(options)));
             }
         }
 
@@ -175,7 +181,7 @@ namespace MilkJugg24.FactorioAvatarExporter.PackHarness
         {
             public const string Usage =
                 "usage: PackHarness --out DIR [--id ID] [--title TITLE] [--rig generic|chibi|minimal|dragon] " +
-                "[--height METERS] [--ppt 64|32] [--supersampling N] [--no-flight] [--zip]";
+                "[--height METERS] [--size PERCENT] [--ppt 64|32] [--supersampling N] [--no-flight] [--zip]";
 
             private static readonly HashSet<string> Rigs = new HashSet<string> { "generic", "chibi", "minimal", "dragon" };
 
@@ -184,6 +190,9 @@ namespace MilkJugg24.FactorioAvatarExporter.PackHarness
             public string Title { get; private set; } = "Harness";
             public string Rig { get; private set; } = "generic";
             public double Height { get; private set; } = 1.6;
+
+            /// <summary>How tall the figure is drawn, percent of the engineer's height, as the exporter's Size in game.</summary>
+            public double Size { get; private set; } = 100;
             public int PixelsPerTile { get; private set; } = 64;
             public int Supersampling { get; private set; } = 2;
             public bool Flight { get; private set; } = true;
@@ -202,6 +211,7 @@ namespace MilkJugg24.FactorioAvatarExporter.PackHarness
                         case "--title": o.Title = Value(); break;
                         case "--rig": o.Rig = Value(); break;
                         case "--height": o.Height = double.Parse(Value(), CultureInfo.InvariantCulture); break;
+                        case "--size": o.Size = double.Parse(Value(), CultureInfo.InvariantCulture); break;
                         case "--ppt": o.PixelsPerTile = int.Parse(Value(), CultureInfo.InvariantCulture); break;
                         case "--supersampling": o.Supersampling = int.Parse(Value(), CultureInfo.InvariantCulture); break;
                         case "--no-flight": o.Flight = false; break;

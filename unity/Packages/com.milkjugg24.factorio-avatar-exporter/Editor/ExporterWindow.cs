@@ -33,11 +33,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private string packAuthor;
         [SerializeField] private string packVersion = PackContent.DefaultVersion;
         [SerializeField] private int pixelsPerTile = Conventions.DefaultPixelsPerTile;
+        [SerializeField] private int sizePercent = 100;
         [SerializeField] private bool flight = true;
         [SerializeField] private string saveFolder;
         [SerializeField] private bool permission;
         [SerializeField] private string permissionNote;
         private string exported;
+        private int appliedSize;
 
         private PosePreview preview;
         private string error;
@@ -82,17 +84,19 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             try
             {
                 EditorUtility.DisplayProgressBar("Factorio Avatar Exporter", "Loading " + source.name, 0.5f);
-                preview = PosePreview.Load(source);
-                preview.SetLighting(lighting);
                 if (packFor != source.name)
                 {
-                    // another avatar: its own name, id and permission
+                    // another avatar: its own name, id, size and permission
                     packFor = source.name;
                     packTitle = source.name;
                     packId = "";
+                    sizePercent = 100;
                     permission = false;
                     permissionNote = "";
                 }
+                preview = PosePreview.Load(source, HeightTiles(sizePercent));
+                appliedSize = sizePercent;
+                preview.SetLighting(lighting);
                 exported = null;
                 Rerender();
             }
@@ -245,6 +249,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
         }
 
+        private const int MinSizePercent = 75, MaxSizePercent = 130;
+
+        private static double HeightTiles(int percent) => Conventions.EngineerHeight * percent / 100.0;
+
         private static readonly string[] Resolutions = { "64 pixels per tile (sharp)", "32 pixels per tile (a quarter of the memory)" };
         private static readonly int[] ResolutionValues = { 64, 32 };
 
@@ -261,6 +269,17 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             packVersion = EditorGUILayout.TextField(new GUIContent("Version", "Raise it (1.0.1, 1.1.0, ...) when you export " +
                 "the pack again for a server: every player needs the same version."), packVersion);
             pixelsPerTile = EditorGUILayout.IntPopup("Resolution", pixelsPerTile, Resolutions, ResolutionValues);
+            sizePercent = EditorGUILayout.IntSlider(new GUIContent("Size in game (%)", "How tall your avatar is drawn, " +
+                "compared with the engineer (100%). Only the picture changes: the character still takes up the " +
+                "engineer's space, and moves as fast."), sizePercent, MinSizePercent, MaxSizePercent);
+            // measuring the avatar again and planning its canvas takes a moment, so only once the slider is let go
+            if (sizePercent != appliedSize && GUIUtility.hotControl == 0)
+            {
+                appliedSize = sizePercent;
+                preview.SetHeight(HeightTiles(sizePercent));
+                Rerender();
+            }
+            EditorGUILayout.LabelField(" ", preview.SizeNote, EditorStyles.miniLabel);
             flight = EditorGUILayout.Toggle(new GUIContent("Flight animations", "Hovering and flying with Space Age's mech armor. " +
                 "Without them the avatar walks in the air."), flight);
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -35,7 +36,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
         private readonly AvatarStage stage;
         private readonly StageCamera camera;
-        private readonly HumanoidAnimations poses;
+        private HumanoidAnimations poses;
         private readonly Dictionary<string, Bounds3> bounds = new Dictionary<string, Bounds3>();
         private readonly Dictionary<string, int> margins = new Dictionary<string, int>();
 
@@ -57,12 +58,31 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         public int Retakes => camera.Retakes;
         public int PlaceholderLeft => camera.PlaceholderLeft;
 
+        /// <summary>Draws the avatar <paramref name="tiles"/> tall from now on, in the preview and the export.</summary>
+        public void SetHeight(double tiles)
+        {
+            if (tiles == stage.HeightTiles)
+            {
+                return;
+            }
+            stage.SetHeight(tiles);
+            poses = new HumanoidAnimations(stage.Rig);
+            bounds.Clear();
+            margins.Clear();
+        }
+
+        /// <summary>How big the avatar is drawn, for the window and report.txt.</summary>
+        public string SizeNote =>
+            $"size in game: {(100 * stage.HeightTiles / Conventions.EngineerHeight).ToString("0", CultureInfo.InvariantCulture)}% " +
+            $"of the engineer's height, {stage.HeightTiles.ToString("0.00", CultureInfo.InvariantCulture)} tiles tall " +
+            $"({stage.MetersPerTile.ToString("0.000", CultureInfo.InvariantCulture)} m per tile)";
+
         /// <summary>Lights the avatar for the preview and the export (<see cref="StageCamera.SetLighting"/>).</summary>
         public void SetLighting(StageLighting lighting) => camera.SetLighting(lighting);
 
-        public static PosePreview Load(GameObject source)
+        public static PosePreview Load(GameObject source, double heightTiles = Conventions.EngineerHeight)
         {
-            AvatarStage stage = AvatarStage.Load(source);
+            AvatarStage stage = AvatarStage.Load(source, heightTiles);
             try
             {
                 return new PosePreview(stage);
@@ -221,7 +241,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         {
             using (var renderer = new StageRenderer(stage, camera))
             {
-                return PackExport.Write(options, AvatarName, poses, renderer, Notes.Append(camera.Lighting.Describe()),
+                return PackExport.Write(options, AvatarName, poses, renderer, Notes.Append(SizeNote).Append(camera.Lighting.Describe()),
                     progress, cancel);
             }
         }
