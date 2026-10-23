@@ -10,8 +10,9 @@ using Object = UnityEngine.Object;
 namespace MilkJugg24.FactorioAvatarExporter.Editor
 {
     /// <summary>
-    /// The Factorio sprite camera in an <see cref="AvatarStage"/>'s scene: a key light, flat ambient light, and
-    /// renders on black and on white turned into a transparent frame with Core's difference matting.
+    /// The Factorio sprite camera in an <see cref="AvatarStage"/>'s scene: the lights (<see cref="StageLighting"/>:
+    /// key, fill and rim lights, flat ambient light and surroundings to reflect), and renders on black and on
+    /// white turned into a transparent frame with Core's difference matting.
     ///
     /// Shaders are compiled before they are drawn (Unity would otherwise draw a cyan placeholder while they
     /// compile in the background), and a render that still shows the placeholder is taken again.
@@ -20,11 +21,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     {
         public const int Supersampling = 2;
         private const int RenderAttempts = 5;
-        private static readonly Color Ambient = new Color(0.45f, 0.45f, 0.45f);
-        private const float LightIntensity = 1.0f;
+        private const int StudioSize = 64;
 
         private readonly AvatarStage stage;
         private readonly Camera camera;
+        private readonly Light key, fill, rim;
+        private readonly ReflectionProbe probe;
+        private readonly Cubemap studio = MakeStudio();
+        private StageLighting lighting;
         private readonly bool linear = PlayerSettings.colorSpace == UnityEngine.ColorSpace.Linear;
         private RenderTexture target;
         private Texture2D readback;
@@ -50,15 +54,106 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             camera.useOcclusionCulling = false;
             camera.depthTextureMode = DepthTextureMode.Depth; // for shader effects that read depth
 
-            var lightObject = new GameObject("Key light");
+            key = AddLight("Key light");
+            fill = AddLight("Fill light");
+            rim = AddLight("Rim light");
+            // reflections: a probe around the whole stage, and the scene's default reflection below (whichever
+            // the render pipeline picks up), both with the same surroundings
+            var probeObject = new GameObject("Reflections");
+            SceneManager.MoveGameObjectToScene(probeObject, stage.Scene);
+            probe = probeObject.AddComponent<ReflectionProbe>();
+            probe.mode = ReflectionProbeMode.Custom;
+            probe.size = Vector3.one * 1000;
+            probe.boxProjection = false;
+            probe.importance = 100;
+            SetLighting(new StageLighting());
+        }
+
+        /// <summary>The lighting in effect (a copy).</summary>
+        public StageLighting Lighting => lighting.Copy();
+
+        /// <summary>Lights the stage as <paramref name="settings"/> say (Factorio style unless they are custom).</summary>
+        public void SetLighting(StageLighting settings)
+        {
+            lighting = settings.Effective.Copy();
+            Point(key, lighting.KeyDirection, lighting.KeyHeight, lighting.KeyStrength, lighting.KeyColor);
+            Point(fill, lighting.KeyDirection + 180, StageLighting.FillHeight, lighting.FillStrength, Color.white);
+            Point(rim, StageLighting.RimDirection, StageLighting.RimHeight, lighting.RimStrength, Color.white);
+            probe.customBakedTexture = Surroundings;
+            probe.intensity = lighting.ReflectionStrength;
+        }
+
+        private Cubemap Surroundings => lighting.Environment != null ? lighting.Environment : studio;
+
+        private Light AddLight(string name)
+        {
+            var lightObject = new GameObject(name);
             SceneManager.MoveGameObjectToScene(lightObject, stage.Scene);
-            (double x, double y, double z) toLight = UnitySpace.ToUnity(Conventions.ShadeLight);
-            lightObject.transform.rotation = Quaternion.LookRotation(-new Vector3((float)toLight.x, (float)toLight.y, (float)toLight.z));
             Light light = lightObject.AddComponent<Light>();
             light.type = LightType.Directional;
-            light.color = Color.white;
-            light.intensity = LightIntensity;
             light.shadows = LightShadows.None;
+            return light;
+        }
+
+        private static void Point(Light light, float direction, float height, float strength, Color color)
+        {
+            Vector3 towards = StageLighting.TowardsLight(direction, height);
+            light.transform.rotation = Quaternion.LookRotation(-towards, Mathf.Abs(towards.y) > 0.99f ? Vector3.forward : Vector3.up);
+            light.color = color;
+            light.intensity = strength;
+            light.enabled = strength > 0;
+        }
+
+        /// <summary>
+        /// The neutral studio shiny materials reflect: bright above, a soft grey horizon and a dark floor, the same
+        /// all around (linear light, with mipmaps for rough materials' blurred reflections).
+        /// </summary>
+        private static Cubemap MakeStudio()
+        {
+            var cubemap = new Cubemap(StudioSize, TextureFormat.RGBAHalf, true)
+            {
+                name = "Neutral studio",
+                hideFlags = HideFlags.HideAndDontSave,
+                filterMode = FilterMode.Trilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            var pixels = new Color[StudioSize * StudioSize];
+            foreach (CubemapFace face in new[] { CubemapFace.PositiveX, CubemapFace.NegativeX, CubemapFace.PositiveY,
+                CubemapFace.NegativeY, CubemapFace.PositiveZ, CubemapFace.NegativeZ })
+            {
+                for (int row = 0; row < StudioSize; row++)
+                {
+                    for (int column = 0; column < StudioSize; column++)
+                    {
+                        float s = (column + 0.5f) / StudioSize * 2 - 1, t = (row + 0.5f) / StudioSize * 2 - 1;
+                        float up = FaceDirection(face, s, t).normalized.y;
+                        float v = up >= 0
+                            ? Mathf.Lerp(0.4f, 0.9f, Mathf.Sqrt(up))
+                            : Mathf.Lerp(0.4f, 0.12f, Mathf.SmoothStep(0, 1, Mathf.Min(1, -up * 3)));
+                        pixels[row * StudioSize + column] = new Color(v, v, v, 1);
+                    }
+                }
+                cubemap.SetPixels(pixels, face, 0);
+            }
+            cubemap.Apply(true, false);
+            return cubemap;
+        }
+
+        /// <summary>
+        /// The direction through a point of a cubemap face, <paramref name="s"/> left to right and
+        /// <paramref name="t"/> top to bottom (both -1 to 1), as Unity lays faces out (row 0 at the top).
+        /// </summary>
+        private static Vector3 FaceDirection(CubemapFace face, float s, float t)
+        {
+            switch (face)
+            {
+                case CubemapFace.PositiveX: return new Vector3(1, -t, -s);
+                case CubemapFace.NegativeX: return new Vector3(-1, -t, s);
+                case CubemapFace.PositiveY: return new Vector3(s, 1, t);
+                case CubemapFace.NegativeY: return new Vector3(s, -1, -t);
+                case CubemapFace.PositiveZ: return new Vector3(s, -t, 1);
+                default: return new Vector3(-s, -t, -1);
+            }
         }
 
         /// <summary>Retakes because a shader was still compiling, since the camera was made.</summary>
@@ -195,7 +290,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             try
             {
                 RenderSettings.ambientMode = AmbientMode.Flat;
-                RenderSettings.ambientLight = Ambient;
+                Color ambient = lighting.AmbientColor * lighting.AmbientStrength;
+                RenderSettings.ambientLight = new Color(ambient.r, ambient.g, ambient.b, 1);
+                RenderSettings.defaultReflectionMode = DefaultReflectionMode.Custom;
+                RenderSettings.customReflection = Surroundings;
+                RenderSettings.reflectionIntensity = lighting.ReflectionStrength;
                 camera.Render();
             }
             finally
@@ -284,6 +383,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         public void Dispose()
         {
             ReleaseTargets();
+            Object.DestroyImmediate(studio);
         }
 
         /// <summary>Turns asynchronous shader compilation off while it lives, then restores the settings.</summary>

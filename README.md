@@ -4,8 +4,9 @@ Play Factorio 2.1 as your own avatar. Two parts work together:
 
 - **The Factorio Avatar Exporter**, a Unity package. It takes a humanoid avatar (a VRChat avatar, for
   example) in your Unity project, poses it in every animation the game needs (idle, running, shooting,
-  mining, flying with mech armor, the corpse) and renders the sprites. Its output is an **avatar pack**:
-  a small Factorio mod named `avatar-pack-<name>`.
+  mining, flying with mech armor, the corpse) and renders the sprites, lit like the game's characters or
+  with lights you set yourself. Its output is an **avatar pack**: a small Factorio mod named
+  `avatar-pack-<name>`.
 - **Avatar Characters**, a Factorio mod (`avatar-characters/`). It turns the installed avatar packs into
   characters. Every player picks their own look in the avatar window, or stays the engineer.
 

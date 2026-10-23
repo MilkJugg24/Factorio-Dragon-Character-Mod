@@ -31,7 +31,9 @@ a newer `.unitypackage` the same way.
    scene and your avatar are not changed.
 3. Look it over in the preview: pick an animation, a direction and a frame, or press **Play**. The
    yellow cross is where your character stands in the game.
-4. Under **Avatar pack**, fill in:
+4. Under **Lighting**, keep **Factorio style** (lit like the game's own characters), or choose **Custom**
+   and set the lights yourself while you watch the preview (see [Lighting](#lighting) below).
+5. Under **Avatar pack**, fill in:
    - **Name**: shown in the game. The **Pack id** is made from it; keep it the same when you export a
      new version later.
    - **Author** (optional) and **Version** (start with 1.0.0).
@@ -40,7 +42,7 @@ a newer `.unitypackage` the same way.
    - **Flight animations**: on, unless you never fly with mech armor.
    - Tick **I made this avatar, or its author allows me to use it this way**, and if you like, add a note
      (the avatar's license, or who gave permission). It goes into the pack's README.
-5. Press **Export All** and choose where to save the pack. Keep its file name,
+6. Press **Export All** and choose where to save the pack. Keep its file name,
    `avatar-pack-<id>_<version>.zip`: Factorio expects a mod's zip to be named that way. Then the exporter
    renders every animation, which takes a few minutes; you can cancel from the progress bar.
 
@@ -68,6 +70,35 @@ Start Factorio (restart it if it was running). New mods are switched on by defau
 button in the top-left corner, **Ctrl + Shift + A**, or the chat command `/avatar`, and click your avatar.
 Your choice is saved with the game. If you're in a vehicle or crafting, your new look is applied as soon
 as you're done.
+
+## Lighting
+
+The exporter lights your avatar in a hidden scene of its own, not with your scene's lights. Every
+animation and direction is lit the same way: the lights stay put relative to the camera while the avatar
+turns, as in the game.
+
+- **Factorio style** (the default): the game's light, from the left and a little in front, above; soft light
+  from all around; and a neutral studio, bright above and dark below, for shiny and metallic materials to
+  reflect.
+- **Custom**: set it yourself and watch the preview change.
+  - **Key light from** and **Key light height**: where the main light comes from, in degrees around the
+    avatar as you see it (0 from behind, 90 from the right, 180 from the front, 270 from the left), and how
+    high (90 is straight above). Its **strength** and **colour**.
+  - **Fill light**: a softer light from the opposite side, so the side away from the key light isn't dark.
+  - **Rim light**: a light from behind that draws bright edges around the avatar.
+  - **Ambient light** and its colour: light from every direction, so nothing is pitch black.
+  - **Reflections**: how strongly shiny materials reflect their surroundings, and optionally what they
+    reflect: any cubemap in your project, such as a skybox or an HDRI imported with **Texture Shape: Cube**.
+    Empty means the neutral studio.
+  - **Reset to Factorio style** puts every setting back to the game's, as a starting point.
+
+  An avatar with a lot of specular and reflections often looks best with the key light higher and more in
+  front, some fill and rim light, and reflections of a cubemap that suits it.
+
+The shadow on the ground isn't part of the lighting. The exporter draws it separately, as Factorio wants,
+and it always falls the way the game's shadows do (to the right and a little up), whatever the lights. The
+game draws it under the character and every other shadow alike. `report.txt` notes the lighting a pack was
+exported with.
 
 ## Playing together
 

@@ -57,6 +57,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         public int Retakes => camera.Retakes;
         public int PlaceholderLeft => camera.PlaceholderLeft;
 
+        /// <summary>Lights the avatar for the preview and the export (<see cref="StageCamera.SetLighting"/>).</summary>
+        public void SetLighting(StageLighting lighting) => camera.SetLighting(lighting);
+
         public static PosePreview Load(GameObject source)
         {
             AvatarStage stage = AvatarStage.Load(source);
@@ -218,7 +221,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         {
             using (var renderer = new StageRenderer(stage, camera))
             {
-                return PackExport.Write(options, AvatarName, poses, renderer, Notes, progress, cancel);
+                return PackExport.Write(options, AvatarName, poses, renderer, Notes.Append(camera.Lighting.Describe()),
+                    progress, cancel);
             }
         }
 

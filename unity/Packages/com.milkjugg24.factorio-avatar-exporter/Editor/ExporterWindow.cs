@@ -24,6 +24,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private int row = 4;
         [SerializeField] private int frame;
         [SerializeField] private int zoom = 2;
+        [SerializeField] private StageLighting lighting = new StageLighting();
 
         // the pack
         [SerializeField] private string packFor;
@@ -82,6 +83,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 EditorUtility.DisplayProgressBar("Factorio Avatar Exporter", "Loading " + source.name, 0.5f);
                 preview = PosePreview.Load(source);
+                preview.SetLighting(lighting);
                 if (packFor != source.name)
                 {
                     // another avatar: its own name, id and permission
@@ -176,6 +178,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
 
             EditorGUILayout.Space();
+            LightingGUI();
+
+            EditorGUILayout.Space();
             if (GUILayout.Button("Export Selected Animation"))
             {
                 SaveSheet(info.Name);
@@ -184,6 +189,60 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             EditorGUILayout.Space();
             PackGUI();
             EditorGUILayout.EndScrollView();
+        }
+
+        private static readonly string[] LightingModes = { "Factorio style", "Custom" };
+
+        /// <summary>How the avatar is lit (<see cref="StageLighting"/>); the preview follows every change.</summary>
+        private void LightingGUI()
+        {
+            EditorGUILayout.LabelField("Lighting", EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
+            lighting.Custom = EditorGUILayout.Popup(new GUIContent("Lighting", "Factorio style lights the avatar like " +
+                "the game's own characters. Custom lets you set the lights yourself, for example for a shiny avatar."),
+                lighting.Custom ? 1 : 0, LightingModes) == 1;
+            bool reset = false;
+            if (lighting.Custom)
+            {
+                lighting.KeyDirection = EditorGUILayout.Slider(new GUIContent("Key light from", "Where the main light " +
+                    "comes from, in degrees around the avatar as you see it: 0 from behind, 90 from the right, 180 from " +
+                    "the front, 270 from the left. Factorio style: " + Mathf.Round(StageLighting.FactorioKeyDirection) + "."),
+                    lighting.KeyDirection, 0, 360);
+                lighting.KeyHeight = EditorGUILayout.Slider(new GUIContent("Key light height", "Degrees above the " +
+                    "horizon; 90 is straight above. Factorio style: " + Mathf.Round(StageLighting.FactorioKeyHeight) + "."),
+                    lighting.KeyHeight, 0, 90);
+                lighting.KeyStrength = EditorGUILayout.Slider("Key light strength", lighting.KeyStrength, 0, 3);
+                lighting.KeyColor = EditorGUILayout.ColorField("Key light colour", lighting.KeyColor);
+                lighting.FillStrength = EditorGUILayout.Slider(new GUIContent("Fill light", "A softer light from the " +
+                    "opposite side, so the side away from the key light isn't dark."), lighting.FillStrength, 0, 2);
+                lighting.RimStrength = EditorGUILayout.Slider(new GUIContent("Rim light", "A light from behind that " +
+                    "draws bright edges around the avatar."), lighting.RimStrength, 0, 2);
+                lighting.AmbientStrength = EditorGUILayout.Slider(new GUIContent("Ambient light", "Light from every " +
+                    "direction, so nothing is pitch black."), lighting.AmbientStrength, 0, 1.5f);
+                lighting.AmbientColor = EditorGUILayout.ColorField("Ambient colour", lighting.AmbientColor);
+                lighting.ReflectionStrength = EditorGUILayout.Slider(new GUIContent("Reflections", "How strongly shiny " +
+                    "and metallic materials reflect their surroundings."), lighting.ReflectionStrength, 0, 2);
+                lighting.Environment = (Cubemap)EditorGUILayout.ObjectField(new GUIContent("Reflected surroundings",
+                    "Optional: a cubemap shiny materials reflect, such as a skybox or an HDRI imported with Texture " +
+                    "Shape: Cube. Empty: a neutral studio, bright above and dark below."), lighting.Environment, typeof(Cubemap), false);
+                reset = GUILayout.Button("Reset to Factorio style");
+                if (reset)
+                {
+                    lighting = new StageLighting { Custom = true };
+                    GUI.FocusControl(null);
+                }
+            }
+            EditorGUILayout.LabelField(lighting.Custom
+                ? "The lights stay where they are as the avatar turns, so every direction is lit alike. The shadow on " +
+                  "the ground always falls the way the game's shadows do."
+                : "The game's light: from the left and a little in front, above, with soft light all around and a " +
+                  "neutral studio for shiny materials to reflect. The shadow on the ground is drawn separately, the " +
+                  "way the game's shadows fall.", EditorStyles.wordWrappedMiniLabel);
+            if ((EditorGUI.EndChangeCheck() || reset) && preview != null)
+            {
+                preview.SetLighting(lighting);
+                Rerender();
+            }
         }
 
         private static readonly string[] Resolutions = { "64 pixels per tile (sharp)", "32 pixels per tile (a quarter of the memory)" };
