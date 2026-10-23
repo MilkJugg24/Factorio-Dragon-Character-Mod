@@ -35,6 +35,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         private const int SouthDirection = 4;
         private static readonly Color Ambient = new Color(0.45f, 0.45f, 0.45f);
         private const float LightIntensity = 1.0f;
+        private const int RenderAttempts = 5;
+
+        /// <summary>Shader compilation and retakes during one render, for the report.</summary>
+        private sealed class ShaderStats
+        {
+            public int Retakes;
+            public int PlaceholderLeft;
+        }
 
         [MenuItem(MenuPath, true)]
         private static bool CanRender() => Selection.activeGameObject != null;
@@ -158,9 +166,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             Scene scene = EditorSceneManager.NewPreviewScene();
             var temporary = new List<Object>();
             // Unity draws a cyan placeholder while a shader variant compiles in the background; compile
-            // each one before it is drawn instead
+            // each one before it is drawn instead (both settings are restored afterwards)
             bool asyncCompilation = ShaderUtil.allowAsyncCompilation;
+            bool asyncSetting = EditorSettings.asyncShaderCompilation;
             ShaderUtil.allowAsyncCompilation = false;
+            EditorSettings.asyncShaderCompilation = false;
             try
             {
                 // the avatar hangs under a pivot at the origin, its feet on the ground and its hips over the pivot
@@ -173,6 +183,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 avatar.transform.localPosition = Vector3.zero;
                 avatar.transform.localRotation = Quaternion.identity;
                 Strip(avatar, report);
+                report.AppendLine($"shaders: compiled {CompileShaders(avatar)} passes before rendering");
+                var shaders = new ShaderStats();
 
                 List<Vector3> points = MeshPoints(avatar, temporary);
                 if (points.Count == 0)
@@ -221,8 +233,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 {
                     EditorUtility.DisplayProgressBar("Factorio avatar spike", $"direction {d + 1} of {Directions}", (float)d / Directions);
                     pivot.transform.rotation = Facing(d);
-                    ImageF onBlack = RenderOnce(scene, camera, readback, Color.black);
-                    ImageF onWhite = RenderOnce(scene, camera, readback, Color.white);
+                    ImageF onBlack = RenderChecked(scene, camera, readback, Color.black, avatar, shaders);
+                    ImageF onWhite = RenderChecked(scene, camera, readback, Color.white, avatar, shaders);
                     ImageF matte = Matting.FromBlackAndWhite(onBlack, onWhite, linear);
                     sprites[d] = ImageConvert.ToImage8(Downsample.Box(matte, Supersampling));
                     File.WriteAllBytes(Path.Combine(folder, $"direction-{d + 1}.png"), PngWriter.Encode(sprites[d]));
@@ -235,13 +247,20 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 Image8 strip = Strip(sprites);
                 File.WriteAllBytes(Path.Combine(folder, "strip.png"), PngWriter.Encode(strip));
                 File.WriteAllBytes(Path.Combine(folder, "strip-on-grey.png"), PngWriter.Encode(OnGrey(strip)));
-                report.AppendLine($"rendered {2 * Directions} images in {clock.Elapsed.TotalSeconds:0.0} s");
+                report.AppendLine($"rendered {2 * Directions} images in {clock.Elapsed.TotalSeconds:0.0} s, " +
+                    $"{shaders.Retakes} retaken because a shader was still compiling");
+                if (shaders.PlaceholderLeft > 0)
+                {
+                    report.AppendLine($"WARNING: {shaders.PlaceholderLeft} pixels still show Unity's cyan shader-compilation " +
+                        $"placeholder after {RenderAttempts} attempts; those parts are wrong in the sprites");
+                }
                 File.WriteAllText(Path.Combine(folder, "report.txt"), report.ToString());
                 return report.ToString();
             }
             finally
             {
                 ShaderUtil.allowAsyncCompilation = asyncCompilation;
+                EditorSettings.asyncShaderCompilation = asyncSetting;
                 EditorSceneManager.ClosePreviewScene(scene);
                 foreach (Object o in temporary)
                 {
@@ -430,6 +449,80 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             light.shadows = LightShadows.None;
         }
 
+        /// <summary>
+        /// Compiles every pass of every material on the avatar now, waiting for each, so nothing is drawn with
+        /// the placeholder. Returns how many passes needed compiling.
+        /// </summary>
+        private static int CompileShaders(GameObject avatar)
+        {
+            int compiled = 0;
+            var seen = new HashSet<Material>();
+            foreach (Renderer renderer in avatar.GetComponentsInChildren<Renderer>(true))
+            {
+                foreach (Material material in renderer.sharedMaterials)
+                {
+                    if (material == null || material.shader == null || !seen.Add(material))
+                    {
+                        continue;
+                    }
+                    for (int pass = 0; pass < material.passCount; pass++)
+                    {
+                        if (!ShaderUtil.IsPassCompiled(material, pass))
+                        {
+                            ShaderUtil.CompilePass(material, pass, true);
+                            compiled++;
+                        }
+                    }
+                }
+            }
+            return compiled;
+        }
+
+        /// <summary>
+        /// Renders until no pixel shows the cyan placeholder Unity draws for a shader that is still compiling:
+        /// after a render with placeholder pixels it compiles the avatar's shaders again, waits for the
+        /// compiler and retakes the picture, up to <see cref="RenderAttempts"/> times.
+        /// </summary>
+        private static ImageF RenderChecked(Scene scene, Camera camera, Texture2D readback, Color background,
+            GameObject avatar, ShaderStats stats)
+        {
+            for (int attempt = 1; ; attempt++)
+            {
+                ImageF image = RenderOnce(scene, camera, readback, background);
+                int placeholder = PlaceholderPixels(image);
+                if (placeholder == 0)
+                {
+                    return image;
+                }
+                if (attempt == RenderAttempts)
+                {
+                    stats.PlaceholderLeft += placeholder;
+                    return image;
+                }
+                stats.Retakes++;
+                CompileShaders(avatar);
+                for (int wait = 0; ShaderUtil.anythingCompiling && wait < 200; wait++)
+                {
+                    System.Threading.Thread.Sleep(50);
+                }
+            }
+        }
+
+        /// <summary>Pixels in Unity's shader-compilation placeholder colour, an unlit cyan no lit surface gives.</summary>
+        private static int PlaceholderPixels(ImageF image)
+        {
+            int count = 0;
+            float[] p = image.Pixels;
+            for (int i = 0; i < p.Length; i += 4)
+            {
+                if (p[i] < 0.02f && p[i + 1] > 0.97f && p[i + 2] > 0.97f)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
         /// <summary>Renders over a solid background and reads the result back with row 0 at the top.</summary>
         private static ImageF RenderOnce(Scene scene, Camera camera, Texture2D readback, Color background)
         {
@@ -440,15 +533,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 RenderSettings.ambientMode = AmbientMode.Flat;
                 RenderSettings.ambientLight = Ambient;
                 camera.Render();
-                // should asynchronous compilation still have kicked in, wait for it and draw again
-                for (int tries = 0; ShaderUtil.anythingCompiling && tries < 600; tries++)
-                {
-                    System.Threading.Thread.Sleep(50);
-                    if (!ShaderUtil.anythingCompiling)
-                    {
-                        camera.Render();
-                    }
-                }
             }
             finally
             {
