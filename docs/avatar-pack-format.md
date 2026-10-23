@@ -248,6 +248,45 @@ does):
 - **Size:** a standing character is about 1.5 tiles tall on screen. In the
   flight animations the body is raised 0.42 tiles off the ground.
 
+## Bundles
+
+An **avatar bundle** is one mod holding several packs, so a server hands its players one file. The
+exporter's Combine Packs for a Server writes them; they need `avatar-characters` 0.3.0 or newer.
+
+| Thing | Name |
+| --- | --- |
+| Mod name | `avatar-bundle-<name>`, with `"dependencies": ["avatar-characters >= 0.3.0"]` |
+| Zip file | `avatar-bundle-<name>_<version>.zip` |
+| A character's folder | `characters/<id>/`, holding `avatar-pack.lua` (the pack's description), its graphics, `README.txt` (its source and permission) and `pack.json` (id, title, author and the pack's version) |
+| mod-data, character and corpse prototypes | the same as the pack's: `avatar-pack-<id>`, `avatar-pack-corpse-<id>` |
+
+A character's file paths point into the bundle, `__avatar-bundle-<name>__/characters/<id>/...`, and the
+bundle's `data.lua` registers each description with a `mod` field naming the bundle:
+
+```lua
+-- An avatar bundle: several avatar packs in one mod (docs/avatar-pack-format.md, "Bundles").
+local bundle = "avatar-bundle-<name>"
+for _, id in ipairs({ "<id>", "<id>" }) do
+  local pack = require("characters." .. id .. ".avatar-pack")
+  pack.mod = bundle
+  data:extend({
+    {
+      type = "mod-data",
+      name = "avatar-pack-" .. id,
+      data_type = "avatar-characters.avatar-pack",
+      data = pack,
+    },
+  })
+end
+```
+
+The ids are listed in sorted order. `mod` is the one field a pack's own description never has: when it
+is set, it must name an `avatar-bundle-` mod, and every file must be inside that mod. Otherwise a bundled
+character follows every rule of a pack.
+
+Because a character keeps its prototype names, a save keeps its characters when a server replaces
+separate packs by a bundle holding them, or one bundle version by the next.
+
 ## Validation
 
 `avatar-characters` refuses to load (with an error naming the pack and the

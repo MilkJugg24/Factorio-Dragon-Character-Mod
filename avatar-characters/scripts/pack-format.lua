@@ -11,6 +11,10 @@ format.MOD_PREFIX = "avatar-pack-"
 format.CORPSE_PREFIX = "avatar-pack-corpse-"
 format.SPRITE_PREFIX = "avatar-characters-pack-"
 
+-- Avatar bundles hold several packs in one mod; a pack's `mod` field then names
+-- the bundle its files are in (docs/avatar-pack-format.md, "Bundles").
+format.BUNDLE_PREFIX = "avatar-bundle-"
+
 format.ID_PATTERN = "^[a-z0-9][a-z0-9%-]*$"
 format.MAX_ID_LENGTH = 35
 format.MAX_TITLE_LENGTH = 80

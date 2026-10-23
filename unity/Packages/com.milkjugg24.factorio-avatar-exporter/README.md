@@ -71,13 +71,32 @@ as you're done.
 
 ## Playing together
 
-Factorio can't load new pictures while a game runs, so every pack is a mod, and **every player needs
-exactly the same mods as the server**, the same versions too. The game won't let anyone join otherwise.
-Collect the Avatar Characters zip and every player's pack into one folder, share it (a zip of it on
-Discord, for example), and have everyone put the files into their `mods` folder.
+Factorio can't load new pictures while a game runs, so every character is in a mod, and **every player
+needs exactly the same mods as the server**, the same versions too. The game won't let anyone join
+otherwise. The easiest way is one **bundle**: a single mod with everyone's characters.
 
-Each pack uses video memory on every player's computer; `report.txt` says how much. With many avatars,
-export them at 32 pixels per tile.
+1. Every player exports their own avatar (steps 1 to 3) and sends their `avatar-pack-<id>_<version>.zip`
+   to whoever runs the server.
+2. The server owner chooses **Tools ▸ Factorio Avatar Exporter ▸ Combine Packs for a Server**, adds the
+   packs (**Add a Pack or Bundle...**, or **Add a Folder of Packs...**), gives the bundle a name (your
+   server's), and presses **Combine...** to save `avatar-bundle-<name>_<version>.zip`.
+3. The server owner shares that zip and the Avatar Characters zip. Every player, and the server, puts
+   both, still zipped, into Factorio's `mods` folder.
+4. In the game, everyone picks their own character in the avatar window, and everyone sees everyone else
+   as the character they picked.
+
+When someone new joins, or someone updates their avatar: add the **previous bundle** and the new packs to
+Combine Packs, and save a new version (the window raises it for you). A newer version of a character
+replaces the older one. Everyone replaces the old bundle zip with the new one. Characters keep their
+names, so the save keeps everyone's character and items, also when a server switches from separate packs
+to a bundle.
+
+To leave a character out of a new bundle, untick it in Combine Packs. Before the server loads that
+bundle, run `/avatar-revert-all <id>` in the game for it (see the section on removing below), or the characters
+using it are deleted together with their items.
+
+Each character uses video memory on every player's computer; `report.txt` says how much. With many
+avatars, export them at 32 pixels per tile.
 
 ## Updating your avatar
 
@@ -85,11 +104,12 @@ Raise the **Version** (1.0.1, 1.1.0, ...), keep the **Pack id**, press **Export 
 zip in the `mods` folder with the new one (delete the old file). On a server, everyone needs the new
 version.
 
-## Removing a pack (or Avatar Characters) from a save
+## Removing a pack, a bundle's character, or Avatar Characters from a save
 
-When a pack is removed, Factorio deletes the characters and corpses that use it **together with the items
-they carry**. Before removing one, an admin types `/avatar-revert-all <id>` in the chat (`<id>` is the
-pack id), which turns everyone using it back into the engineer. Before removing Avatar Characters itself,
+When a pack is removed, or a new bundle leaves a character out, Factorio deletes the characters and
+corpses that use it **together with the items they carry**. Before that, an admin types
+`/avatar-revert-all <id>` in the chat (`<id>` is the pack id), which turns everyone using it back into
+the engineer. Before removing a whole bundle, do it for each of its characters. Before removing Avatar Characters itself,
 type `/avatar-revert-all`. Everyone should be online, alive and out of vehicles; the command reports
 anything it couldn't change. Then save, and remove the mod.
 

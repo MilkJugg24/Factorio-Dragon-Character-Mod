@@ -191,10 +191,19 @@ local function validate(mod_data)
   if pack_name ~= mod_name then
     fail(pack_name, "must be named \"" .. mod_name .. "\" to match its id")
   end
-  if mods[mod_name] == nil then
-    fail(pack_name, "must come from a mod named \"" .. mod_name .. "\"")
+  -- the mod holding its files: its own, or the avatar bundle it is part of
+  local files_mod = mod_name
+  if d.mod ~= nil then
+    if type(d.mod) ~= "string" or d.mod:sub(1, #format.BUNDLE_PREFIX) ~= format.BUNDLE_PREFIX then
+      fail(pack_name, "names the mod \"" .. tostring(d.mod) .. "\" for its files; only avatar bundles ("
+        .. format.BUNDLE_PREFIX .. "<name>) hold other packs' files")
+    end
+    files_mod = d.mod
   end
-  local prefix = "__" .. mod_name .. "__/"
+  if mods[files_mod] == nil then
+    fail(pack_name, "must come from a mod named \"" .. files_mod .. "\"")
+  end
+  local prefix = "__" .. files_mod .. "__/"
   local title_length = type(d.title) == "string" and format.utf8_length(d.title) or 0
   if title_length == 0 or title_length > format.MAX_TITLE_LENGTH then
     fail(pack_name, "needs a title of 1 to " .. format.MAX_TITLE_LENGTH .. " characters")

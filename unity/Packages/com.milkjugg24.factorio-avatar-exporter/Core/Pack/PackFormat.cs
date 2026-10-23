@@ -14,6 +14,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>Prefix of the pack's mod name and mod-data prototype: "avatar-pack-&lt;id&gt;".</summary>
         public const string ModPrefix = "avatar-pack-";
 
+        /// <summary>The data_type of every pack's mod-data prototype.</summary>
+        public const string DataType = "avatar-characters.avatar-pack";
+
         public const int MaxIdLength = 35;
 
         /// <summary>Longest pack title, in characters (Unicode code points).</summary>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 
 namespace MilkJugg24.FactorioAvatarExporter.Core
 {
@@ -54,9 +55,20 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         public void Complete()
         {
             sequence.Complete();
+            WriteZip(stream, rootFolder, files);
+            files.Clear();
+        }
+
+        /// <summary>
+        /// Writes <paramref name="files"/> (path inside the folder -> bytes) as a zip of the one folder
+        /// <paramref name="rootFolder"/>, deterministically: ordinal path order, the fixed time
+        /// <see cref="EntryTime"/>, no folder entries. The stream is left open.
+        /// </summary>
+        internal static void WriteZip(Stream stream, string rootFolder, IEnumerable<KeyValuePair<string, byte[]>> files)
+        {
             using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, true))
             {
-                foreach (KeyValuePair<string, byte[]> file in files)
+                foreach (KeyValuePair<string, byte[]> file in files.OrderBy(f => f.Key, StringComparer.Ordinal))
                 {
                     ZipArchiveEntry entry = archive.CreateEntry(rootFolder + "/" + file.Key, CompressionLevel.Optimal);
                     entry.LastWriteTime = EntryTime;
@@ -66,7 +78,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                     }
                 }
             }
-            files.Clear();
         }
     }
 }

@@ -103,16 +103,16 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         private static string Generator(PackContent content) => content.GeneratorName + " " + content.GeneratorVersion;
 
-        private static void Section(StringBuilder text, string heading) =>
+        internal static void Section(StringBuilder text, string heading) =>
             text.Append(heading).Append('\n').Append('-', heading.Length).Append('\n');
 
-        private static string NormalizeLines(string text) => text.Replace("\r\n", "\n").Replace('\r', '\n');
+        internal static string NormalizeLines(string text) => text.Replace("\r\n", "\n").Replace('\r', '\n');
 
-        private static void AppendJsonField(StringBuilder json, string name, string value) =>
+        internal static void AppendJsonField(StringBuilder json, string name, string value) =>
             json.Append("  ").Append(JsonString(name)).Append(": ").Append(JsonString(value)).Append(",\n");
 
         /// <summary>A JSON string literal; non-ASCII characters stay as they are (the file is UTF-8).</summary>
-        private static string JsonString(string value)
+        internal static string JsonString(string value)
         {
             var output = new StringBuilder(value.Length + 2);
             output.Append('"');

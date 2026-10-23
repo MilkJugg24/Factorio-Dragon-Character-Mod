@@ -39,12 +39,18 @@ Put the mod zip and the pack zips, still zipped, into Factorio's `mods` folder:
 
 ### Multiplayer
 
-Factorio can't load graphics while a game runs, so every pack is a mod, and **every player needs the
-same mods, the same versions, as the server**. The game refuses to join otherwise. It downloads missing
-mods by itself only when they're on the official mod portal, so for a private server, share one folder
-(or zip) of the mods with everyone: the Avatar Characters zip and every player's pack.
+Factorio can't load graphics while a game runs, so every character is in a mod, and **every player needs
+the same mods, the same versions, as the server**. The game refuses to join otherwise. It downloads
+missing mods by itself only when they're on the official mod portal.
 
-Each pack costs video memory on every player's computer (the validator below prints how much), so a
+For a private server, each player exports their own pack and sends it to the server owner, who combines
+them with **Combine Packs for a Server** in the exporter into one **avatar bundle**
+(`avatar-bundle-<name>_<version>.zip`). Everyone installs that one zip next to Avatar Characters; each
+player picks their own character, and everyone sees everyone else's choice. A character keeps its name
+whether it comes as a pack or in a bundle, so saves keep their characters when the bundle grows or a
+server switches from separate packs. The exporter's README has the steps.
+
+Each character costs video memory on every player's computer (the validator below prints how much), so a
 server with many avatars may want 32-pixel packs, or packs without flight.
 
 ### Removing a pack or the mod
@@ -54,7 +60,8 @@ their items** when the save loads. Before removing anything:
 
 1. Make sure every player who uses it is online, alive and not in a vehicle.
 2. Run `/avatar-revert-all <id>` to turn everyone using that pack back into the engineer (`<id>` is the
-   part of the mod name after `avatar-pack-`; the mod name works too). Use `/avatar-revert-all` alone
+   part of the mod name after `avatar-pack-`; the mod name works too). For a bundle, do this for each of
+   its characters that goes. Use `/avatar-revert-all` alone
    before removing Avatar Characters itself. Admins only. It reports anything it couldn't convert.
 3. Save, then disable the pack or the mod.
 
@@ -68,8 +75,8 @@ author allows it.
 
 ### Compatibility notes
 
-- The vanilla `character` prototype stays the engineer. Each pack adds `avatar-pack-<id>` character and
-  `avatar-pack-corpse-<id>` corpse prototypes, copied from `character` in `data-final-fixes`, so they
+- The vanilla `character` prototype stays the engineer. Each pack, or each character of a bundle, adds
+  `avatar-pack-<id>` character and `avatar-pack-corpse-<id>` corpse prototypes, copied from `character` in `data-final-fixes`, so they
   inherit changes other mods make to it.
 - If another mod temporarily swaps your character (a jetpack, for example), this mod leaves it alone and
   reapplies your look once you're back to a normal character.

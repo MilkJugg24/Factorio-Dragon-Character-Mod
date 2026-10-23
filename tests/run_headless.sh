@@ -10,7 +10,9 @@
 #                   pack is removed
 #   --broken-packs  check that each deliberately broken pack stops the game from
 #                   loading with the expected error
-#   --pack PATH     add an avatar pack (folder or zip) to the test; may be repeated
+#   --pack PATH     add an avatar pack or bundle (folder or zip) to the test; may be repeated
+#   --swap-to PATH  then load the save again with this pack or bundle instead of the --pack ones,
+#                   as a server does when it moves its players' packs into one bundle
 #
 # /path/to/factorio is an unpacked Factorio (headless works) directory.
 set -euo pipefail
@@ -20,12 +22,14 @@ DLC=false
 TEST_PACKS=false
 BROKEN_PACKS=false
 PACKS=()
+SWAP_TO=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --space-age) DLC=true ;;
     --test-packs) TEST_PACKS=true ;;
     --broken-packs) BROKEN_PACKS=true ;;
     --pack) PACKS+=("$(realpath "$2")"); shift ;;
+    --swap-to) SWAP_TO="$(realpath "$2")"; shift ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
@@ -119,9 +123,11 @@ if [ "$TEST_PACKS" = true ]; then
   cp "$WORK/packs/avatar-pack-small_1.0.0.zip" "$MODS/"
   PACK_NAMES+=(avatar-pack-test avatar-pack-small_1.0.0.zip)
 fi
+EXTRA_NAMES=()
 for pack in "${PACKS[@]+"${PACKS[@]}"}"; do
   cp -r "$pack" "$MODS/"
   PACK_NAMES+=("$(basename "$pack")")
+  EXTRA_NAMES+=("$(basename "$pack")")
 done
 for name in "${PACK_NAMES[@]+"${PACK_NAMES[@]}"}"; do
   python3 "$REPO/tools/validate_sprites.py" --pack "$MODS/$name" || fail "$name: tools/validate_sprites.py failed"
@@ -140,4 +146,17 @@ if [ "$TEST_PACKS" = true ]; then
   run_benchmark "$MODS" "$WORK/test.zip" "$WORK/removed.log" "AVATAR-TEST: PASS (avatar packs removed)"
 else
   run_benchmark "$MODS" "$WORK/test.zip" "$WORK/run.log" "AVATAR-TEST: PASS"
+fi
+
+if [ -n "$SWAP_TO" ]; then
+  # the same save with the --pack mods replaced: characters of packs still installed must survive
+  for name in "${EXTRA_NAMES[@]+"${EXTRA_NAMES[@]}"}"; do
+    rm -rf "${MODS:?}/$name"
+  done
+  cp -r "$SWAP_TO" "$MODS/"
+  python3 "$REPO/tools/validate_sprites.py" --pack "$MODS/$(basename "$SWAP_TO")" > /dev/null \
+    || fail "$(basename "$SWAP_TO"): tools/validate_sprites.py failed"
+  write_mod_list "$MODS"
+  run_benchmark "$MODS" "$WORK/test.zip" "$WORK/swapped.log" "AVATAR-TEST: PASS"
+  echo "(after swapping the packs for $(basename "$SWAP_TO"))"
 fi

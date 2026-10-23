@@ -18,6 +18,9 @@ MAX_TITLE_LENGTH = 80
 MAX_SHEET_SIZE = 4096
 MAX_FRAMES = 255  # Factorio's limit for one animation
 MIN_MAIN_VERSION = (0, 1, 0)
+# Avatar bundles: several packs in one mod (docs/avatar-pack-format.md, "Bundles")
+BUNDLE_PREFIX = "avatar-bundle-"
+MIN_BUNDLE_MAIN_VERSION = (0, 3, 0)
 # Factorio 2.0 aborts on start, without a message, when a mod's info.json title is longer
 INFO_TITLE_MAX_BYTES = 100
 
@@ -51,6 +54,25 @@ data:extend({
   },
 })
 '''
+
+
+def bundle_data_lua(bundle_id, ids):
+    """The data.lua of a bundle, byte for byte (PackBundler.DataLua in the exporter's Core)."""
+    listed = ", ".join(f'"{i}"' for i in sorted(ids))
+    return ('-- An avatar bundle: several avatar packs in one mod (docs/avatar-pack-format.md, "Bundles").\n'
+            f'local bundle = "{BUNDLE_PREFIX}{bundle_id}"\n'
+            f'for _, id in ipairs({{ {listed} }}) do\n'
+            '  local pack = require("characters." .. id .. ".avatar-pack")\n'
+            '  pack.mod = bundle\n'
+            '  data:extend({\n'
+            '    {\n'
+            '      type = "mod-data",\n'
+            f'      name = "{MOD_PREFIX}" .. id,\n'
+            f'      data_type = "{DATA_TYPE}",\n'
+            '      data = pack,\n'
+            '    },\n'
+            '  })\n'
+            'end\n')
 
 
 def info_title(title):

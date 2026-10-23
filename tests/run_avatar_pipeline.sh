@@ -2,7 +2,9 @@
 # End-to-end test of the avatar exporter's Unity-free Core: the pack harness poses a synthetic
 # humanoid rig, renders it with the software stick-figure renderer and writes an avatar pack
 # exactly like the Unity exporter will; the pack is then checked by tools/validate_sprites.py,
-# loaded and exercised in a headless Factorio by tests/run_headless.sh, and previewed as GIFs.
+# loaded and exercised in a headless Factorio by tests/run_headless.sh, and previewed as GIFs. A
+# second pack is made and both are combined into a bundle, which must load in place of the packs
+# without losing the characters a save holds.
 #
 #   tests/run_avatar_pipeline.sh /path/to/factorio [--space-age] [--rig generic|chibi|minimal]
 #
@@ -39,6 +41,18 @@ python3 "$REPO/tools/validate_sprites.py" --pack "$WORK/avatar-pack-harness-$RIG
 
 echo "== loading it in Factorio"
 "$REPO/tests/run_headless.sh" "$FACTORIO_DIR" "${HEADLESS_ARGS[@]+"${HEADLESS_ARGS[@]}"}" --pack "$ZIP"
+
+echo "== a second pack, and both combined into a bundle"
+dotnet run --project "$REPO/unity/dotnet/PackHarness" -c Release -- \
+  --out "$WORK" --id harness-second --title "Harness second" --rig chibi --no-flight --zip > /dev/null
+SECOND="$(ls "$WORK"/avatar-pack-harness-second_*.zip)"
+dotnet run --project "$REPO/unity/dotnet/PackHarness" -c Release -- bundle --out "$WORK" --name "Harness bundle" "$ZIP" "$SECOND"
+BUNDLE="$(ls "$WORK"/avatar-bundle-harness-bundle_*.zip)"
+python3 "$REPO/tools/validate_sprites.py" --pack "$BUNDLE"
+
+echo "== a save made with both packs, loaded again with the bundle instead"
+"$REPO/tests/run_headless.sh" "$FACTORIO_DIR" "${HEADLESS_ARGS[@]+"${HEADLESS_ARGS[@]}"}" --pack "$ZIP" --pack "$SECOND" \
+  --swap-to "$BUNDLE"
 
 echo "== previews"
 python3 "$REPO/tools/avatar_pack/preview.py" "$ZIP" --out "$REPO/build/pipeline-preview" > /dev/null

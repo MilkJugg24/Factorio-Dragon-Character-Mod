@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.0
+Date: 2026-10-23
+  Features:
+    - Avatar bundles (mods named avatar-bundle-<name>): several avatar packs in one mod, so a server
+      hands every player one file. Make one with Combine Packs in the Factorio Avatar Exporter. A
+      character keeps its name whether it comes as a pack or in a bundle, so a save keeps everyone's
+      characters when a server switches.
+---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 2026-10-23
   Changes:

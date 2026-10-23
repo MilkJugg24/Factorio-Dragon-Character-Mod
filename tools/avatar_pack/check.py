@@ -52,6 +52,25 @@ class PackFiles:
         return Image.open(io.BytesIO(self.read(name)))
 
 
+class SubFiles:
+    """The files under one folder of a pack's files (a bundle character's characters/<id>/)."""
+
+    def __init__(self, parent, folder):
+        self.parent = parent
+        self.folder = folder
+        self.root_name = parent.root_name
+        self.names = {n[len(folder):] for n in parent.names if n.startswith(folder)}
+
+    def exists(self, name):
+        return name in self.names
+
+    def read(self, name):
+        return self.parent.read(self.folder + name)
+
+    def image(self, name):
+        return Image.open(io.BytesIO(self.read(name)))
+
+
 class Checker:
     def __init__(self, files):
         self.files = files
@@ -59,6 +78,9 @@ class Checker:
         self.warnings = []
         self.sheets = {}  # file name -> (width, height)
         self.mod_name = None
+        # file paths in the description are "__<files_mod>__/<files_dir><name>" for a file <name> of self.files
+        self.files_mod = None
+        self.files_dir = ""
 
     def error(self, message):
         self.errors.append(message)
@@ -78,9 +100,11 @@ class Checker:
             self.error(f"info.json is not valid JSON: {e}")
             return None
         name = info.get("name")
-        if not isinstance(name, str) or not name.startswith(spec.MOD_PREFIX):
-            self.error(f'info.json: name must be "{spec.MOD_PREFIX}<id>", not {name!r}')
+        if not isinstance(name, str) or not name.startswith((spec.MOD_PREFIX, spec.BUNDLE_PREFIX)):
+            self.error(f'info.json: name must be "{spec.MOD_PREFIX}<id>" (or "{spec.BUNDLE_PREFIX}<id>" for a bundle),'
+                       f' not {name!r}')
             return None
+        minimum = spec.MIN_BUNDLE_MAIN_VERSION if name.startswith(spec.BUNDLE_PREFIX) else spec.MIN_MAIN_VERSION
         title = info.get("title")
         if not isinstance(title, str) or not title:
             self.error("info.json: title is missing")
@@ -98,10 +122,10 @@ class Checker:
         dependency_ok = False
         for dep in info.get("dependencies") or []:
             m = re.fullmatch(r"\s*avatar-characters\s*>=\s*(\d+)\.(\d+)\.(\d+)\s*", dep) if isinstance(dep, str) else None
-            if m and tuple(int(g) for g in m.groups()) >= spec.MIN_MAIN_VERSION:
+            if m and tuple(int(g) for g in m.groups()) >= minimum:
                 dependency_ok = True
         if not dependency_ok:
-            self.error('info.json: dependencies must include "avatar-characters >= 0.1.0"')
+            self.error(f'info.json: dependencies must include "avatar-characters >= {".".join(map(str, minimum))}"')
         return name
 
     def check_data_lua(self):
@@ -138,7 +162,7 @@ class Checker:
 
     def file(self, path, what):
         """Checks that path points into the pack and returns the file name inside it, or None."""
-        prefix = f"__{self.mod_name}__/"
+        prefix = f"__{self.files_mod}__/{self.files_dir}"
         if not isinstance(path, str) or not path.startswith(prefix) or ".." in path:
             self.error(f"{what} must be a file inside the pack ({prefix}...)")
             return None
@@ -268,9 +292,12 @@ class Checker:
                 if not is_int(frame, 1, run_frames):
                     self.error(f"timing.{field} has frame {frame} outside 1..{run_frames}")
 
-    def check_description(self, mod_name):
+    def check_description(self, mod_name, path="prototypes/avatar-pack.lua", in_bundle=False):
+        """Checks a pack's description. mod_name is its avatar-pack-<id> name (for a bundle's character
+        too: its id must be its folder's)."""
         self.mod_name = mod_name
-        path = "prototypes/avatar-pack.lua"
+        if self.files_mod is None:
+            self.files_mod = mod_name
         if not self.files.exists(path):
             self.error(f"{path} is missing")
             return
@@ -295,8 +322,11 @@ class Checker:
                        f"{spec.MAX_ID_LENGTH} characters, not starting with corpse-)")
             return
         if spec.MOD_PREFIX + pack_id != mod_name:
-            self.error(f'id "{pack_id}" does not match the mod name "{mod_name}"')
+            self.error(f'id "{pack_id}" does not match ' + (f'its folder characters/{mod_name[len(spec.MOD_PREFIX):]}'
+                                                            if in_bundle else f'the mod name "{mod_name}"'))
             return
+        if d.get("mod") is not None:
+            self.error('has a "mod" field; only a bundle\'s data.lua sets it')
         title = d.get("title")
         if not isinstance(title, str) or not 1 <= len(title) <= spec.MAX_TITLE_LENGTH:
             self.error(f"needs a title of 1 to {spec.MAX_TITLE_LENGTH} characters")
@@ -339,7 +369,8 @@ class Checker:
                 self.warn(f'animation "{name}" is not part of the format and is ignored')
         self.check_timing(d.get("timing"), animations)
         icon_path = icon.get("filename") if isinstance(icon, dict) else None
-        icon_file = icon_path.split("__/", 1)[-1] if isinstance(icon_path, str) else None
+        prefix = f"__{self.files_mod}__/{self.files_dir}"
+        icon_file = icon_path[len(prefix):] if isinstance(icon_path, str) and icon_path.startswith(prefix) else None
         unused = sorted(n for n in self.files.names
                         if n.startswith("graphics/") and n.endswith(".png") and n not in self.sheets
                         and n != icon_file)
@@ -348,10 +379,39 @@ class Checker:
 
     def run(self):
         mod_name = self.check_info()
+        if mod_name and mod_name.startswith(spec.BUNDLE_PREFIX):
+            self.run_bundle(mod_name)
+            return
         self.check_data_lua()
         self.check_extras()
         if mod_name:
             self.check_description(mod_name)
+
+    def run_bundle(self, bundle_name):
+        """A bundle: its data.lua and extras, and each character in characters/<id>/ like a pack."""
+        self.check_extras()
+        ids = sorted({n.split("/")[1] for n in self.files.names
+                      if n.startswith("characters/") and n.count("/") == 2 and n.endswith("/avatar-pack.lua")})
+        if not ids:
+            self.error("the bundle has no characters (characters/<id>/avatar-pack.lua)")
+            return
+        if not self.files.exists("data.lua"):
+            self.error("data.lua is missing")
+        else:
+            text = self.files.read("data.lua").decode("utf-8", "replace")
+            if text.split() != spec.bundle_data_lua(bundle_name[len(spec.BUNDLE_PREFIX):], ids).split():
+                self.error("data.lua is not the standard bundle one from docs/avatar-pack-format.md")
+        for pack_id in ids:
+            folder = f"characters/{pack_id}/"
+            character = Checker(SubFiles(self.files, folder))
+            character.files_mod = bundle_name
+            character.files_dir = folder
+            character.check_description(spec.MOD_PREFIX + pack_id, "avatar-pack.lua", in_bundle=True)
+            if not character.files.exists("README.txt"):
+                character.warn("README.txt is missing (source avatar, its author and permission to use it)")
+            self.errors += [f"{pack_id}: {m}" for m in character.errors]
+            self.warnings += [f"{pack_id}: {m}" for m in character.warnings]
+            self.sheets.update({folder + name: size for name, size in character.sheets.items()})
 
     def vram_mb(self):
         return sum(w * h * 4 for w, h in self.sheets.values()) / 2 ** 20

@@ -128,6 +128,19 @@ if mods["avatar-pack-small"] then
   end
 end
 
+-- characters of avatar bundles draw their sheets from the bundle's characters/<id>/ folder
+for name, mod_data in pairs(data.raw["mod-data"] or {}) do
+  local d = mod_data.data_type == "avatar-characters.avatar-pack" and mod_data.data or nil
+  if d and d.mod then
+    local folder = "__" .. d.mod .. "__/characters/" .. d.id .. "/"
+    local character = data.raw["character"][name]
+    local idle = character and character.animations[1].idle.layers[1]
+    local file = idle and (idle.filename or idle.filenames[1]) or ""
+    check(file:sub(1, #folder) == folder, "bundled pack " .. name .. " draws " .. file .. ", not from " .. folder)
+    check(character and character.icon:sub(1, #folder) == folder, "bundled pack " .. name .. ": icon not in its bundle")
+  end
+end
+
 if #failures > 0 then
   error("AVATAR-TEST: FAIL (data stage)\n" .. table.concat(failures, "\n"))
 end

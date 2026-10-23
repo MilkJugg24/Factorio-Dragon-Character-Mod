@@ -16,6 +16,10 @@ namespace MilkJugg24.FactorioAvatarExporter.PackHarness
     ///       [--no-flight] [--zip]
     ///
     /// Writes DIR/avatar-pack-ID/ and, with --zip, DIR/avatar-pack-ID_VERSION.zip.
+    ///
+    ///   dotnet run --project unity/dotnet/PackHarness -- bundle --out DIR --name NAME [--version V] ZIP...
+    ///
+    /// combines pack and bundle zips into DIR/avatar-bundle-ID_V.zip, as the exporter's Combine Packs does.
     /// </summary>
     public static class Program
     {
@@ -23,6 +27,10 @@ namespace MilkJugg24.FactorioAvatarExporter.PackHarness
 
         public static int Main(string[] args)
         {
+            if (args.Length > 0 && args[0] == "bundle")
+            {
+                return Bundle(args);
+            }
             Options options;
             try
             {
@@ -99,6 +107,55 @@ namespace MilkJugg24.FactorioAvatarExporter.PackHarness
                 default:
                     return new HumanoidAnimations(HumanoidRig.Measure(SyntheticRigs.Generic(options.Height)));
             }
+        }
+
+        private static int Bundle(string[] args)
+        {
+            string output = null, name = null, version = Version;
+            var inputs = new List<string>();
+            for (int i = 1; i < args.Length; i++)
+            {
+                switch (args[i])
+                {
+                    case "--out": output = args[++i]; break;
+                    case "--name": name = args[++i]; break;
+                    case "--version": version = args[++i]; break;
+                    default: inputs.Add(args[i]); break;
+                }
+            }
+            if (output == null || name == null || inputs.Count == 0)
+            {
+                Console.Error.WriteLine("usage: PackHarness bundle --out DIR --name NAME [--version V] ZIP...");
+                return 2;
+            }
+            var read = new List<BundleInput>();
+            foreach (string input in inputs)
+            {
+                using (FileStream stream = File.OpenRead(input))
+                {
+                    read.Add(PackBundler.Read(stream, Path.GetFileName(input)));
+                }
+            }
+            var notes = new List<string>();
+            List<BundleCharacter> characters = PackBundler.Merge(read, notes);
+            notes.ForEach(n => Console.WriteLine("  " + n));
+            var info = new BundleInfo
+            {
+                Id = PackNaming.DeriveId(name),
+                Title = name,
+                Version = version,
+                Author = "pack harness",
+                GeneratorName = "factorio-avatar-exporter-harness",
+                GeneratorVersion = Version,
+            };
+            Directory.CreateDirectory(output);
+            string zip = Path.Combine(output, PackBundler.ZipFileName(info.Id, info.Version));
+            using (FileStream stream = File.Create(zip))
+            {
+                PackBundler.Write(stream, info, characters);
+            }
+            Console.WriteLine($"wrote {zip} with {string.Join(", ", characters.ConvertAll(c => c.Id))}");
+            return 0;
         }
 
         /// <summary>Reports on the calling thread (System.Progress posts to the thread pool).</summary>

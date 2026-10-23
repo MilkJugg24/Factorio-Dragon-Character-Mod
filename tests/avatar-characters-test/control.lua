@@ -278,7 +278,8 @@ local function test_generated_packs(surface, force, packs)
   check(test_corpse.valid and small_corpse.valid and engineer_corpse.valid, "a refused revert_all converted corpses")
   -- the pack's mod name works as well as its id
   local result = call("revert_all", "avatar-pack-small")
-  check(result.corpses == 1 and result.remaining == 1,
+  -- the unowned character above, and the one on_init left for the pack
+  check(result.corpses == 1 and result.remaining == 2,
     "revert_all(small): " .. result.corpses .. " corpses, " .. result.remaining .. " remaining")
   check(test_corpse.valid and engineer_corpse.valid and not small_corpse.valid, "revert_all(small) touched other corpses")
   local converted = corpse_at(surface, { 22, 20 })
@@ -320,17 +321,39 @@ local function test_packs_removed(surface)
   check(#left == 0, "the unowned pack character should be gone")
 end
 
-script.on_init(function()
-  if not script.active_mods["avatar-pack-test"] then
-    return
+-- Characters left in the save by on_init, one per pack installed then, are found again in later
+-- runs with their items while their pack is installed (also when it moved into a bundle), and are
+-- gone once it is not.
+local function test_survivors(surface)
+  for _, s in ipairs(storage.survivors or {}) do
+    local found = surface.find_entities_filtered({ type = "character", position = s.position, radius = 0.5 })[1]
+    if pack_list.get(s.id) then
+      check(found and found.name == "avatar-pack-" .. s.id
+        and found.get_main_inventory().get_item_count("iron-plate") == 17,
+        "the character of pack " .. s.id .. " or its items were lost when the save was loaded again")
+    else
+      check(found == nil, "the character of the removed pack " .. s.id .. " still exists")
+    end
   end
+end
+
+script.on_init(function()
   local surface = game.surfaces[1]
   surface.request_to_generate_chunks({ 0, 0 }, 2)
   surface.force_generate_chunk_requests()
-  create_corpse(surface, "avatar-pack-corpse-test", FIXTURE_CORPSE_POSITION, 42)
-  surface.create_entity({ name = "avatar-pack-test", position = FIXTURE_CHARACTER_POSITION, force = "player" })
-  local result = call("revert_all", "test")
-  storage.fixture = { corpses = result.corpses, remaining = result.remaining }
+  if script.active_mods["avatar-pack-test"] then
+    create_corpse(surface, "avatar-pack-corpse-test", FIXTURE_CORPSE_POSITION, 42)
+    surface.create_entity({ name = "avatar-pack-test", position = FIXTURE_CHARACTER_POSITION, force = "player" })
+    local result = call("revert_all", "test")
+    storage.fixture = { corpses = result.corpses, remaining = result.remaining }
+  end
+  storage.survivors = {}
+  for i, pack in ipairs(call("get_avatar_packs")) do
+    local position = { 30 + 3 * i, 30 }
+    local character = surface.create_entity({ name = pack.character, position = position, force = "player" })
+    character.get_main_inventory().insert({ name = "iron-plate", count = 17 })
+    storage.survivors[#storage.survivors + 1] = { id = pack.id, position = position }
+  end
 end)
 
 script.on_event(defines.events.on_tick, function(event)
@@ -344,6 +367,7 @@ script.on_event(defines.events.on_tick, function(event)
   test_transfer(surface, force)
   test_corpse(surface, force)
   local packs = test_any_packs(surface, force)
+  test_survivors(surface)
   local phase = ""
   if script.active_mods["avatar-pack-test"] then
     test_generated_packs(surface, force, packs)
