@@ -19,7 +19,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private List<string> leftOut = new List<string>();
         [SerializeField] private string bundleName = "My server";
         [SerializeField] private string bundleVersion = PackContent.DefaultVersion;
-        [SerializeField] private string bundleAuthor;
+        [SerializeField] private string author = PackContent.DefaultAuthor;
         [SerializeField] private string lastFolder;
 
         private List<(string path, BundleInput input, string error)> read;
@@ -130,13 +130,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     GUI.FocusControl(null);
                 }
             }
-            if (string.IsNullOrWhiteSpace(bundleAuthor))
-            {
-                string account = CloudProjectSettings.userName;
-                bundleAuthor = string.IsNullOrWhiteSpace(account) || account == "anonymous" ? "" : account;
-            }
-            bundleAuthor = EditorGUILayout.TextField(new GUIContent("Author", "Your name, as whoever runs the server. " +
-                "Factorio needs one for every mod."), bundleAuthor);
+            author = EditorGUILayout.TextField(new GUIContent("Author", "The name shown with the bundle. Factorio " +
+                "needs one for every mod; any name will do."), author);
 
             List<BundleCharacter> chosen = Chosen();
             string problem = chosen.Count == 0 ? "Add at least one pack." : Problem();
@@ -239,9 +234,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 return "The version must look like 1.0.0.";
             }
-            if (string.IsNullOrWhiteSpace(bundleAuthor))
+            if (string.IsNullOrWhiteSpace(author))
             {
-                return "Enter an author (your name): Factorio needs one for every mod.";
+                return "Enter an author (any name): Factorio needs one for every mod.";
             }
             string previous = PreviousVersion();
             if (previous != null && PackBundler.CompareVersions(bundleVersion, previous) <= 0)
@@ -277,7 +272,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     Id = BundleId,
                     Title = bundleName.Trim(),
                     Version = bundleVersion,
-                    Author = string.IsNullOrWhiteSpace(bundleAuthor) ? null : bundleAuthor.Trim(),
+                    Author = string.IsNullOrWhiteSpace(author) ? null : author.Trim(),
                     GeneratorVersion = ExporterInfo.Version,
                 };
                 string partial = path + ".partial";

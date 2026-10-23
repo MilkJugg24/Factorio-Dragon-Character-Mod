@@ -117,7 +117,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
             content.Author = null;
             using (JsonDocument doc = JsonDocument.Parse(Write(content).Files[PackFiles.InfoJson]))
             {
-                Assert.That(doc.RootElement.GetProperty("author").GetString(), Is.EqualTo("unknown"));
+                Assert.That(doc.RootElement.GetProperty("author").GetString(), Is.EqualTo("Anonymous"));
             }
         }
 

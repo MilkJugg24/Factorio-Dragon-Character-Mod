@@ -32,7 +32,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private string packFor;
         [SerializeField] private string packTitle;
         [SerializeField] private string packId;
-        [SerializeField] private string packAuthor;
+        [SerializeField] private string author = PackContent.DefaultAuthor;
         [SerializeField] private string packVersion = PackContent.DefaultVersion;
         [SerializeField] private int pixelsPerTile = Conventions.DefaultPixelsPerTile;
         [SerializeField] private int sizePercent = 100;
@@ -255,13 +255,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             .Select(o => AnimationUtility.CalculateTransformPath(o.transform, source.transform))
             .ToList();
 
-        /// <summary>The Unity account's name, a likely author; empty when not signed in.</summary>
-        private static string DefaultAuthor()
-        {
-            string name = CloudProjectSettings.userName;
-            return string.IsNullOrWhiteSpace(name) || name == "anonymous" ? "" : name;
-        }
-
         private static readonly string[] LightingModes = { "Factorio style", "Custom" };
 
         /// <summary>How the avatar is lit (<see cref="StageLighting"/>); the preview follows every change.</summary>
@@ -332,12 +325,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             string id = EditorGUILayout.TextField(new GUIContent("Pack id", "Lowercase letters, digits and -. The mod is " +
                 "called avatar-pack-<id>; keep it the same when you export a new version."), string.IsNullOrEmpty(packId) ? derived : packId);
             packId = id == derived ? "" : id;
-            if (string.IsNullOrWhiteSpace(packAuthor))
-            {
-                packAuthor = DefaultAuthor();
-            }
-            packAuthor = EditorGUILayout.TextField(new GUIContent("Author", "Your name, shown with the pack. Factorio " +
-                "needs one for every mod."), packAuthor);
+            author = EditorGUILayout.TextField(new GUIContent("Author", "The name shown with the pack. Factorio needs " +
+                "one for every mod; any name will do."), author);
             packVersion = EditorGUILayout.TextField(new GUIContent("Version", "Raise it (1.0.1, 1.1.0, ...) when you export " +
                 "the pack again for a server: every player needs the same version."), packVersion);
             pixelsPerTile = EditorGUILayout.IntPopup("Resolution", pixelsPerTile, Resolutions, ResolutionValues);
@@ -412,7 +401,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         {
             Title = packTitle,
             Id = string.IsNullOrEmpty(packId) ? PackNaming.DeriveId(packTitle ?? "") : packId,
-            Author = packAuthor,
+            Author = author,
             Version = packVersion,
             PixelsPerTile = pixelsPerTile,
             Flight = flight,

@@ -36,8 +36,8 @@ a newer `.unitypackage` the same way.
 5. Under **Avatar pack**, fill in:
    - **Name**: shown in the game. The **Pack id** is made from it; keep it the same when you export a
      new version later.
-   - **Author**: your name (filled in from your Unity account if you're signed in). Factorio needs one
-     for every mod.
+   - **Author**: the name shown with the pack; it starts as "Anonymous", and any name will do. Factorio
+     needs one for every mod.
    - **Version**: start with 1.0.0.
    - **Resolution**: 64 pixels per tile is sharp, and right for almost everyone. 32 uses a quarter of
      the video memory, for very large servers or old computers.

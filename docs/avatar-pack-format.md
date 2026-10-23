@@ -58,7 +58,7 @@ avatar-pack-<id>_<version>/
 ```
 
 `author` is required: Factorio refuses to load a mod without one ("Key "author"
-not found in property tree"). The exporter writes "unknown" when none is given.
+not found in property tree"). The exporter writes "Anonymous" when none is given.
 
 The `info.json` title must be at most **100 bytes** of UTF-8 (about 33 Japanese
 characters): Factorio 2.0 stops with a crash, without an error message, when a

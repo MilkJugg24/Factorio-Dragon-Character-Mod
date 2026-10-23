@@ -28,7 +28,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             AppendJsonField(json, "name", PackNaming.ModName(content.Id));
             AppendJsonField(json, "version", content.Version);
             AppendJsonField(json, "title", PackNaming.InfoTitle(content.Title));
-            AppendJsonField(json, "author", AuthorOrUnknown(content.Author));
+            AppendJsonField(json, "author", AuthorOrDefault(content.Author));
             AppendJsonField(json, "factorio_version", PackFormat.FactorioVersion);
             AppendJsonField(json, "description", ModDescription(content));
             json.Append("  ").Append(JsonString("dependencies")).Append(": [")
@@ -110,9 +110,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         /// <summary>
         /// The author for info.json, which Factorio requires ("Key \"author\" not found" otherwise): the given one,
-        /// or "unknown".
+        /// or <see cref="PackContent.DefaultAuthor"/>.
         /// </summary>
-        internal static string AuthorOrUnknown(string author) => string.IsNullOrWhiteSpace(author) ? "unknown" : author.Trim();
+        internal static string AuthorOrDefault(string author) =>
+            string.IsNullOrWhiteSpace(author) ? PackContent.DefaultAuthor : author.Trim();
 
         internal static void AppendJsonField(StringBuilder json, string name, string value) =>
             json.Append("  ").Append(JsonString(name)).Append(": ").Append(JsonString(value)).Append(",\n");

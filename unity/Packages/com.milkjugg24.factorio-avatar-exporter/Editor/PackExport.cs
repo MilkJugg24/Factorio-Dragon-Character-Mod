@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.6.4";
+        public const string Version = "0.6.5";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -56,7 +56,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
             if (string.IsNullOrWhiteSpace(Author))
             {
-                return "Enter an author (your name): Factorio needs one for every mod.";
+                return "Enter an author (any name): Factorio needs one for every mod.";
             }
             return null;
         }

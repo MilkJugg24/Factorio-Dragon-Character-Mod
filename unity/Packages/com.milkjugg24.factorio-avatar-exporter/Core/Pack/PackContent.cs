@@ -21,6 +21,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>The pack's author; optional (null or empty leaves it out).</summary>
         public string Author { get; set; }
 
+        /// <summary>The author when none is given: a generic name (Factorio requires one in info.json).</summary>
+        public const string DefaultAuthor = "Anonymous";
+
         /// <summary>The mod version, "major.minor.patch".</summary>
         public string Version { get; set; } = DefaultVersion;
 
