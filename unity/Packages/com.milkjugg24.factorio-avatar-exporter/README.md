@@ -1,112 +1,153 @@
-# Factorio Avatar Exporter (Unity package)
+# Factorio Avatar Exporter
 
-Turns a humanoid avatar (a VRChat avatar, for example) into an avatar pack for the Avatar Characters
-Factorio mod, so you can play as your avatar (every player picks their own). It previews your avatar
-posed in every animation, and **Export All** writes the avatar pack: a Factorio mod zip. Work in
-progress (see "What it doesn't do yet"). It also still has the **rendering spike**, the first test of
-whether avatars render cleanly for sprites.
+Play Factorio 2.0 as your own avatar. This Unity tool turns a humanoid avatar (a VRChat avatar, for
+example) into an **avatar pack**: a small Factorio mod with your avatar idling, running, shooting, mining,
+flying with mech armor and lying as a corpse, in every direction, with its shadow. In the game, the
+**Avatar Characters** mod lets every player pick their own look.
+
+Downloads and source: https://github.com/MilkJugg24/Factorio-VRChat-Avatar-Exporter (see **Releases**).
+
+## Step by step
+
+### 1. What you need
+
+- Unity 2022.3 with a project that has your avatar in it (your VRChat avatar project works).
+- Factorio 2.0. Space Age is optional; it adds flying with mech armor.
+- From the newest release on the Releases page, both downloads:
+  - `FactorioAvatarExporter_<version>.unitypackage` (this tool);
+  - `avatar-characters_<version>.zip` (the Factorio mod every player needs).
+
+### 2. Install the exporter
+
+In Unity choose **Assets ▸ Import Package ▸ Custom Package...**, pick the `.unitypackage` and click
+**Import**. It lands in `Assets/FactorioAvatarExporter` (where this README is). To update it later, import
+a newer `.unitypackage` the same way.
+
+### 3. Export your avatar
+
+1. Choose **Tools ▸ Factorio Avatar Exporter ▸ Exporter**.
+2. Drag your avatar into the **Avatar** field: the object with the VRChat avatar descriptor, from the
+   Hierarchy, or its prefab. Press **Load avatar**. The exporter works on a copy in a hidden scene; your
+   scene and your avatar are not changed.
+3. Look it over in the preview: pick an animation, a direction and a frame, or press **Play**. The
+   yellow cross is where your character stands in the game.
+4. Under **Avatar pack**, fill in:
+   - **Name**: shown in the game. The **Pack id** is made from it; keep it the same when you export a
+     new version later.
+   - **Author** (optional) and **Version** (start with 1.0.0).
+   - **Resolution**: 64 pixels per tile is sharp. 32 uses a quarter of the video memory, which is worth it
+     on a server with many avatars.
+   - **Flight animations**: on, unless you never fly with mech armor.
+   - Tick **I made this avatar, or its author allows me to use it this way**, and if you like, add a note
+     (the avatar's license, or who gave permission). It goes into the pack's README.
+5. Press **Export All** and choose where to save the pack. Keep its file name,
+   `avatar-pack-<id>_<version>.zip`: Factorio expects a mod's zip to be named that way. Then the exporter
+   renders every animation, which takes a few minutes; you can cancel from the progress bar.
+
+Next to your project's `Assets` folder, `FactorioAvatarExport/<avatar>/preview/` also gets `report.txt`
+(what the exporter found and did, and how much video memory the pack needs) and a preview image of every
+animation.
+
+### 4. Install it in Factorio
+
+Put two files, **still zipped** (don't unzip them), into Factorio's `mods` folder:
+
+- your `avatar-pack-<id>_<version>.zip`;
+- `avatar-characters_<version>.zip` from the release.
+
+The `mods` folder is:
+
+- Windows: `%APPDATA%\Factorio\mods` (paste that into the address bar of a File Explorer window);
+- macOS: `~/Library/Application Support/factorio/mods`;
+- Linux: `~/.factorio/mods`.
+
+### 5. Play as your avatar
+
+Start Factorio (restart it if it was running). New mods are switched on by default; you can check under
+**Mods** in the main menu. In a game, open the avatar window with the button in the shortcut bar, the
+button in the top-left corner, **Ctrl + Shift + A**, or the chat command `/avatar`, and click your avatar.
+Your choice is saved with the game. If you're in a vehicle or crafting, your new look is applied as soon
+as you're done.
+
+## Playing together
+
+Factorio can't load new pictures while a game runs, so every pack is a mod, and **every player needs
+exactly the same mods as the server**, the same versions too. The game won't let anyone join otherwise.
+Collect the Avatar Characters zip and every player's pack into one folder, share it (a zip of it on
+Discord, for example), and have everyone put the files into their `mods` folder.
+
+Each pack uses video memory on every player's computer; `report.txt` says how much. With many avatars,
+export them at 32 pixels per tile.
+
+## Updating your avatar
+
+Raise the **Version** (1.0.1, 1.1.0, ...), keep the **Pack id**, press **Export All**, and replace the old
+zip in the `mods` folder with the new one (delete the old file). On a server, everyone needs the new
+version.
+
+## Removing a pack (or Avatar Characters) from a save
+
+When a pack is removed, Factorio deletes the characters and corpses that use it **together with the items
+they carry**. Before removing one, an admin types `/avatar-revert-all <id>` in the chat (`<id>` is the
+pack id), which turns everyone using it back into the engineer. Before removing Avatar Characters itself,
+type `/avatar-revert-all`. Everyone should be online, alive and out of vehicles; the command reports
+anything it couldn't change. Then save, and remove the mod.
+
+## Permission
+
+Many avatars may only be used in VRChat. Only make a pack of an avatar you made, or whose author allows
+it, and only share the pack with others if the author allows that too.
+
+## If something goes wrong
+
+- **"has no humanoid rig":** the avatar's model needs **Animation Type: Humanoid** in its import
+  settings (Rig tab), as VRChat avatars have.
+- **Part of the outfit floats away or stays behind:** outfits added with VRCFury's Armature Link or Modular
+  Avatar's Merge Armature, and objects held on by constraints, are joined to the body only in Play mode,
+  so the exporter holds them on itself:
+  - an object a parent constraint held follows the bone it was held to;
+  - a part's bones follow the body's bones of the same name, also with a prefix or suffix
+    (`Chest_Hoodie` follows `Chest`);
+  - anything else follows the nearest bone of the trunk (hips, spine, chest, head).
+
+  The report lists every part and what it follows; please report the line of a part that still floats.
+- **Pose check over 1 px** (shown under the preview): the posing doesn't fit your rig exactly; please
+  report it with `report.txt`.
+- **Pink or light-blue patches:** a shader is missing or wasn't compiled yet. Make sure the avatar looks
+  right in the Scene view first, and try again.
+- **The pack doesn't show up in Factorio:** check that both zips are in the `mods` folder, still zipped,
+  with their original names, and that both mods are enabled under **Mods** in the main menu.
+
+## What it doesn't do yet
+
+- Fingers don't close around the gun and pickaxe, which are simple stand-in shapes.
+- Wings, tails and ears stay in their rest pose in every animation.
+- The player colour doesn't tint the avatar.
+
+## More about the exporter window
+
+- **Report** (under the Avatar field): height, how big it is drawn, leg style (plantigrade or
+  digitigrade), optional bones it lacks, scripts removed from the copy, warnings about the rig, and which
+  loose parts it held on to the body.
+- **Pose check:** how far the avatar's bones ended up from where the exporter meant to put them, in
+  pixels.
+- **Export Selected Animation:** saves only the animation shown as one image (a row per direction, a
+  column per frame) in `FactorioAvatarExport/<avatar>/preview/`.
+
+## The rendering spike
+
+**Tools ▸ Factorio Avatar Exporter ▸ Spike: Render Selected Avatar** is the first test of whether avatars
+render cleanly for sprites: the selected avatar, as it stands, from Factorio's camera in 8 directions, into
+`FactorioAvatarSpike/<avatar>/` next to `Assets`. `strip-on-grey.png` shows all 8 directions;
+`report.txt` has sizes, colour space and the removed scripts. In the repository,
+`tests/run_unity_spike.ps1` runs the spike, the poses or a whole pack export without opening the Editor
+(see `tests/UNITY-SPIKE.md` there).
+
+## For developers
 
 - `Core/`: everything that decides what to draw and writes the pack. It has no Unity references and is
-  developed and tested outside Unity (see `unity/dotnet/README.md`).
-- `Editor/`: the Unity side.
-
-## The exporter window
-
-Open **Tools ▸ Factorio Avatar Exporter ▸ Exporter**, drag your avatar into the Avatar field (the object
-with the VRChat avatar descriptor, or its prefab) and press **Load avatar**. A copy is made in a hidden
-scene; your scene and avatar are not changed.
-
-- **Report:** height, how big it is drawn, leg style (plantigrade or digitigrade), optional bones it
-  lacks, scripts removed from the copy, warnings about the rig, and which loose parts it held on to the
-  body (see below).
-- **Preview:** choose an animation, a direction and a frame, or press **Play**. The yellow cross is where
-  the character stands in the game. Every animation of a pack is there:
-  - idle, run and mine, with or without a gun;
-  - flight (hover, fly, take-off);
-  - the corpse.
-- **Pose check:** how far the avatar's bones ended up from where the exporter meant to put them, in
-  pixels. Under 1 px means the posing works on your rig. If it says more, please report it.
-- **Export Selected Animation:** saves the animation shown as one image (a row per direction, a column
-  per frame) in `FactorioAvatarExport/<avatar>/preview/` next to `Assets`.
-
-### Exporting the avatar pack
-
-Below the preview, in **Avatar pack**:
-- **Name:** shown in the game's avatar window. **Pack id:** made from the name; the mod is called
-  `avatar-pack-<id>`. Keep it when you export a new version.
-- **Author** (optional) and **Version**. Raise the version (1.0.1, 1.1.0, ...) when you export again for a
-  server: every player needs the same version.
-- **Resolution:** 64 pixels per tile is sharp; 32 uses a quarter of the video memory, worth it on a
-  server with many avatars.
-- **Flight animations:** hovering and flying with Space Age's mech armor.
-- **Save the pack in:** Factorio's mods folder when the exporter finds it, so the pack is ready the
-  next time Factorio starts.
-- **Permission:** tick that you made the avatar or its author allows you to use it this way. The note
-  below it (the avatar's license, or who gave permission) goes into the pack's `README.txt`.
-
-**Export All** renders every animation with its ground shadow, which takes a few minutes. It then
-writes `avatar-pack-<id>_<version>.zip`. It also writes `report.txt` and a preview image per
-animation to `FactorioAvatarExport/<avatar>/preview/`; the report includes how much video memory the
-pack needs in the game. To play, put the zip, still zipped, in Factorio's `mods` folder next to the
-Avatar Characters mod (both are on the Releases page), start Factorio and choose your avatar in the
-avatar window.
-
-Outfits and accessories with their own armature (joined to the body by VRCFury's Armature Link or Modular
-Avatar's Merge Armature, which only do it in Play mode), and objects held on by constraints, would be left
-behind when the copy's scripts are removed. The exporter holds them on itself:
-- an object a parent constraint held follows the bone the constraint held it to;
-- a part's bones follow the body's bones of the same name, also when the part adds a prefix or suffix to
-  them (`Chest_Hoodie` follows `Chest`);
-- a part with neither follows, as a whole, the nearest bone of the trunk (hips, spine, chest, head).
-
-The report lists each part and what it follows. If something still floats away, please report its
-line in the report.
-
-What it doesn't do yet:
-- fingers don't close around the gun or pickaxe (which are simple stand-in shapes);
-- wings, tails and ears stay in their rest pose in every animation;
-- no colour tinting: the player colour doesn't change the avatar.
-
-## Trying the rendering spike
-
-You need Unity 2022.3 (the VRChat version) and a project with an avatar in it.
-
-1. Download `FactorioAvatarExporter_<version>.unitypackage` from the newest release on the repository's
-   Releases page (the mod zip next to it is for Factorio). In Unity choose **Assets ▸ Import Package ▸ Custom Package...**, pick the
-   file and click **Import**. It is installed in `Assets/FactorioAvatarExporter`; importing a newer version
-   updates it in place.
-
-   (Developers can instead use **Window ▸ Package Manager ▸ + ▸ Add package from disk...** on this folder's
-   `package.json`. Use one way or the other, not both, or Unity reports the assemblies twice.)
-2. Select your avatar in the Hierarchy (the object with the VRChat avatar descriptor), or its prefab.
-3. Choose **Tools ▸ Factorio Avatar Exporter ▸ Spike: Render Selected Avatar**.
-
-Your open scene is not changed: the avatar is copied into a hidden preview scene, its scripts (VRChat
-components, PhysBones and similar) are removed from the copy, and the copy is rendered from Factorio's
-sprite camera in 8 directions, on black and on white. The renders are turned into transparent sprites.
-The avatar stays in whatever pose it is in (usually a T-pose or A-pose); poses come later.
-
-The output goes to `FactorioAvatarSpike/<avatar name>/`, next to your project's `Assets` folder:
-
-| File | What it shows |
-| --- | --- |
-| `strip-on-grey.png` | All 8 directions side by side on grey. The main thing to look at. |
-| `strip.png`, `direction-1.png` ... `direction-8.png` | The transparent sprites (north first, clockwise; 5 is south, facing you). |
-| `south-on-black.png`, `south-on-white.png` | The raw renders the sprites were made from. |
-| `report.txt` | Sizes, timing, colour space and which scripts were removed. |
-
-What to look for, and please report:
-
-- Does the avatar look like it does in the Scene view (colours, outlines, shading)?
-- Are there dark or light fringes around the edges, or a fog or halo around the avatar?
-- Is anything missing (hair, accessories, outfit parts) or cut off at the edges?
-- Did Unity's Console show errors?
-
-The most useful set is one avatar using Poiyomi, one using lilToon, and any plain humanoid. Sending back
-`strip-on-grey.png` and `report.txt` for each (and screenshots of any Console errors) is enough.
-
-Outfits added with Modular Avatar or VRCFury are only merged into the avatar in Play mode, so they may be
-missing from the spike's renders. (The exporter window holds them on; the spike doesn't.)
-
-The spike can also run without opening the Editor, for testing several avatars in one go:
-`tests/run_unity_spike.ps1` in the repository does that (see `tests/UNITY-SPIKE.md` there).
+  developed and tested outside Unity (`unity/dotnet/` in the repository).
+- `Editor/`: the Unity side: the window, the stage the avatar is posed on, the camera and the renderer.
+- Instead of the `.unitypackage`, **Window ▸ Package Manager ▸ + ▸ Add package from disk...** on this
+  folder's `package.json` works too. Use one way or the other, not both, or Unity reports the assemblies
+  twice.

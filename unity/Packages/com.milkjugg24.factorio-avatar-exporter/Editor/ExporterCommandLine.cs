@@ -90,7 +90,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     Id = PackNaming.DeriveId(source.name),
                     Confirmed = false,
                     PermissionNote = "Exported by tests/run_unity_spike.ps1 to test the exporter; not for sharing.",
-                    OutputFolder = folder,
+                    ZipPath = Path.Combine(folder, PackNaming.ZipFileName(PackNaming.DeriveId(source.name), PackContent.DefaultVersion)),
                     PreviewFolder = folder,
                 };
                 return preview.ExportPack(options, null, CancellationToken.None).Report;

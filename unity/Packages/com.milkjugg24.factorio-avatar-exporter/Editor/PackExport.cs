@@ -13,7 +13,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>The version of this package, written into every pack (kept equal to package.json by a test).</summary>
     internal static class ExporterInfo
     {
-        public const string Version = "0.3.0";
+        public const string Version = "0.3.1";
     }
 
     /// <summary>What the user chose for a pack.</summary>
@@ -32,8 +32,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// <summary>The user's own note on the avatar's license or permission (optional when <see cref="Confirmed"/>).</summary>
         public string PermissionNote;
 
-        /// <summary>Where the pack's zip goes (usually Factorio's mods folder).</summary>
-        public string OutputFolder;
+        /// <summary>The file the pack's zip is saved as (the user chooses it; see <see cref="PackNaming.ZipFileName"/>).</summary>
+        public string ZipPath;
 
         /// <summary>Where report.txt and preview sheets go.</summary>
         public string PreviewFolder;
@@ -54,10 +54,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 return "The version must look like 1.0.0.";
             }
-            if (string.IsNullOrWhiteSpace(OutputFolder))
-            {
-                return "Choose where the pack goes.";
-            }
             if (!Confirmed && string.IsNullOrWhiteSpace(PermissionNote))
             {
                 return "Tick the permission box to export.";
@@ -76,26 +72,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
     /// <summary>Helpers for writing avatar packs from the Editor.</summary>
     internal static class PackExport
     {
-        /// <summary>Factorio's mods folder on this computer, or null when there is none.</summary>
-        public static string FactorioModsFolder()
-        {
-            string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string folder;
-            switch (Application.platform)
-            {
-                case RuntimePlatform.WindowsEditor:
-                    folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Factorio", "mods");
-                    break;
-                case RuntimePlatform.OSXEditor:
-                    folder = Path.Combine(home, "Library", "Application Support", "factorio", "mods");
-                    break;
-                default:
-                    folder = Path.Combine(home, ".factorio", "mods");
-                    break;
-            }
-            return Directory.Exists(folder) ? folder : null;
-        }
-
         /// <summary>
         /// The permission statement written to the pack's README.txt: the user's confirmation (when given) and
         /// their note.
@@ -113,14 +89,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
         /// <summary>
         /// Renders every animation of <paramref name="poses"/> with <paramref name="renderer"/> and writes the
-        /// pack's zip to <see cref="PackOptions.OutputFolder"/>, then report.txt and a preview sheet per
+        /// pack's zip to <see cref="PackOptions.ZipPath"/>, then report.txt and a preview sheet per
         /// animation to <see cref="PackOptions.PreviewFolder"/>. Throws <see cref="OperationCanceledException"/>
         /// when cancelled (nothing is written then).
         /// </summary>
         public static PackExportResult Write(PackOptions options, string sourceAvatar, IPoseSource poses,
             StageRenderer renderer, IEnumerable<string> notes, Action<ExportProgress> progress, CancellationToken cancel)
         {
-            string problem = options.Problem();
+            string problem = options.Problem() ?? (string.IsNullOrWhiteSpace(options.ZipPath) ? "No file to save the pack as." : null);
             if (problem != null)
             {
                 throw new ArgumentException(problem);
@@ -164,8 +140,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             };
             exporter.Fill(content, art);
 
-            Directory.CreateDirectory(options.OutputFolder);
-            string zip = Path.Combine(options.OutputFolder, PackNaming.ZipFileName(content.Id, content.Version));
+            string zip = Path.GetFullPath(options.ZipPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(zip));
             string partial = zip + ".partial";
             using (FileStream stream = File.Create(partial))
             {

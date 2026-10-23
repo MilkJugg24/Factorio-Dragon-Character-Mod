@@ -33,7 +33,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         [SerializeField] private string packVersion = PackContent.DefaultVersion;
         [SerializeField] private int pixelsPerTile = Conventions.DefaultPixelsPerTile;
         [SerializeField] private bool flight = true;
-        [SerializeField] private string outputFolder;
+        [SerializeField] private string saveFolder;
         [SerializeField] private bool permission;
         [SerializeField] private string permissionNote;
         private string exported;
@@ -205,31 +205,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             flight = EditorGUILayout.Toggle(new GUIContent("Flight animations", "Hovering and flying with Space Age's mech armor. " +
                 "Without them the avatar walks in the air."), flight);
 
-            if (string.IsNullOrEmpty(outputFolder))
-            {
-                outputFolder = PackExport.FactorioModsFolder() ??
-                    Path.Combine(Path.GetDirectoryName(Application.dataPath), "FactorioAvatarExport");
-            }
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                outputFolder = EditorGUILayout.TextField("Save the pack in", outputFolder);
-                if (GUILayout.Button("Choose...", GUILayout.Width(80)))
-                {
-                    string chosen = EditorUtility.OpenFolderPanel("Where the avatar pack goes", outputFolder, "");
-                    if (!string.IsNullOrEmpty(chosen))
-                    {
-                        outputFolder = chosen;
-                        GUI.FocusControl(null);
-                    }
-                }
-            }
-            string mods = PackExport.FactorioModsFolder();
-            bool intoMods = mods != null && SameFolder(outputFolder, mods);
-            EditorGUILayout.LabelField(intoMods
-                ? "This is Factorio's mods folder: the pack is ready the next time Factorio starts."
-                : "Put the zip, still zipped, in Factorio's mods folder" + (mods != null ? " (" + mods + ")." : "."),
-                EditorStyles.wordWrappedMiniLabel);
-
             permission = EditorGUILayout.ToggleLeft("I made this avatar, or its author allows me to use it this way", permission);
             EditorGUILayout.LabelField("Note for the pack's README (optional): the avatar's license, or who gave permission",
                 EditorStyles.wordWrappedMiniLabel);
@@ -241,10 +216,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             string problem = permission ? options.Problem() : "Tick the permission box to export.";
             using (new EditorGUI.DisabledScope(problem != null))
             {
-                if (GUILayout.Button(new GUIContent("Export All", "Renders every animation with its shadow and writes the " +
-                    "avatar pack, a Factorio mod zip. Takes a few minutes."), GUILayout.Height(28)))
+                if (GUILayout.Button(new GUIContent("Export All", "Asks where to save the avatar pack (a Factorio mod zip), " +
+                    "then renders every animation with its shadow. Takes a few minutes."), GUILayout.Height(28)))
                 {
-                    ExportAll(options);
+                    if (ChooseZip(options))
+                    {
+                        ExportAll(options);
+                    }
                 }
             }
             if (problem != null)
@@ -257,17 +235,34 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
         }
 
-        private static bool SameFolder(string a, string b)
+        /// <summary>
+        /// Asks where to save the pack, under the file name Factorio expects for a mod
+        /// (avatar-pack-&lt;id&gt;_&lt;version&gt;.zip). False when cancelled.
+        /// </summary>
+        private bool ChooseZip(PackOptions options)
         {
-            try
+            string name = PackNaming.ZipFileName(options.Id, options.Version);
+            string folder = !string.IsNullOrEmpty(saveFolder) && Directory.Exists(saveFolder)
+                ? saveFolder
+                : Path.GetDirectoryName(Application.dataPath);
+            string path = EditorUtility.SaveFilePanel("Save the avatar pack", folder, name, "zip");
+            if (string.IsNullOrEmpty(path))
             {
-                return Path.GetFullPath(a).TrimEnd('/', '\\').Equals(Path.GetFullPath(b).TrimEnd('/', '\\'),
-                    StringComparison.OrdinalIgnoreCase);
+                return false;
             }
-            catch (Exception)
+            if (Path.GetFileName(path) != name)
             {
-                return false; // a path being typed
+                if (!EditorUtility.DisplayDialog("Keep the pack's file name",
+                    "Factorio expects a mod's zip to be named after the mod and its version, so this pack must be called " +
+                    name + ". Save it under that name in the folder you chose?", "Save as " + name, "Cancel"))
+                {
+                    return false;
+                }
+                path = Path.Combine(Path.GetDirectoryName(path), name);
             }
+            saveFolder = Path.GetDirectoryName(path);
+            options.ZipPath = path;
+            return true;
         }
 
         private PackOptions Options() => new PackOptions
@@ -280,7 +275,6 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             Flight = flight,
             Confirmed = permission,
             PermissionNote = permissionNote,
-            OutputFolder = outputFolder,
             PreviewFolder = PreviewFolder,
         };
 
@@ -299,9 +293,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                         cancel.Cancel();
                     }
                 }, cancel.Token);
-                exported = $"Wrote {result.ZipPath}. Start Factorio (restart it if it is running) with the Avatar Characters " +
-                    $"mod, and choose \"{options.Title.Trim()}\" in the avatar window (shortcut bar, or Ctrl + Shift + A). " +
-                    $"A report and preview sheets are in {options.PreviewFolder}.";
+                exported = $"Saved {result.ZipPath}. Put it, still zipped, in Factorio's mods folder together with the " +
+                    "Avatar Characters mod, start Factorio and choose " + $"\"{options.Title.Trim()}\" in the avatar window " +
+                    "(shortcut bar, or Ctrl + Shift + A). README.md in Assets/FactorioAvatarExporter has every step. " +
+                    $"A report and preview images are in {options.PreviewFolder}.";
                 Debug.Log("Factorio Avatar Exporter:\n" + result.Report);
                 EditorUtility.RevealInFinder(result.ZipPath);
             }
