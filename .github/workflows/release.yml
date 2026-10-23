@@ -86,7 +86,8 @@ jobs:
           **Installing the mod (Avatar Characters $MOD):** Factorio's \`mods\` folder is
           \`%APPDATA%\\Factorio\\mods\` on Windows, \`~/.factorio/mods\` on Linux and
           \`~/Library/Application Support/factorio/mods\` on macOS. Factorio 2.1; Space Age is optional. In
-          multiplayer, everyone needs the same mods and packs as the server. Before removing a pack or the mod
+          multiplayer, everyone needs the same mods and packs as the server, from whoever runs it: the game's
+          **Synchronize** button can't fetch them, since they aren't on the mod portal. Before removing a pack or the mod
           from a save, an admin runs \`/avatar-revert-all\` (see the README).
 
           **Installing the exporter:** in Unity 2022.3 (your VRChat project) choose **Assets ▸ Import Package ▸

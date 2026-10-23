@@ -168,6 +168,10 @@ it, and only share the pack with others if the author allows that too.
   right in the Scene view first, and try again.
 - **The pack doesn't show up in Factorio:** check that both zips are in the `mods` folder, still zipped,
   with their original names, and that both mods are enabled under **Mods** in the main menu.
+- **"Your active mods don't match the server's" when joining:** your bundle (or Avatar Characters) isn't
+  the server's version. **Synchronize** can't help: it only downloads mods from the official mod
+  portal, and these aren't there. Get the current zips from whoever runs the server, replace the old
+  ones in the `mods` folder, and join again.
 
 ## What it doesn't do yet
 
