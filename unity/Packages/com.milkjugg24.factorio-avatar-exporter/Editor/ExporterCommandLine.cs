@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
-using MilkJugg24.FactorioAvatarExporter.Core;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Debug = UnityEngine.Debug;
-using AnimationInfo = MilkJugg24.FactorioAvatarExporter.Core.AnimationInfo;
 
 namespace MilkJugg24.FactorioAvatarExporter.Editor
 {
@@ -64,28 +61,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
 
         private static string PreviewAvatar(GameObject source, string folder)
         {
-            var clock = Stopwatch.StartNew();
-            var report = new StringBuilder();
-            Directory.CreateDirectory(folder);
             using (PosePreview preview = PosePreview.Load(source))
             {
-                foreach (string note in preview.Notes)
-                {
-                    report.AppendLine(note);
-                }
-                foreach (AnimationInfo info in AnimationSpec.All)
-                {
-                    Image8 sheet = preview.Sheet(info.Name, out double worst);
-                    File.WriteAllBytes(Path.Combine(folder, info.Name + ".png"), PngWriter.Encode(sheet));
-                    report.AppendLine($"{info.Name}: {info.DirectionCount} directions x {info.FrameCount} frames of " +
-                        $"{sheet.Width / info.FrameCount}x{sheet.Height / info.DirectionCount} px; bones within {worst:0.0} px of Core's joints");
-                }
-                report.AppendLine($"retaken while shaders compiled: {preview.Retakes}; placeholder pixels left: " +
-                    $"{preview.PlaceholderLeft}; canvas grown to fit: {preview.Growths} times");
+                return preview.SaveAllSheets(folder);
             }
-            report.AppendLine($"done in {clock.Elapsed.TotalSeconds:0.0} s");
-            File.WriteAllText(Path.Combine(folder, "report.txt"), report.ToString());
-            return report.ToString();
         }
 
         /// <summary>A prefab, a named top-level object of a scene, or every active humanoid at a scene's top level.</summary>

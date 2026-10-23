@@ -16,7 +16,8 @@ with the VRChat avatar descriptor, or its prefab) and press **Load avatar**. A c
 scene; your scene and avatar are not changed.
 
 - **Report:** height, how big it is drawn, leg style (plantigrade or digitigrade), optional bones it
-  lacks, scripts removed from the copy, and warnings about the rig.
+  lacks, scripts removed from the copy, warnings about the rig, and which loose parts it held on to the
+  body (see below).
 - **Preview:** choose an animation, a direction and a frame, or press **Play**. The yellow cross is where
   the character stands in the game. Every animation of a pack is there:
   - idle, run and mine, with or without a gun;
@@ -24,8 +25,21 @@ scene; your scene and avatar are not changed.
   - the corpse.
 - **Pose check:** how far the avatar's bones ended up from where the exporter meant to put them, in
   pixels. Under 1 px means the posing works on your rig. If it says more, please report it.
-- **Save every frame of this animation as an image:** a sheet with a row per direction, in
-  `FactorioAvatarExport/<avatar>/preview/` next to `Assets`. Handy for sending.
+- **Save every animation as images:** a sheet per animation (a row per direction, a column per frame)
+  and `report.txt` with the report and each animation's pose check, in
+  `FactorioAvatarExport/<avatar>/preview/` next to `Assets`. Handy for sending. **Save only this
+  animation** does the one shown.
+
+Outfits and accessories with their own armature (joined to the body by VRCFury's Armature Link or Modular
+Avatar's Merge Armature, which only do it in Play mode), and objects held on by constraints, would be left
+behind when the copy's scripts are removed. The exporter holds them on itself:
+- an object a parent constraint held follows the bone the constraint held it to;
+- a part's bones follow the body's bones of the same name, also when the part adds a prefix or suffix to
+  them (`Chest_Hoodie` follows `Chest`);
+- a part with neither follows, as a whole, the nearest bone of the trunk (hips, spine, chest, head).
+
+The report lists each part and what it follows. If something still floats away, please report its
+line in the report.
 
 What it doesn't do yet:
 - fingers don't close around the gun or pickaxe, and the gun and pickaxe themselves aren't drawn;
@@ -72,7 +86,7 @@ The most useful set is one avatar using Poiyomi, one using lilToon, and any plai
 `strip-on-grey.png` and `report.txt` for each (and screenshots of any Console errors) is enough.
 
 Outfits added with Modular Avatar or VRCFury are only merged into the avatar in Play mode, so they may be
-missing from the spike's renders. That is expected for now.
+missing from the spike's renders. (The exporter window holds them on; the spike doesn't.)
 
 The spike can also run without opening the Editor, for testing several avatars in one go:
 `tests/run_unity_spike.ps1` in the repository does that (see `tests/UNITY-SPIKE.md` there).

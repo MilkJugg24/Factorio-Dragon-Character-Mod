@@ -152,7 +152,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
 
             EditorGUILayout.Space();
-            if (GUILayout.Button("Save every frame of this animation as an image"))
+            if (GUILayout.Button("Save every animation as images"))
+            {
+                SaveAllSheets();
+            }
+            if (GUILayout.Button("Save only this animation"))
             {
                 SaveSheet(info.Name);
             }
@@ -190,6 +194,40 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
         }
 
+        private string PreviewFolder => Path.Combine(Path.GetDirectoryName(Application.dataPath), "FactorioAvatarExport",
+            preview.AvatarName, "preview");
+
+        private void SaveAllSheets()
+        {
+            playing = false;
+            try
+            {
+                string folder = PreviewFolder;
+                preview.SaveAllSheets(folder, (animation, p) =>
+                {
+                    if (EditorUtility.DisplayCancelableProgressBar("Factorio Avatar Exporter", "Rendering " + animation, p))
+                    {
+                        throw new OperationCanceledException();
+                    }
+                });
+                Debug.Log($"Factorio Avatar Exporter: wrote every animation (a sheet each, a row per direction) and report.txt to {folder}");
+                EditorUtility.RevealInFinder(Path.Combine(folder, "report.txt"));
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.Log("Factorio Avatar Exporter: saving cancelled; the animations done so far are saved");
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+                error = e.Message;
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
+
         private void SaveSheet(string animation)
         {
             playing = false;
@@ -197,8 +235,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 Image8 sheet = preview.Sheet(animation, out double worst,
                     p => EditorUtility.DisplayProgressBar("Factorio Avatar Exporter", "Rendering " + animation, p));
-                string folder = Path.Combine(Path.GetDirectoryName(Application.dataPath), "FactorioAvatarExport",
-                    preview.AvatarName, "preview");
+                string folder = PreviewFolder;
                 Directory.CreateDirectory(folder);
                 string path = Path.Combine(folder, animation + ".png");
                 File.WriteAllBytes(path, PngWriter.Encode(sheet));

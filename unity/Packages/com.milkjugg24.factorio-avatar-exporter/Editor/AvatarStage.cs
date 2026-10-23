@@ -5,6 +5,7 @@ using MilkJugg24.FactorioAvatarExporter.Core;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Animations;
 using UnityEngine.SceneManagement;
 using HumanBone = MilkJugg24.FactorioAvatarExporter.Core.HumanBone;
 using Object = UnityEngine.Object;
@@ -29,6 +30,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         private readonly Dictionary<HumanBone, Quaternion> restRotations = new Dictionary<HumanBone, Quaternion>();
         private readonly List<(Transform t, Vector3 position, Quaternion rotation, Vector3 scale)> rest =
             new List<(Transform, Vector3, Quaternion, Vector3)>();
+
+        /// <summary>Loose parts held to a body bone: the part's rest position and rotation in the bone's frame.</summary>
+        private readonly List<(Transform part, Transform bone, Vector3 position, Quaternion rotation)> links =
+            new List<(Transform, Transform, Vector3, Quaternion)>();
 
         private AvatarStage(Scene scene)
         {
@@ -89,8 +94,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     bones.Add(bone, t);
                 }
             }
+            Dictionary<Transform, Transform> constrained = ParentConstraintSources();
             Notes.Add(AvatarCleaner.Strip(Avatar));
+            // the offsets are taken as the avatar was saved, where its outfits fit the body
+            LinkLooseParts(constrained);
             ApplyRestPose(animator);
+            FollowLinks();
 
             // measure the rest pose: bone positions and the meshes' top and bottom, meters, in pivot space
             List<Vector3> points = MeshPoints();
@@ -161,6 +170,229 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 : $"rest pose: the rig's configured pose for {applied} of {bones.Count} bones, the rest as placed");
         }
 
+        /// <summary>
+        /// The objects parent constraints hold on to a bone of the body, and that bone: VRChat's constraints (read
+        /// before the stage removes them, as they are scripts) and Unity's (switched off, as the stage moves
+        /// those objects itself now).
+        /// </summary>
+        private Dictionary<Transform, Transform> ParentConstraintSources()
+        {
+            var sources = new Dictionary<Transform, Transform>();
+            foreach (MonoBehaviour script in Avatar.GetComponentsInChildren<MonoBehaviour>(true))
+            {
+                if (script == null || !script.GetType().Name.EndsWith("ParentConstraint", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+                Transform target = script.transform, source = null;
+                using (var serialized = new SerializedObject(script))
+                {
+                    SerializedProperty p = serialized.GetIterator();
+                    while (p.Next(true))
+                    {
+                        if (p.propertyType != SerializedPropertyType.ObjectReference || p.name.StartsWith("m_", StringComparison.Ordinal))
+                        {
+                            continue;
+                        }
+                        Transform t = p.objectReferenceValue is GameObject g ? g.transform : p.objectReferenceValue as Transform;
+                        if (t != null && p.name == "TargetTransform")
+                        {
+                            target = t;
+                        }
+                        else if (t != null && source == null && InBody(t))
+                        {
+                            source = t;
+                        }
+                    }
+                }
+                if (source != null && !InBody(target))
+                {
+                    sources[target] = source;
+                }
+            }
+            foreach (ParentConstraint constraint in Avatar.GetComponentsInChildren<ParentConstraint>(true))
+            {
+                for (int i = 0; i < constraint.sourceCount; i++)
+                {
+                    Transform source = constraint.GetSource(i).sourceTransform;
+                    if (source != null && InBody(source) && !InBody(constraint.transform))
+                    {
+                        sources[constraint.transform] = source;
+                        constraint.constraintActive = false;
+                        break;
+                    }
+                }
+            }
+            return sources;
+        }
+
+        /// <summary>Whether <paramref name="t"/> is the hips or below them: the body the poses move.</summary>
+        private bool InBody(Transform t)
+        {
+            for (Transform p = t; p != null; p = p.parent)
+            {
+                if (p == bones[HumanBone.Hips])
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Holds on to the body the parts that are only joined to it by scripts the stage removed: outfits and
+        /// accessories with their own armature, which VRCFury's Armature Link or Modular Avatar's Merge Armature
+        /// merge into the body only in Play mode, and objects that constraints keep on a bone. An object a parent
+        /// constraint held follows that bone; a part's bones follow the body's bones of the same name (allowing a
+        /// prefix or suffix the part adds to all of them, like "Chest_Hoodie"); a part with neither follows, as a
+        /// whole, the bone of the trunk (hips to head) nearest to it. Each keeps its offset as it is now.
+        /// </summary>
+        private void LinkLooseParts(Dictionary<Transform, Transform> constrained)
+        {
+            Transform hips = bones[HumanBone.Hips];
+            var spine = new HashSet<Transform>(); // the hips and the transforms above them
+            for (Transform t = hips; t != null && t != Avatar.transform; t = t.parent)
+            {
+                spine.Add(t);
+            }
+            var body = new Dictionary<string, Transform>(StringComparer.OrdinalIgnoreCase);
+            foreach (Transform t in hips.GetComponentsInChildren<Transform>(true))
+            {
+                if (!body.ContainsKey(t.name))
+                {
+                    body.Add(t.name, t);
+                }
+            }
+
+            // what the meshes outside the body hang on: their bones, or the mesh object itself
+            var loose = new List<Transform>();
+            foreach (Renderer renderer in Avatar.GetComponentsInChildren<Renderer>(true))
+            {
+                Transform[] meshBones = renderer is SkinnedMeshRenderer skinned ? skinned.bones : null;
+                if (meshBones != null && meshBones.Length > 0)
+                {
+                    loose.AddRange(meshBones.Where(b => b != null && !InBody(b) && !spine.Contains(b)));
+                }
+                else if (!InBody(renderer.transform))
+                {
+                    loose.Add(renderer.transform);
+                }
+            }
+            // grouped by part: the top-most transform holding them that is neither the body nor above it
+            var parts = new Dictionary<Transform, List<Transform>>();
+            foreach (Transform t in loose.Distinct())
+            {
+                Transform part = t;
+                while (part.parent != null && part.parent != Avatar.transform && !spine.Contains(part.parent))
+                {
+                    part = part.parent;
+                }
+                if (!parts.TryGetValue(part, out List<Transform> held))
+                {
+                    parts.Add(part, held = new List<Transform>());
+                }
+                held.Add(t);
+            }
+
+            string[] humanoidNames = HumanBones.ParentFirst.Where(bones.ContainsKey).Select(b => bones[b].name).ToArray();
+            HumanBone[] trunk = new[] { HumanBone.Hips, HumanBone.Spine, HumanBone.Chest, HumanBone.UpperChest, HumanBone.Head }
+                .Where(bones.ContainsKey).ToArray();
+            foreach (KeyValuePair<Transform, List<Transform>> part in parts)
+            {
+                (string prefix, string suffix) = Affixes(part.Key, humanoidNames);
+                var held = new List<string>();
+                int byName = 0;
+                foreach (Transform t in part.Key.GetComponentsInChildren<Transform>(true))
+                {
+                    if (constrained.TryGetValue(t, out Transform source))
+                    {
+                        Link(t, source);
+                        held.Add($"{t.name} to {source.name}");
+                    }
+                    else if (body.TryGetValue(t.name, out Transform bone) || body.TryGetValue(StripAffixes(t.name, prefix, suffix), out bone))
+                    {
+                        Link(t, bone);
+                        byName++;
+                    }
+                }
+                if (held.Count > 0)
+                {
+                    Notes.Add($"{part.Key.name}: held by its constraints ({string.Join(", ", held)})");
+                }
+                if (byName > 0)
+                {
+                    Notes.Add($"{part.Key.name}: {byName} bones follow the body's bones of the same name");
+                }
+                if (held.Count > 0 || byName > 0)
+                {
+                    continue;
+                }
+                Vector3 centre = Vector3.zero;
+                foreach (Transform t in part.Value)
+                {
+                    centre += t.position;
+                }
+                centre /= part.Value.Count;
+                HumanBone nearest = trunk.OrderBy(b => (bones[b].position - centre).sqrMagnitude).First();
+                Link(part.Key, bones[nearest]);
+                Notes.Add($"{part.Key.name}: follows the {nearest} bone, the nearest (no constraint or bone names join it to the body)");
+            }
+            // parents before children, so a child's place is set after its parent moved
+            links.Sort((a, b) => Depth(a.part).CompareTo(Depth(b.part)));
+        }
+
+        private void Link(Transform part, Transform bone)
+        {
+            links.Add((part, bone, bone.InverseTransformPoint(part.position), Quaternion.Inverse(bone.rotation) * part.rotation));
+        }
+
+        /// <summary>Puts the linked parts back on their bones, at the offsets they were linked with.</summary>
+        private void FollowLinks()
+        {
+            foreach ((Transform part, Transform bone, Vector3 position, Quaternion rotation) in links)
+            {
+                part.SetPositionAndRotation(bone.TransformPoint(position), bone.rotation * rotation);
+            }
+        }
+
+        /// <summary>The prefix and suffix a part adds to the names of its copy of the body's bones ("" when none).</summary>
+        private static (string prefix, string suffix) Affixes(Transform part, string[] humanoidNames)
+        {
+            foreach (string name in humanoidNames)
+            {
+                foreach (Transform t in part.GetComponentsInChildren<Transform>(true))
+                {
+                    int i = t.name.IndexOf(name, StringComparison.OrdinalIgnoreCase);
+                    if (i >= 0)
+                    {
+                        return (t.name.Substring(0, i), t.name.Substring(i + name.Length));
+                    }
+                }
+            }
+            return ("", "");
+        }
+
+        private static string StripAffixes(string name, string prefix, string suffix)
+        {
+            if (name.Length > prefix.Length + suffix.Length &&
+                name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) &&
+                name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            {
+                return name.Substring(prefix.Length, name.Length - prefix.Length - suffix.Length);
+            }
+            return name;
+        }
+
+        private static int Depth(Transform t)
+        {
+            int depth = 0;
+            for (Transform p = t.parent; p != null; p = p.parent)
+            {
+                depth++;
+            }
+            return depth;
+        }
+
         /// <summary>Faces the model <paramref name="orientation"/> (a fraction of a clockwise turn from north).</summary>
         public void SetOrientation(double orientation)
         {
@@ -184,8 +416,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// <summary>
         /// Poses the avatar as PoseResult documents: from the rest pose, parent first, every listed bone gets
         /// the rotation <c>delta * rest</c> (in the pivot's space), then the hips move to the pose's hips
-        /// position, then the whole avatar drops onto the ground if the pose asks for it. Fingers and props are
-        /// not done yet.
+        /// position, then the parts held on the body follow their bones, then the whole avatar drops onto the
+        /// ground if the pose asks for it. Fingers and props are not done yet.
         /// </summary>
         public void ApplyPose(PoseResult pose)
         {
@@ -198,6 +430,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 }
             }
             bones[HumanBone.Hips].position = Pivot.TransformPoint(ToUnity(pose.HipsPosition, MetersPerTile));
+            FollowLinks();
             if (pose.GroundToLowestPoint)
             {
                 float lowest = MeshPoints().Min(p => p.y);

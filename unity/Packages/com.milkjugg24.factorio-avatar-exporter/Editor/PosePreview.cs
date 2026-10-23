@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text;
 using MilkJugg24.FactorioAvatarExporter.Core;
 using UnityEngine;
 using AnimationInfo = MilkJugg24.FactorioAvatarExporter.Core.AnimationInfo;
@@ -173,6 +176,37 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 }
             }
             return sheet;
+        }
+
+        /// <summary>
+        /// Writes the <see cref="Sheet"/> of every animation to <paramref name="folder"/> as
+        /// &lt;animation&gt;.png, and report.txt: the notes, and each animation's size and pose check. Returns
+        /// the report. <paramref name="progress"/> gets the animation being drawn and the part of all done.
+        /// </summary>
+        public string SaveAllSheets(string folder, Action<string, float> progress = null)
+        {
+            var clock = Stopwatch.StartNew();
+            var report = new StringBuilder();
+            Directory.CreateDirectory(folder);
+            foreach (string note in Notes)
+            {
+                report.AppendLine(note);
+            }
+            IReadOnlyList<AnimationInfo> all = AnimationSpec.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                AnimationInfo info = all[i];
+                int index = i;
+                Image8 sheet = Sheet(info.Name, out double worst, p => progress?.Invoke(info.Name, (index + p) / all.Count));
+                File.WriteAllBytes(Path.Combine(folder, info.Name + ".png"), PngWriter.Encode(sheet));
+                report.AppendLine($"{info.Name}: {info.DirectionCount} directions x {info.FrameCount} frames of " +
+                    $"{sheet.Width / info.FrameCount}x{sheet.Height / info.DirectionCount} px; bones within {worst:0.0} px of Core's joints");
+            }
+            report.AppendLine($"retaken while shaders compiled: {Retakes}; placeholder pixels left: " +
+                $"{PlaceholderLeft}; canvas grown to fit: {Growths} times");
+            report.AppendLine($"done in {clock.Elapsed.TotalSeconds:0.0} s");
+            File.WriteAllText(Path.Combine(folder, "report.txt"), report.ToString());
+            return report.ToString();
         }
 
         /// <summary>The name of a sheet row, e.g. "south" or "gun north, moving east".</summary>
