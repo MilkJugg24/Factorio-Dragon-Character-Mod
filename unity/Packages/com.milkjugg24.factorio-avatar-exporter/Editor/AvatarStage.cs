@@ -771,7 +771,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         {
             var points = new List<Vector3>();
             Matrix4x4 toPivot = Pivot.worldToLocalMatrix;
-            ForEachMesh((mesh, toWorld) =>
+            ForEachMesh((mesh, _, toWorld) =>
             {
                 Matrix4x4 m = toPivot * toWorld;
                 foreach (Vector3 v in mesh.vertices)
@@ -803,7 +803,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
             var vertices = new List<Vector3>();
             var triangles = new List<int>();
-            ForEachMesh((mesh, toWorld) =>
+            ForEachMesh((mesh, shape, toWorld) =>
             {
                 int start = vertices.Count;
                 Matrix4x4 m = project * place * toWorld;
@@ -811,13 +811,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 {
                     vertices.Add(m.MultiplyPoint3x4(v));
                 }
-                for (int sub = 0; sub < mesh.subMeshCount; sub++)
+                for (int sub = 0; sub < shape.subMeshCount; sub++)
                 {
-                    if (mesh.GetTopology(sub) != MeshTopology.Triangles)
+                    if (shape.GetTopology(sub) != MeshTopology.Triangles)
                     {
                         continue;
                     }
-                    foreach (int index in mesh.GetTriangles(sub))
+                    foreach (int index in shape.GetTriangles(sub))
                     {
                         triangles.Add(start + index);
                     }
@@ -832,14 +832,17 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         }
 
         /// <summary>
-        /// Calls <paramref name="visit"/> with every enabled mesh of the avatar as posed now and its matrix to
-        /// world space (skinned meshes baked; particles, lines and trails left out). Renderers count whatever their
+        /// Calls <paramref name="visit"/> with every enabled mesh of the avatar as posed now (its vertices), the mesh
+        /// whose triangles join them, and its matrix to world space (skinned meshes baked, with the triangles of
+        /// their shared mesh, whose vertices the bake keeps in order; particles, lines and trails left out). Renderers count whatever their
         /// Cast Shadows setting: avatars often turn it off for VRChat's world lighting, and the sprite's shadow
         /// is of the whole avatar.
         /// </summary>
-        private void ForEachMesh(Action<Mesh, Matrix4x4> visit)
+        private void ForEachMesh(Action<Mesh, Mesh, Matrix4x4> visit)
         {
-            var baked = new Mesh();
+            // 32-bit indices: baked into a 16-bit mesh, a body of more than 65535 vertices kept its vertices but
+            // lost its triangles, so only the smaller parts (a hoodie, the pickaxe) cast the shadow
+            var baked = new Mesh { indexFormat = IndexFormat.UInt32 };
             try
             {
                 foreach (Renderer renderer in Avatar.GetComponentsInChildren<Renderer>(false))
@@ -855,14 +858,15 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                             continue;
                         }
                         skinned.BakeMesh(baked, true);
-                        visit(baked, Matrix4x4.TRS(skinned.transform.position, skinned.transform.rotation, Vector3.one));
+                        Mesh shape = baked.vertexCount == skinned.sharedMesh.vertexCount ? skinned.sharedMesh : baked;
+                        visit(baked, shape, Matrix4x4.TRS(skinned.transform.position, skinned.transform.rotation, Vector3.one));
                     }
                     else if (renderer is MeshRenderer)
                     {
                         MeshFilter filter = renderer.GetComponent<MeshFilter>();
                         if (filter != null && filter.sharedMesh != null)
                         {
-                            visit(filter.sharedMesh, renderer.transform.localToWorldMatrix);
+                            visit(filter.sharedMesh, filter.sharedMesh, renderer.transform.localToWorldMatrix);
                         }
                     }
                 }
