@@ -6,8 +6,8 @@
 # - a new mod version (avatar-characters/info.json) alone swaps the new mod zip into the current
 #   release;
 # - nothing new does nothing.
-# Older releases are then removed together with their tags, so the Releases page and the tag list
-# only offer the newest files (the commits themselves stay in the history of main).
+# It is a full release marked latest, so the repository's front page shows it. Older releases are then
+# removed together with their tags, so the Releases page and the tag list only offer the newest files (the commits themselves stay in the history of main).
 #
 # Otherwise either push a tag exporter-v<version> matching package.json, or run this workflow by hand
 # from the Actions tab ("Run workflow").
@@ -98,7 +98,7 @@ jobs:
           title="Factorio Avatar Exporter $EXPORTER (mod $MOD)"
           if ! gh release view "$TAG" > /dev/null 2>&1; then
             gh release create "$TAG" "$package" "$zip" --target "$COMMIT" --title "$title" \
-              --notes-file notes.md --prerelease
+              --notes-file notes.md --latest
             exit 0
           fi
           assets=$(gh release view "$TAG" --json assets --jq '.assets[].name')
@@ -115,8 +115,9 @@ jobs:
             gh release delete-asset "$TAG" "$old" --yes
             echo "removed $old from $TAG"
           done
-          # the notes and title follow this workflow's wording and the current mod version
-          gh release edit "$TAG" --title "$title" --notes-file notes.md
+          # the notes and title follow this workflow's wording and the current mod version; a full release
+          # marked latest, so the repository's front page shows it (it shows no pre-releases, only their tags)
+          gh release edit "$TAG" --title "$title" --notes-file notes.md --prerelease=false --latest
           if [ "$changed" = false ]; then
             echo "Release $TAG already has both files; bump a version to publish a new one."
           fi
