@@ -205,7 +205,8 @@ anything it couldn't change. Then save, and remove the mod.
   each chain turns, so the whole wing follows; its side comes from where the wing lies. If no bone is
   named that way, the bones of a mesh whose object is named "wing" (like "Wings") are used instead.
 - **Tail:** the avatar's own bones below the hips whose names contain "tail", a chain from the root to
-  the tip. It sways in a wave from root to tip and lifts while running and flying. A tail that is part
+  the tip. It sways in a wave from root to tip and lifts while running and flying; a long tail of many
+  bones sways no further than a short one. A tail that is part
   of the body mesh works too, as long as it has its own bones. Anything held on a tail bone (a tuft, for
   example) moves with it.
 

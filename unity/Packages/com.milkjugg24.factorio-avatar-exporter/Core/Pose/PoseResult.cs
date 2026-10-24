@@ -110,7 +110,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>
         /// The tail's sideways swing, for avatars with tail bones (named "tail"): each tail bone, from the root,
         /// turns <c>TailSwing * sin(TailPhase - TailWaveDelay * index)</c> radians about the hips' up axis
-        /// (positive to the avatar's right), so a wave runs down the tail and its tip trails.
+        /// (positive to the avatar's right), so a wave runs down the tail and its tip trails. A tail of more than
+        /// <see cref="TailBones"/> bones scales both by TailBones / bones.
         /// </summary>
         public double TailSwing { get; set; }
         public double TailPhase { get; set; }
@@ -120,6 +121,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         /// <summary>Phase delay of the tail's wave per bone, radians.</summary>
         public const double TailWaveDelay = 0.7;
+
+        /// <summary>
+        /// The tail length, in bones, that <see cref="TailSwing"/> and <see cref="TailWaveDelay"/> are per bone of:
+        /// a longer tail shares them out over its bones, so it sways no further in all.
+        /// </summary>
+        public const int TailBones = 5;
     }
 
     /// <summary>Timing values written to the pack (docs/avatar-pack-format.md, "timing").</summary>

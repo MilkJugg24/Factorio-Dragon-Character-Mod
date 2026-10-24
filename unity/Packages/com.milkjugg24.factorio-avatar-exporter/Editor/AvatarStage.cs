@@ -322,9 +322,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             // raising turns the tail's end up, whichever way it hangs
             float liftSign = Vector3.Dot(Quaternion.AngleAxis(1, right) * along, up) >= Vector3.Dot(along, up) ? 1 : -1;
             float lift = (float)(pose.TailLift / tail.Count * 180 / Math.PI) * liftSign;
+            // the swing and the wave's delay are set for a tail of TailBones bones; a longer chain shares them out,
+            // so a fluffy tail of twenty bones sways as far as one of five, not four times as far
+            double share = Math.Min(1.0, PoseResult.TailBones / (double)tail.Count);
             for (int i = 0; i < tail.Count; i++)
             {
-                float swing = (float)(pose.TailSwing * Math.Sin(pose.TailPhase - PoseResult.TailWaveDelay * i) * 180 / Math.PI);
+                double delay = PoseResult.TailWaveDelay * share * i;
+                float swing = (float)(pose.TailSwing * share * Math.Sin(pose.TailPhase - delay) * 180 / Math.PI);
                 tail[i].rotation = Quaternion.AngleAxis(swing, up) * Quaternion.AngleAxis(lift, right) * tail[i].rotation;
             }
         }
@@ -793,12 +797,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         {
             var points = new List<Vector3>();
             Matrix4x4 toPivot = Pivot.worldToLocalMatrix;
-            ForEachMesh((mesh, _, toWorld) =>
+            ForEachMesh((world, _) =>
             {
-                Matrix4x4 m = toPivot * toWorld;
-                foreach (Vector3 v in mesh.vertices)
+                foreach (Vector3 v in world)
                 {
-                    points.Add(m.MultiplyPoint3x4(v));
+                    points.Add(toPivot.MultiplyPoint3x4(v));
                 }
             });
             return points;
@@ -823,13 +826,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                     project[row, column] = (float)p[row * 4 + column];
                 }
             }
+            Matrix4x4 m = project * place;
             var vertices = new List<Vector3>();
             var triangles = new List<int>();
-            ForEachMesh((mesh, shape, toWorld) =>
+            ForEachMesh((world, shape) =>
             {
                 int start = vertices.Count;
-                Matrix4x4 m = project * place * toWorld;
-                foreach (Vector3 v in mesh.vertices)
+                foreach (Vector3 v in world)
                 {
                     vertices.Add(m.MultiplyPoint3x4(v));
                 }
@@ -853,49 +856,158 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             shadow.RecalculateBounds();
         }
 
-        /// <summary>
-        /// Calls <paramref name="visit"/> with every enabled mesh of the avatar as posed now (its vertices), the mesh
-        /// whose triangles join them, and its matrix to world space (skinned meshes baked, with the triangles of
-        /// their shared mesh, whose vertices the bake keeps in order; particles, lines and trails left out). Renderers count whatever their
-        /// Cast Shadows setting: avatars often turn it off for VRChat's world lighting, and the sprite's shadow
-        /// is of the whole avatar.
-        /// </summary>
-        private void ForEachMesh(Action<Mesh, Mesh, Matrix4x4> visit)
+        /// <summary>What skinning needs of a mesh, read once: its vertices, bone weights, bind poses and blend shapes.</summary>
+        private sealed class SkinData
         {
-            // 32-bit indices: baked into a 16-bit mesh, a body of more than 65535 vertices kept its vertices but
-            // lost its triangles, so only the smaller parts (a hoodie, the pickaxe) cast the shadow
-            var baked = new Mesh { indexFormat = IndexFormat.UInt32 };
-            try
+            public Vector3[] Vertices;
+            public BoneWeight[] Weights;
+            public Matrix4x4[] BindPoses;
+            // per blend shape: each frame's weight and vertex offsets (read when the shape is first used: avatars
+            // have hundreds of face shapes, mostly at 0)
+            public (float weight, Vector3[] deltas)[][] Shapes;
+            public Mesh Mesh;
+
+            public Vector3[] Deltas(int shape, int frame)
             {
-                foreach (Renderer renderer in Avatar.GetComponentsInChildren<Renderer>(false))
+                if (Shapes[shape][frame].deltas == null)
                 {
-                    if (!renderer.enabled)
+                    var deltas = new Vector3[Vertices.Length];
+                    Mesh.GetBlendShapeFrameVertices(shape, frame, deltas, null, null);
+                    Shapes[shape][frame].deltas = deltas;
+                }
+                return Shapes[shape][frame].deltas;
+            }
+        }
+
+        private readonly Dictionary<Mesh, SkinData> skinData = new Dictionary<Mesh, SkinData>();
+
+        private SkinData Skin(Mesh mesh)
+        {
+            if (!skinData.TryGetValue(mesh, out SkinData data))
+            {
+                data = new SkinData { Vertices = mesh.vertices, Weights = mesh.boneWeights, BindPoses = mesh.bindposes, Mesh = mesh };
+                data.Shapes = new (float, Vector3[])[mesh.blendShapeCount][];
+                for (int shape = 0; shape < mesh.blendShapeCount; shape++)
+                {
+                    int frames = mesh.GetBlendShapeFrameCount(shape);
+                    data.Shapes[shape] = new (float, Vector3[])[frames];
+                    for (int frame = 0; frame < frames; frame++)
                     {
-                        continue;
-                    }
-                    if (renderer is SkinnedMeshRenderer skinned)
-                    {
-                        if (skinned.sharedMesh == null)
-                        {
-                            continue;
-                        }
-                        skinned.BakeMesh(baked, true);
-                        Mesh shape = baked.vertexCount == skinned.sharedMesh.vertexCount ? skinned.sharedMesh : baked;
-                        visit(baked, shape, Matrix4x4.TRS(skinned.transform.position, skinned.transform.rotation, Vector3.one));
-                    }
-                    else if (renderer is MeshRenderer)
-                    {
-                        MeshFilter filter = renderer.GetComponent<MeshFilter>();
-                        if (filter != null && filter.sharedMesh != null)
-                        {
-                            visit(filter.sharedMesh, filter.sharedMesh, renderer.transform.localToWorldMatrix);
-                        }
+                        data.Shapes[shape][frame] = (mesh.GetBlendShapeFrameWeight(shape, frame), null);
                     }
                 }
+                skinData.Add(mesh, data);
             }
-            finally
+            return data;
+        }
+
+        /// <summary>
+        /// The world positions of a skinned mesh's vertices as posed now, skinned here the way the renderer does:
+        /// blend shapes at their weights, then each vertex moved by its bones (bone to world times bind pose,
+        /// weighted). Unity's own BakeMesh was not trusted for this: for some avatars it put the body, wings and
+        /// shorts at the wrong scale, so only the hoodie cast a shadow.
+        /// </summary>
+        private Vector3[] Skinned(SkinnedMeshRenderer skinned)
+        {
+            SkinData data = Skin(skinned.sharedMesh);
+            var local = (Vector3[])data.Vertices.Clone();
+            for (int shape = 0; shape < data.Shapes.Length; shape++)
             {
-                Object.DestroyImmediate(baked);
+                float weight = skinned.GetBlendShapeWeight(shape);
+                (float weight, Vector3[] deltas)[] frames = data.Shapes[shape];
+                if (weight == 0 || frames.Length == 0)
+                {
+                    continue;
+                }
+                // between the frames around the weight (from no offset below the first), on past the last
+                int k = 0;
+                while (k < frames.Length - 1 && frames[k].weight < weight)
+                {
+                    k++;
+                }
+                float fromWeight = k == 0 ? 0 : frames[k - 1].weight;
+                Vector3[] from = k == 0 ? null : data.Deltas(shape, k - 1);
+                float span = frames[k].weight - fromWeight;
+                float t = span != 0 ? (weight - fromWeight) / span : 1;
+                Vector3[] to = data.Deltas(shape, k);
+                for (int v = 0; v < local.Length; v++)
+                {
+                    Vector3 a = from != null ? from[v] : Vector3.zero;
+                    local[v] += a + (to[v] - a) * t;
+                }
+            }
+            Transform[] skinBones = skinned.bones;
+            var world = new Vector3[local.Length];
+            if (data.Weights.Length != local.Length || skinBones.Length == 0)
+            {
+                // not skinned to bones: it moves with its own object
+                Matrix4x4 rigid = skinned.transform.localToWorldMatrix;
+                for (int v = 0; v < local.Length; v++)
+                {
+                    world[v] = rigid.MultiplyPoint3x4(local[v]);
+                }
+                return world;
+            }
+            var matrices = new Matrix4x4[skinBones.Length];
+            for (int b = 0; b < skinBones.Length; b++)
+            {
+                matrices[b] = skinBones[b] != null && b < data.BindPoses.Length
+                    ? skinBones[b].localToWorldMatrix * data.BindPoses[b]
+                    : skinned.transform.localToWorldMatrix;
+            }
+            for (int v = 0; v < local.Length; v++)
+            {
+                BoneWeight w = data.Weights[v];
+                Vector3 p = local[v];
+                Vector3 sum = Vector3.zero;
+                float total = 0;
+                void Add(int bone, float weight)
+                {
+                    if (weight > 0 && bone >= 0 && bone < matrices.Length)
+                    {
+                        sum += matrices[bone].MultiplyPoint3x4(p) * weight;
+                        total += weight;
+                    }
+                }
+                Add(w.boneIndex0, w.weight0);
+                Add(w.boneIndex1, w.weight1);
+                Add(w.boneIndex2, w.weight2);
+                Add(w.boneIndex3, w.weight3);
+                world[v] = total > 0 ? sum / total : skinned.transform.localToWorldMatrix.MultiplyPoint3x4(p);
+            }
+            return world;
+        }
+
+        /// <summary>
+        /// Calls <paramref name="visit"/> with the world positions of the vertices of every enabled mesh of the
+        /// avatar as posed now, and the mesh whose triangles join them (particles, lines and trails left out).
+        /// Renderers count whatever their Cast Shadows setting: avatars often turn it off for VRChat's world
+        /// lighting, and the sprite's shadow is of the whole avatar.
+        /// </summary>
+        private void ForEachMesh(Action<Vector3[], Mesh> visit)
+        {
+            foreach (Renderer renderer in Avatar.GetComponentsInChildren<Renderer>(false))
+            {
+                if (!renderer.enabled)
+                {
+                    continue;
+                }
+                if (renderer is SkinnedMeshRenderer skinned)
+                {
+                    if (skinned.sharedMesh != null)
+                    {
+                        visit(Skinned(skinned), skinned.sharedMesh);
+                    }
+                }
+                else if (renderer is MeshRenderer)
+                {
+                    MeshFilter filter = renderer.GetComponent<MeshFilter>();
+                    if (filter != null && filter.sharedMesh != null)
+                    {
+                        Matrix4x4 toWorld = renderer.transform.localToWorldMatrix;
+                        visit(filter.sharedMesh.vertices.Select(v => toWorld.MultiplyPoint3x4(v)).ToArray(), filter.sharedMesh);
+                    }
+                }
             }
         }
 
