@@ -167,7 +167,8 @@ return {
   `hover-gun` frame.
 - `timing.mine_impact_frame` (1-based) is when the mining sound and particles
   play. `left_foot_frames` / `right_foot_frames` are the running frames where a
-  foot lands. `distance_per_frame` sets how fast the run animation plays for
+  foot lands; the footstep sound plays on all of them, and the footprints follow
+  them. `distance_per_frame` sets how fast the run animation plays for
   the distance covered. The game does not move the character
   `distance_per_frame` tiles per frame: one running frame takes
   `distance_per_frame / animation_speed` tiles (the `run` animation speed), so

@@ -211,6 +211,28 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             }
             List<Transform> roots = skin.Where(t => Named(t, "wing") && !(ParentBone(t) is Transform p && Named(p, "wing")))
                 .OrderBy(t => t.name, StringComparer.Ordinal).ToList();
+            if (roots.Count == 0)
+            {
+                // no bone is named "wing": the bones of the meshes that are, apart from the body's humanoid bones and
+                // what holds them, from the first of each chain
+                var humanoid = new HashSet<Transform>();
+                foreach (Transform bone in bones.Values)
+                {
+                    for (Transform t = bone; t != null && t != Avatar.transform; t = t.parent)
+                    {
+                        humanoid.Add(t);
+                    }
+                }
+                var wingBones = new HashSet<Transform>(Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+                    .Where(r => Named(r.transform, "wing"))
+                    .SelectMany(r => r.bones).Where(b => b != null && !humanoid.Contains(b)));
+                roots = wingBones.Where(t => !(ParentBone(t) is Transform p && wingBones.Contains(p)))
+                    .OrderBy(t => t.name, StringComparer.Ordinal).ToList();
+                if (roots.Count > 0)
+                {
+                    Notes.Add("no bone is named \"wing\": using the bones of the meshes named \"wing\"");
+                }
+            }
             var followers = new HashSet<Transform>(links.Where(l => roots.Contains(l.bone)).Select(l => l.part));
             Vector3 top = Pivot.InverseTransformPoint(bones[TopOfTrunk()].position);
             var unsided = new List<string>();

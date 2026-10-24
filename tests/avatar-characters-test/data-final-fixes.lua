@@ -95,8 +95,10 @@ if mods["avatar-pack-test"] then
     check(anim.mining_with_tool.layers[1].animation_speed == 0.415, "pack test: default mine speed")
     check(c.distance_per_frame == 0.15, "pack test: distance_per_frame")
     check(c.mining_with_tool_particles_animation_positions[1] == 6, "pack test: mine impact frame")
-    check(c.running_sound_animation_positions[1] == 1 and c.moving_sound_animation_positions[1] == 5,
-      "pack test: foot frames")
+    check(diff({ 1, 5 }, c.running_sound_animation_positions, "") == nil
+      and diff({ 1, 5 }, c.moving_sound_animation_positions, "") == nil,
+      "pack test: a footstep sound on both feet's frames")
+    check(c.left_footprint_frames[1] == 1 and c.right_footprint_frames[1] == 5, "pack test: footprint frames")
     check(c.character_corpse == "avatar-pack-corpse-test", "pack test: corpse link")
     check(c.icon == "__avatar-pack-test__/graphics/icon.png", "pack test: icon")
     check(c.inventory_size == data.raw["character"]["character"].inventory_size, "pack test: inventory size")
@@ -123,8 +125,9 @@ if mods["avatar-pack-small"] then
     check(anim.idle.layers[1].scale == 1, "pack small: scale should be 1 at 32 pixels per tile")
     check(c.distance_per_frame == 0.238, "pack small: default distance_per_frame")
     check(c.mining_with_tool_particles_animation_positions[1] == 6, "pack small: scaled mine impact frame")
-    check(diff({ 1 }, c.running_sound_animation_positions, "") == nil, "pack small: default left foot frames")
-    check(diff({ 4 }, c.moving_sound_animation_positions, "") == nil, "pack small: scaled right foot frames")
+    check(diff({ 1 }, c.left_footprint_frames, "") == nil, "pack small: default left foot frames")
+    check(diff({ 4 }, c.right_footprint_frames, "") == nil, "pack small: scaled right foot frames")
+    check(diff({ 1, 4 }, c.running_sound_animation_positions, "") == nil, "pack small: footsteps on both feet")
     if flight then
       -- no flight animations: the ground ones are shown in the air
       check(diff(anim.running, anim.flying, "") == nil, "pack small: flying should fall back to running")

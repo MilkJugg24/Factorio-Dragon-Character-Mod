@@ -29,7 +29,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// Half the fore-aft travel of a foot over a run cycle at dragon size, tiles (anims.run uses 0.25;
         /// a little shorter reads better on plantigrade legs).
         /// </summary>
-        private const double RunStride = 0.22;
+        private const double RunStride = 0.18;
 
         /// <summary>
         /// Tiles the vanilla engineer covers in one run cycle (two steps): 22 frames x distance_per_frame 0.13 /
@@ -399,9 +399,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         }
 
         /// <summary>
-        /// Running: every footfall drives the body. Feet land on frames 1 and 7; the hips drop as the leg takes
-        /// the weight and rise into the push-off and the moment both feet are off the ground, tilt down on the
-        /// swinging leg's side and turn forward with it, and sit over the foot on the ground. The chest counters
+        /// Running, a light jog: short quick steps, the body nearly upright, and every footfall drives it. Feet
+        /// land on frames 1 and 7; the hips drop as the leg takes the weight and rise into the push-off and the
+        /// moment both feet are off the ground, tilt down on the swinging leg's side and turn forward with it,
+        /// and sit over the foot on the ground. The chest counters
         /// all three, the arms swing against the legs with bent elbows, rising and crossing in front, the head
         /// stays level and looks ahead, and the tail swings against the hips. <paramref name="move"/> turns the
         /// hips and legs clockwise from the facing direction (running with a gun aimed elsewhere); with a gun the
@@ -412,13 +413,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             double ph = MathUtil.Tau * t;
             // lowest just after each landing, highest in the air between steps
             double bounce = -Math.Cos(2 * ph - 0.4);
-            double lean = (gun ? 0.12 : 0.22) + 0.03 * bounce;
-            double hipTwist = (gun ? 0.12 : 0.16) * Math.Sin(ph);
-            double twist = (gun ? 0.05 : 0.14) * Math.Sin(ph);
-            double hipRoll = 0.07 * Math.Sin(ph);
+            double lean = (gun ? 0.08 : 0.12) + 0.02 * bounce;
+            double hipTwist = (gun ? 0.08 : 0.11) * Math.Sin(ph);
+            double twist = (gun ? 0.04 : 0.09) * Math.Sin(ph);
+            double hipRoll = 0.05 * Math.Sin(ph);
             // the weight over the foot on the ground: the left from frame 1, the right from frame 7
-            Vec3 shift = Turn(new Vec3(-0.025 * legScale * Math.Sin(ph), 0, 0), move);
-            var pelvis = new Vec3(shift.X, shift.Y, rig.HipsHeight - 0.085 * rig.LegLength + 0.03 * legScale * bounce);
+            Vec3 shift = Turn(new Vec3(-0.02 * legScale * Math.Sin(ph), 0, 0), move);
+            var pelvis = new Vec3(shift.X, shift.Y, rig.HipsHeight - 0.055 * rig.LegLength + 0.012 * legScale * bounce);
             HumanoidPoseBuilder b = Torso(pelvis, lean, twist, -hipTwist - move,
                 headPitch: (gun ? -0.06 : -0.12) - 0.03 * bounce, headYaw: -twist * 0.5,
                 hipRoll: hipRoll, chestRoll: -0.55 * hipRoll, headRoll: -0.1 * hipRoll);
@@ -429,8 +430,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 // in the air the heel kicks up behind first, then the knee drives forward
                 double s = phi > 0.5 ? (phi - 0.5) / 0.5 : 0.0;
                 double swing = s > 0 ? Math.Sin(Math.PI * Math.Pow(s, 0.75)) : 0.0;
-                double z = 0.15 * legScale * swing;
-                double heelLift = phi <= 0.5 ? 0.7 * MathUtil.Smoothstep(0.3, 0.5, phi) : 0.9 * (1 - MathUtil.Smoothstep(0.5, 0.9, phi)) + 0.4 * swing;
+                double z = 0.10 * legScale * swing;
+                double heelLift = phi <= 0.5 ? 0.7 * MathUtil.Smoothstep(0.3, 0.5, phi) : 0.7 * (1 - MathUtil.Smoothstep(0.5, 0.9, phi)) + 0.3 * swing;
                 Vec3 rest = rig.Ball(side);
                 Vec3 ball = Turn(new Vec3(rest.X - side * 0.01 * legScale, rest.Y + y, rest.Z + z), move);
                 Vec3 forward = Turn(rig.FootForward(side), move);
@@ -449,8 +450,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                     double ahead = Math.Max(a, 0);
                     Vec3 s = Shoulder(b, side);
                     Vec3 hand = s + chest.Right * (side * (0.08 - 0.05 * ahead) * armScale)
-                                + chest.Forward * ((0.16 + 0.14 * a) * armScale)
-                                - chest.Up * ((0.22 - 0.10 * a) * armScale);
+                                + chest.Forward * ((0.15 + 0.10 * a) * armScale)
+                                - chest.Up * ((0.24 - 0.07 * a) * armScale);
                     // elbows bent about square: swung back, the upper arm points back and the hand hangs under the
                     // shoulder; swung forward, the hand comes up to the chest
                     b.SetArm(side, hand, -chest.Forward * 0.6 + chest.Right * (side * 0.35) - chest.Up, null, 0.6);
@@ -573,7 +574,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             DanglingLegs(b, lean + 0.1, move);
             PoseResult pose = b.Build();
             // full wingbeats, one per loop; the tail streams out behind, rippling
-            pose.LeftWingLift = pose.RightWingLift = 0.35 + 0.55 * Math.Sin(ph);
+            pose.LeftWingLift = pose.RightWingLift = 0.35 + 0.75 * Math.Sin(ph);
             pose.TailSwing = 0.06;
             pose.TailPhase = 2 * ph;
             pose.TailLift = 0.25;
@@ -581,9 +582,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         }
 
         /// <summary>
-        /// anims.take_off: crouch, spring up, and end exactly in the first hover-with-gun frame. The gun stays in
-        /// the hands, as on the game's own mech armor sprites: Factorio has no take-off without a gun, and keeps
-        /// firing while a character takes off, with the muzzle flash where the gun would be.
+        /// anims.take_off: crouch, spring up, and end exactly in the first hover frame. Empty-handed: Factorio has
+        /// one take-off (and landing, the same played backwards) for armed and unarmed alike, and a gun appearing
+        /// for it read as the idle-with-gun pose flashing up.
         /// </summary>
         private PoseResult TakeOff(double t)
         {
@@ -593,7 +594,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             var pelvis = new Vec3(0, -0.005 * legScale * (1 - lift),
                 standingPelvis - 0.11 * legScale * crouch + Conventions.FlyHeight * lift);
             HumanoidPoseBuilder b = Torso(pelvis, lean, headPitch: -0.05 * lift);
-            HoldGun(b, ChestFrame(lean));
+            RelaxedArms(b, ChestFrame(lean), 0, 0.03);
             if (lift < 0.05)
             {
                 StandingFeet(b, 0.01);

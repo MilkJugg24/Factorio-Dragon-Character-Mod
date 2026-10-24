@@ -36,8 +36,13 @@ local function new_character(pack, look)
   character.icons = nil
   character.animations = { builder.armor_animation(look, flight) }
   character.mining_with_tool_particles_animation_positions = { pack.timing.mine_impact_frame }
-  character.running_sound_animation_positions = pack.timing.left_foot_frames
-  character.moving_sound_animation_positions = pack.timing.right_foot_frames
+  -- the walking sound plays on running_sound_animation_positions only: every footfall, both feet
+  local steps = {}
+  for _, frame in ipairs(pack.timing.left_foot_frames) do steps[#steps + 1] = frame end
+  for _, frame in ipairs(pack.timing.right_foot_frames) do steps[#steps + 1] = frame end
+  table.sort(steps)
+  character.running_sound_animation_positions = steps
+  character.moving_sound_animation_positions = steps
   character.left_footprint_frames = pack.timing.left_foot_frames
   character.right_footprint_frames = pack.timing.right_foot_frames
   character.distance_per_frame = pack.timing.distance_per_frame

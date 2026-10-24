@@ -123,16 +123,19 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
         }
 
         [TestCaseSource(nameof(Rigs))]
-        public void TakeOffEndsInTheFirstHoverWithGunFrame(RigInput input)
+        public void TakeOffEndsInTheFirstHoverFrameWithoutAGun(RigInput input)
         {
             HumanoidAnimations animations = Animations(input, out _);
             PoseResult end = animations.Pose(AnimationSpec.TakeOff, 1.0, 0);
-            PoseResult hover = animations.Pose(AnimationSpec.HoverGun, 0.0, 0);
+            PoseResult hover = animations.Pose(AnimationSpec.Hover, 0.0, 0);
             foreach (KeyValuePair<string, Vec3> joint in hover.Joints)
             {
                 TestMath.AssertClose(end.Joints[joint.Key], joint.Value, 1e-9, joint.Key);
             }
-            TestMath.AssertClose(end.Prop.Tip, hover.Prop.Tip, 1e-9, "the gun");
+            for (int f = 0; f < AnimationSpec.Get(AnimationSpec.TakeOff).FrameCount; f++)
+            {
+                Assert.That(Frame(animations, AnimationSpec.TakeOff, f).Prop, Is.Null, $"frame {f + 1}: no gun");
+            }
             PoseResult start = animations.Pose(AnimationSpec.TakeOff, 0.0, 0);
             PoseResult idle = animations.Pose(AnimationSpec.IdleGun, 0.0, 0);
             TestMath.AssertClose(start.Joints[JointNames.Ball(1)], idle.Joints[JointNames.Ball(1)], 1e-9, "take-off starts standing");
@@ -143,9 +146,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Humanoid
         {
             HumanoidAnimations animations = Animations(input, out HumanoidRig rig);
             double size = rig.HeadTopHeight / 1.5;
-            // take-off too: the game keeps shooting while a character takes off
-            foreach (string animation in new[] { AnimationSpec.IdleGun, AnimationSpec.RunGun, AnimationSpec.HoverGun, AnimationSpec.FlyGun,
-                AnimationSpec.TakeOff })
+            foreach (string animation in new[] { AnimationSpec.IdleGun, AnimationSpec.RunGun, AnimationSpec.HoverGun, AnimationSpec.FlyGun })
             {
                 AnimationInfo info = AnimationSpec.Get(animation);
                 for (int row = 0; row < info.DirectionCount; row++)

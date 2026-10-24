@@ -196,12 +196,14 @@ anything it couldn't change. Then save, and remove the mod.
 
 - **Idle:** the avatar breathes, shifts its weight from foot to foot and looks around. Every 8 seconds one
   wing stretches out, the left and then the right, and the head turns towards it.
-- **Running:** the hips drop and rise with each step, tilt and turn with the legs, and the chest and arms
-  swing against them, elbows bent. The shooting versions (which the game shows from your first shot on)
+- **Running:** a light jog, nearly upright, with short quick steps. The hips rise and fall with each step,
+  tilt and turn with the legs, and the chest and arms swing against them, elbows bent. The shooting versions (which the game shows from your first shot on)
   move the same way, more gently, so the gun stays on target.
-- **Flying** (mech armor): the wings flap; hovering, they beat slowly.
+- **Flying** (mech armor): the wings flap; hovering, they beat slowly. Taking off (and landing, the same
+  played backwards) is empty-handed, since the game uses one take-off for armed and unarmed alike.
 - **Wings:** bones whose names contain "wing" (any letter case), on any mesh. The first such bone of
-  each chain turns, so the whole wing follows; its side comes from where the wing lies.
+  each chain turns, so the whole wing follows; its side comes from where the wing lies. If no bone is
+  named that way, the bones of a mesh whose object is named "wing" (like "Wings") are used instead.
 - **Tail:** the avatar's own bones below the hips whose names contain "tail", a chain from the root to
   the tip. It sways in a wave from root to tip and lifts while running and flying. A tail that is part
   of the body mesh works too, as long as it has its own bones. Anything held on a tail bone (a tuft, for

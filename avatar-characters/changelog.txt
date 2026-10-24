@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.1
+Date: 2026-10-24
+  Bugfixes:
+    - The footstep sound plays on every step of an avatar's run, not every second one, and the
+      footprints fall on the avatar's own footfalls.
+---------------------------------------------------------------------------------------------------
 Version: 0.4.0
 Date: 2026-10-24
   Features:
