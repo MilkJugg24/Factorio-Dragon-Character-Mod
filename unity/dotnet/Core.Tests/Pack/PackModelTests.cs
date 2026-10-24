@@ -26,6 +26,22 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         }
 
         [Test]
+        public void HoldsASheetSplitByFrames()
+        {
+            var s = new SheetSet(2, 5, 3, 4, 0, 0, Files((6, 8), (6, 8), (3, 8)), null, 2);
+            Assert.That(s.FramesPerFile, Is.EqualTo(2));
+            Assert.That(s.LinesPerFile, Is.Null);
+            Assert.That(Enumerable.Range(0, 3).Select(s.FramesInFile), Is.EqualTo(new[] { 2, 2, 1 }));
+            Assert.That(Enumerable.Range(0, 3).Select(s.FirstFrameInFile), Is.EqualTo(new[] { 0, 2, 4 }));
+            Assert.That(Enumerable.Range(0, 3).Select(s.RowsInFile), Is.EqualTo(new[] { 2, 2, 2 }));
+            Assert.Throws<ArgumentOutOfRangeException>(() => s.FramesInFile(3));
+            Assert.Throws<ArgumentException>(() => new SheetSet(2, 5, 3, 4, 0, 0, Files((6, 8), (6, 8)), null, 2), "needs three files");
+            Assert.Throws<ArgumentException>(() => new SheetSet(2, 5, 3, 4, 0, 0, Files((6, 8), (6, 8), (6, 8)), null, 2), "the last file is narrower");
+            Assert.Throws<ArgumentOutOfRangeException>(() => new SheetSet(2, 5, 3, 4, 0, 0, Files((15, 8)), null, 5));
+            Assert.Throws<ArgumentException>(() => new SheetSet(4, 4, 1, 1, 0, 0, Files((2, 2), (2, 2), (2, 2), (2, 2)), 2, 2), "both ways");
+        }
+
+        [Test]
         public void RefusesInconsistentFiles()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => new SheetSet(0, 1, 1, 1, 0, 0, Files((1, 1)), null));

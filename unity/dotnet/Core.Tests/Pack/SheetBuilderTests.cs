@@ -178,8 +178,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
         {
             // 8 frames of 4 px = 32 px wide, frames 10 px high
             Assert.That(SheetBuilder.Build(TenPixelRows(2, 8), 3, 12, 64, 32).Files[0].Width, Is.EqualTo(32));
-            var wide = Assert.Throws<InvalidOperationException>(() => SheetBuilder.Build(TenPixelRows(2, 8), 3, 12, 64, 31));
-            StringAssert.Contains("8 frames of 4x10 px", wide.Message);
+            // too wide: split by frames, 7 per file
+            SheetSet split = SheetBuilder.Build(TenPixelRows(2, 8), 3, 12, 64, 31);
+            Assert.That(split.FramesPerFile, Is.EqualTo(7));
+            Assert.That(split.Files.Select(f => (f.Width, f.Height)), Is.EqualTo(new[] { (28, 20), (4, 20) }));
+            // too wide and too tall at once
+            var both = Assert.Throws<InvalidOperationException>(() => SheetBuilder.Build(TenPixelRows(4, 8), 3, 12, 64, 31));
+            StringAssert.Contains("4 directions of 8 frames of 4x10 px", both.Message);
             Assert.That(SheetBuilder.Build(TenPixelRows(1, 1), 3, 12, 64, 10).FrameHeight, Is.EqualTo(10));
             Assert.Throws<InvalidOperationException>(() => SheetBuilder.Build(TenPixelRows(1, 1), 3, 12, 64, 9));
         }
@@ -213,21 +218,27 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 int directions = rng.Next(1, 10), frameCount = rng.Next(1, 6);
                 List<IReadOnlyList<Image8>> frames = RandomFrames(rng, directions, frameCount, width, height);
                 int anchorX = rng.Next(width), anchorY = rng.Next(height);
-                int maxSheet = rng.Next(Math.Max(frameCount * width, height), 200);
+                int maxSheet = rng.Next(Math.Max(width, height), 200);
+                (int x0, int y0, int x1, int y1) = ExpectedCrop(frames, anchorX, anchorY);
+                bool wide = frameCount * (x1 - x0) > maxSheet, tall = directions * (y1 - y0) > maxSheet;
+                if (wide && tall)
+                {
+                    Assert.Throws<InvalidOperationException>(() => SheetBuilder.Build(frames, anchorX, anchorY, 64, maxSheet));
+                    continue;
+                }
                 SheetSet s = SheetBuilder.Build(frames, anchorX, anchorY, 64, maxSheet);
 
-                int lines = s.LinesPerFile ?? directions;
-                Assert.That(s.Files.Sum(f => f.Height), Is.EqualTo(directions * s.FrameHeight));
+                int lines = s.LinesPerFile ?? directions, perFile = s.FramesPerFile ?? frameCount;
                 Assert.That(s.Files.All(f => f.Height <= maxSheet && f.Width <= maxSheet));
-                Assert.That(s.LinesPerFile.HasValue, Is.EqualTo(directions * s.FrameHeight > maxSheet));
-                (int x0, int y0, int x1, int y1) = ExpectedCrop(frames, anchorX, anchorY);
+                Assert.That(s.LinesPerFile.HasValue, Is.EqualTo(tall));
+                Assert.That(s.FramesPerFile.HasValue, Is.EqualTo(wide));
                 Assert.That((s.FrameWidth, s.FrameHeight), Is.EqualTo((x1 - x0, y1 - y0)));
                 for (int d = 0; d < directions; d++)
                 {
                     for (int f = 0; f < frameCount; f++)
                     {
                         Image8 frame = frames[d][f];
-                        Image8 file = s.Files[d / lines];
+                        Image8 file = s.Files[wide ? f / perFile : d / lines];
                         for (int y = 0; y < height; y++)
                         {
                             for (int x = 0; x < width; x++)
@@ -238,7 +249,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                                     Assert.That(frame.Alpha(x, y), Is.EqualTo(0), "a drawn pixel is outside the crop");
                                     continue;
                                 }
-                                int sx = f * s.FrameWidth + x - x0, sy = (d % lines) * s.FrameHeight + y - y0;
+                                int sx = (f % perFile) * s.FrameWidth + x - x0, sy = (d % lines) * s.FrameHeight + y - y0;
                                 for (int c = 0; c < 4; c++)
                                 {
                                     Assert.That(file[sx, sy, c], Is.EqualTo(frame[x, y, c]));

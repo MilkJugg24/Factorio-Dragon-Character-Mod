@@ -1,7 +1,7 @@
 # Avatar pack format (version 1)
 
 An **avatar pack** is a small Factorio mod that adds one look to the Avatar
-Characters mod (`avatar-characters` 0.1.0 or newer). The pack only ships
+Characters mod (`avatar-characters` 0.4.0 or newer). The pack only ships
 sprite sheets and a description of them. `avatar-characters` reads that
 description, creates the character and corpse prototypes, and offers the look
 in its avatar window, where each player picks their own.
@@ -53,7 +53,7 @@ avatar-pack-<id>_<version>/
   "author": "<author>",
   "factorio_version": "2.1",
   "description": "...",
-  "dependencies": ["avatar-characters >= 0.1.0"]
+  "dependencies": ["avatar-characters >= 0.4.0"]
 }
 ```
 
@@ -230,13 +230,20 @@ to the west.
 - `shift` is the offset of the frame centre from the entity position, in tiles:
   `(frame centre - anchor) / pixels_per_tile`, where the anchor is the ground
   point under the character.
-- No file may be larger than 4096 px in either direction. A single row
-  (`frame_count x width`) must fit in 4096 px.
+- No file may be larger than 4096 px in either direction.
 - When `direction_count x height` is more than 4096 px, split the sheet by
   rows: use `filenames` instead of `filename` and set
   `lines_per_file = floor(4096 / height)`. File *k* holds rows
   `(k-1) x lines_per_file` up to the next file's first row; the last file may
   be shorter. `#filenames` must be `ceil(direction_count / lines_per_file)`.
+- When instead a row (`frame_count x width`) is more than 4096 px, split the
+  sheet by frames: use `filenames` and set `frames_per_file = floor(4096 / width)`
+  (needs `avatar-characters` 0.4.0 or newer). Every file holds all directions;
+  file *k* holds frames `(k-1) x frames_per_file + 1` onwards, and the last file
+  may be narrower. `#filenames` must be `ceil(frame_count / frames_per_file)`.
+  avatar-characters turns this into Factorio's `stripes`.
+- A layer is split one way only: `lines_per_file` and `frames_per_file` never
+  appear together, so a layer too wide and too tall at once does not fit.
 - PNG, RGBA, 8 bits per channel, straight (not premultiplied) alpha, sRGB.
 
 ## Rendering conventions
@@ -259,11 +266,11 @@ does):
 ## Bundles
 
 An **avatar bundle** is one mod holding several packs, so a server hands its players one file. The
-exporter's Combine Packs for a Server writes them; they need `avatar-characters` 0.3.0 or newer.
+exporter's Combine Packs for a Server writes them; they need `avatar-characters` 0.3.0 or newer (the exporter now writes 0.4.0).
 
 | Thing | Name |
 | --- | --- |
-| Mod name | `avatar-bundle-<name>`, with `"dependencies": ["avatar-characters >= 0.3.0"]` |
+| Mod name | `avatar-bundle-<name>`, with `"dependencies": ["avatar-characters >= 0.4.0"]` |
 | Zip file | `avatar-bundle-<name>_<version>.zip` |
 | A character's folder | `characters/<id>/`, holding `avatar-pack.lua` (the pack's description), its graphics, `README.txt` (its source) and `pack.json` (id, title, author and the pack's version) |
 | mod-data, character and corpse prototypes | the same as the pack's: `avatar-pack-<id>`, `avatar-pack-corpse-<id>` |
@@ -309,7 +316,7 @@ problem) when a pack:
   `height`, or a `shift` that is not two numbers;
 - has a `title` that is empty or longer than 80 characters;
 - points `filename` / `filenames` outside its own mod, or has a `filenames`
-  count that does not match `lines_per_file`;
+  count that does not match `lines_per_file` or `frames_per_file`, or both;
 - has `timing` values out of range.
 
 Refusing to load is deliberate: skipping a broken pack would make Factorio

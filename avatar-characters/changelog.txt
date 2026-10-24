@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.0
+Date: 2026-10-24
+  Features:
+    - Packs may split a sheet whose row of frames is too wide for one file by frames
+      (frames_per_file), each file holding every direction. Exporter 0.7.0 does this for its longer
+      idle animations, so its packs need this version.
+---------------------------------------------------------------------------------------------------
 Version: 0.3.2
 Date: 2026-10-23
   Changes:

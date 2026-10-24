@@ -271,30 +271,45 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Export
             Assert.That(art.Animations[AnimationSpec.Idle][PackLayers.Base].FrameWidth, Is.GreaterThan(4));
         }
 
-        [TestCase(64, 1024, false, "run shadow")]
-        [TestCase(32, 768, false, "run shadow")]
-        [TestCase(32, 4096, true, "run base")]
-        public void SheetsThatDoNotFitNameTheAnimationAndLayer(int pixelsPerTile, int maxSheetSize, bool wide, string layer)
+        [TestCase(64, 1024, "run-gun shadow", 18)]
+        [TestCase(32, 768, "mine base", 8)]
+        public void SheetsThatDoNotFitNameTheAnimationAndLayer(int pixelsPerTile, int maxSheetSize, string layer, int directions)
         {
-            // The stick figure's run shadow is about 100 px wide at 64 pixels per tile and 50 at 32; the grey
-            // renderer fills canvases 12 tiles wide, so it needs no margin.
+            // The stick figure's run-gun shadow is about 100 px wide and too wide and tall for 1024 px sheets
+            // at 64 pixels per tile; at 32 the mine (pick held high) is first to fit neither way into 768.
             var settings = new ExportSettings
             {
                 PixelsPerTile = pixelsPerTile,
                 Supersampling = 1,
                 Flight = false,
                 MaxSheetSize = maxSheetSize,
-                CanvasMarginPixels = wide ? 0 : CanvasPlanner.DefaultMarginPixels,
             };
-            IFrameRenderer renderer = wide ? new GreyRenderer { HalfWidth = 6 } : (IFrameRenderer)new StickFigureRenderer();
-            var exporter = new AvatarExporter(GenericRig(), renderer, settings);
+            var exporter = new AvatarExporter(GenericRig(), new StickFigureRenderer(), settings);
             var e = Assert.Throws<InvalidOperationException>(() => exporter.Render());
             Assert.That(e.Message, Does.StartWith($"the {layer} frames do not fit"));
-            Assert.That(e.Message, Does.Contain($"at most {maxSheetSize / 12} px wide"));
+            Assert.That(e.Message, Does.Contain($"at most {maxSheetSize / 12} px wide or {maxSheetSize / directions} px high"));
             Assert.That(e.Message.Contains("32 pixels per tile"), Is.EqualTo(pixelsPerTile == 64), "halving");
             Assert.That(e.Message.Contains("raise MaxSheetSize"), Is.EqualTo(maxSheetSize < 4096), "larger sheets");
             Assert.That(e.Message, Does.Not.Contain("fewer frames"));
             Assert.That(e.InnerException, Is.InstanceOf<InvalidOperationException>());
+        }
+
+        [Test]
+        public void RowsTooWideAreSplitByFrames()
+        {
+            // the grey renderer fills canvases 12 tiles wide: 12 run frames of 384 px are 4608 px, but 8 directions fit
+            var settings = new ExportSettings
+            {
+                PixelsPerTile = 32,
+                Supersampling = 1,
+                Flight = false,
+                CanvasMarginPixels = 0,
+            };
+            ExportedArt art = new AvatarExporter(GenericRig(), new GreyRenderer { HalfWidth = 6 }, settings).Render();
+            SheetSet run = art.Animations[AnimationSpec.Run][PackLayers.Base];
+            Assert.That(run.FramesPerFile, Is.EqualTo(4096 / run.FrameWidth));
+            Assert.That(run.LinesPerFile, Is.Null);
+            Assert.That(run.Files.Count, Is.EqualTo((12 + run.FramesPerFile.Value - 1) / run.FramesPerFile.Value));
         }
 
         [Test]

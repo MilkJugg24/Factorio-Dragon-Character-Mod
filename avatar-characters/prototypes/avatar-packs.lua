@@ -37,8 +37,8 @@ local function check_layer(pack_name, prefix, anim_name, key, meta, info)
   if not is_int(info.width, 1, limit) or not is_int(info.height, 1, limit) then
     fail(pack_name, where .. " needs an integer width and height between 1 and " .. limit)
   end
-  if meta.frame_count * info.width > limit then
-    fail(pack_name, where .. " is wider than " .. limit .. " px (frame_count x width)")
+  if meta.frame_count * info.width > limit and not (info.filenames and info.frames_per_file) then
+    fail(pack_name, where .. " is wider than " .. limit .. " px (frame_count x width); split it with filenames + frames_per_file")
   end
   local shift = info.shift
   if type(shift) ~= "table" or not is_number(shift[1]) or not is_number(shift[2]) then
@@ -51,14 +51,32 @@ local function check_layer(pack_name, prefix, anim_name, key, meta, info)
     for i, path in ipairs(info.filenames) do
       check_file(pack_name, prefix, path, where .. " file " .. i)
     end
-    local lines = info.lines_per_file
-    if not is_int(lines, 1) or lines * info.height > limit then
-      fail(pack_name, where .. " needs lines_per_file between 1 and floor(" .. limit .. " / height)")
-    end
-    if #info.filenames ~= math.ceil(meta.direction_count / lines) then
-      fail(pack_name, where .. " has " .. #info.filenames .. " files but needs "
-        .. math.ceil(meta.direction_count / lines) .. " for " .. meta.direction_count
-        .. " directions at " .. lines .. " per file")
+    if info.frames_per_file ~= nil then
+      local per = info.frames_per_file
+      if info.lines_per_file ~= nil then
+        fail(pack_name, where .. " has both lines_per_file and frames_per_file; a layer is split one way only")
+      end
+      if not is_int(per, 1) or per * info.width > limit then
+        fail(pack_name, where .. " needs frames_per_file between 1 and floor(" .. limit .. " / width)")
+      end
+      if meta.direction_count * info.height > limit then
+        fail(pack_name, where .. " is taller than " .. limit .. " px (direction_count x height)")
+      end
+      if #info.filenames ~= math.ceil(meta.frame_count / per) then
+        fail(pack_name, where .. " has " .. #info.filenames .. " files but needs "
+          .. math.ceil(meta.frame_count / per) .. " for " .. meta.frame_count
+          .. " frames at " .. per .. " per file")
+      end
+    else
+      local lines = info.lines_per_file
+      if not is_int(lines, 1) or lines * info.height > limit then
+        fail(pack_name, where .. " needs lines_per_file between 1 and floor(" .. limit .. " / height)")
+      end
+      if #info.filenames ~= math.ceil(meta.direction_count / lines) then
+        fail(pack_name, where .. " has " .. #info.filenames .. " files but needs "
+          .. math.ceil(meta.direction_count / lines) .. " for " .. meta.direction_count
+          .. " directions at " .. lines .. " per file")
+      end
     end
   else
     check_file(pack_name, prefix, info.filename, where .. " filename")

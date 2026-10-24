@@ -24,7 +24,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// same for y.</item>
         /// <item>Rows are directions and columns frames. When directions x height exceeds
         /// <paramref name="maxSheetSize"/>, the rows are split over files of
-        /// floor(maxSheetSize / height) rows each.</item>
+        /// floor(maxSheetSize / height) rows each. When instead frames x width exceeds it, the frames
+        /// are split over files of floor(maxSheetSize / width) frames each, every file holding all
+        /// directions. A layer too large both ways does not fit.</item>
         /// </list>
         /// </summary>
         /// <param name="frames">Canvases indexed [direction][frame], all the same size and frame count.</param>
@@ -32,8 +34,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <param name="anchorY">Pixel row of the entity position on the canvas.</param>
         /// <param name="pixelsPerTile">Pixels per tile of the canvas (64 or 32 in a pack).</param>
         /// <param name="maxSheetSize">Largest file width and height, px.</param>
-        /// <exception cref="InvalidOperationException">A row of frames, or one frame, is larger than
-        /// <paramref name="maxSheetSize"/>.</exception>
+        /// <exception cref="InvalidOperationException">One frame is larger than <paramref name="maxSheetSize"/>,
+        /// or the layer is too wide and too tall at once.</exception>
         public static SheetSet Build(IReadOnlyList<IReadOnlyList<Image8>> frames, int anchorX, int anchorY,
             int pixelsPerTile, int maxSheetSize = PackFormat.MaxSheetSize)
         {
@@ -63,27 +65,31 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             box = box.Grown(1, canvasWidth, canvasHeight);
             int width = box.Width;
             int height = box.Height;
-            if (frameCount * width > maxSheetSize || height > maxSheetSize)
+            bool wide = frameCount * width > maxSheetSize, tall = directions * height > maxSheetSize;
+            if (width > maxSheetSize || height > maxSheetSize || (wide && tall))
             {
                 throw new InvalidOperationException(Invariant(
-                    $"{frameCount} frames of {width}x{height} px do not fit in a {maxSheetSize} px sprite sheet ") +
-                    "(a row of frames and each frame must fit). Use fewer frames, 32 pixels per tile, or " +
+                    $"{directions} directions of {frameCount} frames of {width}x{height} px do not fit in {maxSheetSize} px sprite sheets ") +
+                    "(a sheet may be split by rows or by frames, not both). Use fewer frames, 32 pixels per tile, or " +
                     "keep the character from reaching out so far.");
             }
 
-            int lines = directions * height > maxSheetSize ? maxSheetSize / height : directions;
-            int fileCount = (directions + lines - 1) / lines;
+            int lines = tall ? maxSheetSize / height : directions;
+            int framesPerFile = wide ? maxSheetSize / width : frameCount;
+            int fileCount = tall ? (directions + lines - 1) / lines : (frameCount + framesPerFile - 1) / framesPerFile;
             var files = new Image8[fileCount];
             for (int k = 0; k < fileCount; k++)
             {
-                int firstRow = k * lines;
+                int firstRow = tall ? k * lines : 0;
                 int rows = Math.Min(lines, directions - firstRow);
-                var sheet = new Image8(frameCount * width, rows * height);
+                int firstFrame = wide ? k * framesPerFile : 0;
+                int columns = Math.Min(framesPerFile, frameCount - firstFrame);
+                var sheet = new Image8(columns * width, rows * height);
                 for (int row = 0; row < rows; row++)
                 {
-                    for (int f = 0; f < frameCount; f++)
+                    for (int f = 0; f < columns; f++)
                     {
-                        CopyCrop(frames[firstRow + row][f], box, sheet, f * width, row * height);
+                        CopyCrop(frames[firstRow + row][firstFrame + f], box, sheet, f * width, row * height);
                     }
                 }
                 files[k] = sheet;
@@ -92,7 +98,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             double shiftX = DecimalRounding.Round((box.X0 + width / 2.0 - anchorX) / pixelsPerTile, ShiftDigits);
             double shiftY = DecimalRounding.Round((box.Y0 + height / 2.0 - anchorY) / pixelsPerTile, ShiftDigits);
             return new SheetSet(directions, frameCount, width, height, shiftX, shiftY, files,
-                fileCount > 1 ? lines : (int?)null);
+                tall ? lines : (int?)null, wide ? framesPerFile : (int?)null);
         }
 
         private static (int width, int height) CheckFrames(IReadOnlyList<IReadOnlyList<Image8>> frames)

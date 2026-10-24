@@ -114,7 +114,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 ["shift"] = new List<object> { sheets.ShiftX, sheets.ShiftY },
             };
             int count = sheets.Files.Count;
-            if (sheets.LinesPerFile.HasValue)
+            if (count > 1)
             {
                 var filenames = new List<object>(count);
                 for (int k = 0; k < count; k++)
@@ -122,7 +122,14 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                     filenames.Add(PackFiles.ModPath(id, PackFiles.Sheet(animation, layer, k, count)));
                 }
                 table["filenames"] = filenames;
-                table["lines_per_file"] = sheets.LinesPerFile.Value;
+                if (sheets.LinesPerFile.HasValue)
+                {
+                    table["lines_per_file"] = sheets.LinesPerFile.Value;
+                }
+                else
+                {
+                    table["frames_per_file"] = sheets.FramesPerFile.Value;
+                }
             }
             else
             {

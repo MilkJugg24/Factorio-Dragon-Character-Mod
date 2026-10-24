@@ -450,8 +450,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                     string fixes = (s.PixelsPerTile == 64 ? "export at 32 pixels per tile, " : "")
                         + (s.MaxSheetSize < PackFormat.MaxSheetSize ? Invariant($"raise MaxSheetSize (at most {PackFormat.MaxSheetSize}), ") : "");
                     throw new InvalidOperationException(Invariant(
-                        $"the {animation.Name} {layer} frames do not fit in a {s.MaxSheetSize} px sprite sheet: a row of {animation.FrameCount} ") +
-                        Invariant($"frames fits only when each frame is at most {s.MaxSheetSize / animation.FrameCount} px wide (and {s.MaxSheetSize} px high). ") +
+                        $"the {animation.Name} {layer} frames do not fit in {s.MaxSheetSize} px sprite sheets: {animation.DirectionCount} directions of ") +
+                        Invariant($"{animation.FrameCount} frames fit only when each frame is at most {s.MaxSheetSize / animation.FrameCount} px wide ") +
+                        Invariant($"or {s.MaxSheetSize / animation.DirectionCount} px high (and {s.MaxSheetSize} px each way). ") +
                         $"To make them fit, {fixes}{(fixes.Length > 0 ? "or " : "")}keep the character from reaching out so far.", e);
                 }
             }

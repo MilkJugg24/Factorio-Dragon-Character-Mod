@@ -111,7 +111,7 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 Assert.That(info.GetProperty("factorio_version").GetString(), Is.EqualTo("2.1"));
                 StringAssert.Contains("Test Model", info.GetProperty("description").GetString());
                 Assert.That(info.GetProperty("dependencies").EnumerateArray().Select(d => d.GetString()),
-                    Is.EqualTo(new[] { "avatar-characters >= 0.1.0" }));
+                    Is.EqualTo(new[] { "avatar-characters >= 0.4.0" }));
             }
             // Factorio refuses a mod without an author ("Key "author" not found in property tree")
             content.Author = null;
@@ -190,10 +190,13 @@ print(json.dumps(lua_table.loads(sys.stdin.read())))
                         Assert.That(l.GetProperty("shift")[0].GetDouble(), Is.EqualTo(s.ShiftX));
                         Assert.That(l.GetProperty("shift")[1].GetDouble(), Is.EqualTo(s.ShiftY));
                         string prefix = "__avatar-pack-test-avatar__/graphics/" + animation.Key + "-" + layer.Key;
-                        if (s.LinesPerFile.HasValue)
+                        if (s.Files.Count > 1)
                         {
                             Assert.That(l.TryGetProperty("filename", out _), Is.False);
-                            Assert.That(l.GetProperty("lines_per_file").GetInt32(), Is.EqualTo(s.LinesPerFile.Value));
+                            Assert.That(l.TryGetProperty("lines_per_file", out JsonElement lines)
+                                ? lines.GetInt32() : (int?)null, Is.EqualTo(s.LinesPerFile));
+                            Assert.That(l.TryGetProperty("frames_per_file", out JsonElement perFile)
+                                ? perFile.GetInt32() : (int?)null, Is.EqualTo(s.FramesPerFile));
                             Assert.That(l.GetProperty("filenames").EnumerateArray().Select(f => f.GetString()),
                                 Is.EqualTo(Enumerable.Range(1, s.Files.Count).Select(n => prefix + "-" + n + ".png")));
                         }

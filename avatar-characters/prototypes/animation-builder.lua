@@ -43,7 +43,17 @@ local function layer(look, meta, key, extra, rotated)
     line_length = meta.frame_count,
     usage = "player",
   }
-  if info.filenames then
+  if info.frames_per_file then
+    -- each file holds every direction of frames_per_file frames (the last file may hold fewer)
+    l.line_length = nil
+    l.stripes = {}
+    local left = meta.frame_count
+    for _, path in ipairs(info.filenames) do
+      local n = math.min(info.frames_per_file, left)
+      l.stripes[#l.stripes + 1] = { filename = path, width_in_frames = n, height_in_frames = meta.direction_count }
+      left = left - n
+    end
+  elseif info.filenames then
     -- one direction per row; each file holds lines_per_file directions
     l.filenames = info.filenames
     l.lines_per_file = info.lines_per_file

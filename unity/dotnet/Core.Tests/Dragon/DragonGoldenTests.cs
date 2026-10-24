@@ -57,9 +57,12 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Dragon
                         .Select(row => AnimationSpec.Direction(info.Name, row).Move).Distinct();
                     foreach (double move in moves)
                     {
-                        for (int frame = 0; frame < info.FrameCount; frame++)
+                        // the Python renderer's frame counts: its idles have 8 frames (the exporter's have more)
+                        int frames = info.Name == AnimationSpec.Idle || info.Name == AnimationSpec.IdleGun ? 8 : info.FrameCount;
+                        for (int frame = 0; frame < frames; frame++)
                         {
-                            expected.Add(Key(body.Name, info.Name, frame, AnimationSpec.FramePhase(info.Name, frame), move));
+                            double t = info.Loop ? (double)frame / frames : AnimationSpec.FramePhase(info.Name, frame);
+                            expected.Add(Key(body.Name, info.Name, frame, t, move));
                         }
                     }
                 }

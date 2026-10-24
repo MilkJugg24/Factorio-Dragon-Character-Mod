@@ -202,8 +202,10 @@ class Checker:
             self.error(f"{where} needs an integer width and height between 1 and {limit}")
             return
         frames, dirs = meta["frame_count"], meta["direction_count"]
-        if frames * w > limit:
-            self.error(f"{where} is wider than {limit} px (frame_count x width)")
+        by_frames = "filenames" in info and "frames_per_file" in info
+        if frames * w > limit and not by_frames:
+            self.error(f"{where} is wider than {limit} px (frame_count x width);"
+                       " split it with filenames + frames_per_file")
         shift = info.get("shift")
         if not (isinstance(shift, list) and len(shift) == 2 and all(is_number(v) for v in shift)):
             self.error(f"{where} needs a shift of two numbers")
@@ -212,6 +214,9 @@ class Checker:
             lines = info.get("lines_per_file")
             if not isinstance(paths, list) or not paths:
                 self.error(f"{where} has an empty filenames list")
+                return
+            if by_frames:
+                self.check_frame_files(where, info, paths, frames, dirs, w, h, limit)
                 return
             if not is_int(lines, 1) or lines * h > limit:
                 self.error(f"{where} needs lines_per_file between 1 and floor({limit} / height)")
@@ -233,6 +238,29 @@ class Checker:
                 self.error(f"{where} is taller than {limit} px; split it with filenames + lines_per_file")
             elif name:
                 self.check_sheet(name, where, (frames * w, dirs * h), {dirs * h})
+
+    def check_frame_files(self, where, info, paths, frames, dirs, w, h, limit):
+        """A layer split by frames: every file holds all directions of frames_per_file frames."""
+        per_file = info["frames_per_file"]
+        if "lines_per_file" in info:
+            self.error(f"{where} has both lines_per_file and frames_per_file; a layer is split one way only")
+            return
+        if not is_int(per_file, 1) or per_file * w > limit:
+            self.error(f"{where} needs frames_per_file between 1 and floor({limit} / width)")
+            return
+        if dirs * h > limit:
+            self.error(f"{where} is taller than {limit} px (direction_count x height)")
+            return
+        needed = math.ceil(frames / per_file)
+        if len(paths) != needed:
+            self.error(f"{where} has {len(paths)} files but needs {needed} for {frames} frames"
+                       f" at {per_file} per file")
+            return
+        for k, path in enumerate(paths):
+            name = self.file(path, f"{where} file {k + 1}")
+            if name:
+                columns = min(per_file, frames - k * per_file)
+                self.check_sheet(name, where, (columns * w, dirs * h), {dirs * h})
 
     def check_animation(self, name, meta, tintable):
         where = f'animation "{name}"'

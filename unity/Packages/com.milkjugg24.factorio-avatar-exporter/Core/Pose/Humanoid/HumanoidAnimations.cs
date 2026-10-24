@@ -109,15 +109,33 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         private static readonly int[] Sides = { 1, -1 };
 
+        /// <summary>
+        /// The body from the hips up. The spine bends gradually from the hips' turn to the chest's
+        /// (<see cref="HumanoidPoseBuilder.SetTorso"/>), so hips and chest turned or tilted differently
+        /// (<paramref name="hipTwist"/> against <paramref name="twist"/>, <paramref name="hipRoll"/> against
+        /// <paramref name="chestRoll"/>, both radians, roll positive dropping the right side) give a body that
+        /// counters itself, as people do.
+        /// </summary>
         private HumanoidPoseBuilder Torso(Vec3 pelvis, double lean, double twist = 0, double hipTwist = 0,
-            double headPitch = 0, double headYaw = 0)
+            double headPitch = 0, double headYaw = 0, double hipRoll = 0, double chestRoll = 0, double headRoll = 0)
         {
             var b = new HumanoidPoseBuilder(rig);
-            b.SetPelvis(pelvis, Frame(lean * 0.5, hipTwist));
-            b.SetTorso(Frame(lean, twist));
+            b.SetPelvis(pelvis, Frame(lean * 0.5, hipTwist, hipRoll));
+            b.SetTorso(Frame(lean, twist, chestRoll));
             // the head stays closer to level than the torso and looks where the body goes
-            b.SetHead(Frame(lean * 0.35 + headPitch, twist * 0.5 + headYaw));
+            b.SetHead(Frame(lean * 0.35 + headPitch, twist * 0.5 + headYaw, headRoll));
             return b;
+        }
+
+        /// <summary>A smooth bump from 0 up to 1 and back over [<paramref name="start"/>, <paramref name="end"/>] of the loop.</summary>
+        private static double Bump(double t, double start, double end)
+        {
+            if (t <= start || t >= end)
+            {
+                return 0;
+            }
+            double u = (t - start) / (end - start);
+            return Math.Sin(Math.PI * u) * Math.Sin(Math.PI * u);
         }
 
         private static Quat ChestFrame(double lean, double twist = 0) => Frame(lean, twist);
@@ -332,50 +350,87 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
 
         // -- animations -----------------------------------------------------------------------------
 
-        /// <summary>anims.idle: breathing, the head looking around a little.</summary>
+        /// <summary>
+        /// When each wing stretches in the idle loop (16 s): the left from about 2 s to 3.5 s, the right 8 s later.
+        /// </summary>
+        private const double LeftStretchStart = 0.125, StretchLength = 0.09375;
+
+        /// <summary>How far a stretching wing swings out, radians.</summary>
+        private const double WingStretch = 1.0;
+
+        /// <summary>
+        /// Standing (16 s loop, 48 frames): breathing, the weight shifting slowly from foot to foot with the hips
+        /// dropping on the unweighted side and the chest countering, a slight slouch, the head looking around,
+        /// the tail swaying, and a stretch of one wing and, 8 s later, the other, with the body leaning away and
+        /// the head turning to look.
+        /// </summary>
         private PoseResult Idle(double t, bool gun)
         {
-            double breath = Math.Sin(MathUtil.Tau * t);
-            const double lean = 0.03;
-            var pelvis = new Vec3(0, -0.005 * legScale, standingPelvis + 0.004 * legScale * breath);
-            HumanoidPoseBuilder b = Torso(pelvis, lean, headPitch: 0.02 * Math.Sin(MathUtil.Tau * t + 1.2),
-                headYaw: 0.05 * Math.Sin(MathUtil.Tau * t));
-            Quat chest = ChestFrame(lean);
+            double ph = MathUtil.Tau * t;
+            double breath = Math.Sin(4 * ph);
+            double sway = Math.Sin(ph);
+            double left = Bump(t, LeftStretchStart, LeftStretchStart + StretchLength);
+            double right = Bump(t, LeftStretchStart + 0.5, LeftStretchStart + 0.5 + StretchLength);
+            double lean = 0.06 + 0.008 * breath - 0.05 * (left + right);
+            var pelvis = new Vec3(-0.012 * legScale * sway, -0.005 * legScale,
+                standingPelvis + 0.004 * legScale * breath - 0.006 * legScale * Math.Abs(sway));
+            double hipRoll = 0.035 * sway;
+            HumanoidPoseBuilder b = Torso(pelvis, lean, twist: 0.06 * (left - right),
+                headPitch: 0.03 * Math.Sin(3 * ph + 0.5) - 0.02 * breath,
+                headYaw: 0.12 * Math.Sin(2 * ph + 1.0) + 0.45 * (left - right),
+                hipRoll: hipRoll, chestRoll: -0.6 * hipRoll + 0.06 * (right - left), headRoll: 0.2 * hipRoll);
+            Quat chest = ChestFrame(lean, 0.06 * (left - right));
             if (gun)
             {
                 HoldGun(b, chest);
             }
             else
             {
-                RelaxedArms(b, chest);
+                RelaxedArms(b, chest, 0.015 * Math.Sin(4 * ph + 0.8));
             }
             StandingFeet(b, 0.01);
-            return b.Build();
+            PoseResult pose = b.Build();
+            pose.LeftWingLift = WingStretch * left;
+            pose.RightWingLift = WingStretch * right;
+            pose.TailSwing = 0.06;
+            pose.TailPhase = 2 * ph;
+            pose.TailLift = 0.05;
+            return pose;
         }
 
         /// <summary>
-        /// anims.run: <paramref name="move"/> turns the hips and legs clockwise from the facing direction
-        /// (running with a gun aimed elsewhere). Each foot is on the ground for half the cycle, rolling onto
-        /// its ball before it lifts.
+        /// Running: every footfall drives the body. Feet land on frames 1 and 7; the hips drop as the leg takes
+        /// the weight and rise into the push-off and the moment both feet are off the ground, tilt down on the
+        /// swinging leg's side and turn forward with it, and sit over the foot on the ground. The chest counters
+        /// all three, the arms swing against the legs with bent elbows, rising and crossing in front, the head
+        /// stays level and looks ahead, and the tail swings against the hips. <paramref name="move"/> turns the
+        /// hips and legs clockwise from the facing direction (running with a gun aimed elsewhere); with a gun the
+        /// chest twists less, so the gun stays on target.
         /// </summary>
         private PoseResult Run(double t, bool gun, double move)
         {
             double ph = MathUtil.Tau * t;
-            double lean = gun ? 0.12 : 0.22;
-            double twist = 0.10 * Math.Sin(ph);
-            // low enough that the leg reaching forward to land is still bent at the knee
-            var pelvis = new Vec3(0, 0, rig.HipsHeight - 0.08 * rig.LegLength - 0.028 * legScale * Math.Cos(2 * ph));
-            HumanoidPoseBuilder b = Torso(pelvis, lean, twist, -0.12 * Math.Sin(ph) - move,
-                headPitch: gun ? -0.06 : -0.12, headYaw: -twist * 0.5);
+            // lowest just after each landing, highest in the air between steps
+            double bounce = -Math.Cos(2 * ph - 0.4);
+            double lean = (gun ? 0.12 : 0.22) + 0.03 * bounce;
+            double hipTwist = (gun ? 0.12 : 0.16) * Math.Sin(ph);
+            double twist = (gun ? 0.05 : 0.14) * Math.Sin(ph);
+            double hipRoll = 0.07 * Math.Sin(ph);
+            // the weight over the foot on the ground: the left from frame 1, the right from frame 7
+            Vec3 shift = Turn(new Vec3(-0.025 * legScale * Math.Sin(ph), 0, 0), move);
+            var pelvis = new Vec3(shift.X, shift.Y, rig.HipsHeight - 0.085 * rig.LegLength + 0.03 * legScale * bounce);
+            HumanoidPoseBuilder b = Torso(pelvis, lean, twist, -hipTwist - move,
+                headPitch: (gun ? -0.06 : -0.12) - 0.03 * bounce, headYaw: -twist * 0.5,
+                hipRoll: hipRoll, chestRoll: -0.55 * hipRoll, headRoll: -0.1 * hipRoll);
             foreach ((int side, double phase) in new[] { (-1, t), (1, t + 0.5) })
             {
                 double phi = MathUtil.PositiveModulo(phase, 1.0);
                 double y = 0.02 * legScale + RunStride * legScale * Math.Cos(MathUtil.Tau * phi);
-                double swing = phi > 0.5 ? Math.Sin(MathUtil.Tau * (phi - 0.5)) : 0.0;
-                double z = 0.16 * legScale * swing;
-                // the heel comes up as the foot pushes off behind the body, the toes flat on the ground; in the
-                // air the toes stay in line with the foot, which trails while it swings
-                double heelLift = phi <= 0.5 ? 0.7 * MathUtil.Smoothstep(0.3, 0.5, phi) : 0.7 * (1 - MathUtil.Smoothstep(0.5, 0.9, phi)) + 0.4 * swing;
+                // in the air the heel kicks up behind first, then the knee drives forward
+                double s = phi > 0.5 ? (phi - 0.5) / 0.5 : 0.0;
+                double swing = s > 0 ? Math.Sin(Math.PI * Math.Pow(s, 0.75)) : 0.0;
+                double z = 0.15 * legScale * swing;
+                double heelLift = phi <= 0.5 ? 0.7 * MathUtil.Smoothstep(0.3, 0.5, phi) : 0.9 * (1 - MathUtil.Smoothstep(0.5, 0.9, phi)) + 0.4 * swing;
                 Vec3 rest = rig.Ball(side);
                 Vec3 ball = Turn(new Vec3(rest.X - side * 0.01 * legScale, rest.Y + y, rest.Z + z), move);
                 Vec3 forward = Turn(rig.FootForward(side), move);
@@ -391,13 +446,22 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 foreach ((int side, double phase) in new[] { (-1, t), (1, t + 0.5) })
                 {
                     double a = Math.Cos(MathUtil.Tau * (phase + 0.5));
+                    double ahead = Math.Max(a, 0);
                     Vec3 s = Shoulder(b, side);
-                    Vec3 hand = s + chest.Right * (side * 0.07 * armScale) + chest.Forward * ((0.10 + 0.20 * a) * armScale)
-                                - chest.Up * ((0.30 - 0.06 * a) * armScale);
-                    b.SetArm(side, hand, -chest.Forward + chest.Right * (side * 0.3) - chest.Up * 0.2, null, 0.6);
+                    Vec3 hand = s + chest.Right * (side * (0.08 - 0.05 * ahead) * armScale)
+                                + chest.Forward * ((0.16 + 0.14 * a) * armScale)
+                                - chest.Up * ((0.22 - 0.10 * a) * armScale);
+                    // elbows bent about square: swung back, the upper arm points back and the hand hangs under the
+                    // shoulder; swung forward, the hand comes up to the chest
+                    b.SetArm(side, hand, -chest.Forward * 0.6 + chest.Right * (side * 0.35) - chest.Up, null, 0.6);
                 }
             }
-            return b.Build();
+            PoseResult pose = b.Build();
+            pose.LeftWingLift = pose.RightWingLift = 0.05 * (1 + bounce);
+            pose.TailSwing = 0.10;
+            pose.TailPhase = ph + Math.PI;
+            pose.TailLift = 0.15;
+            return pose;
         }
 
         /// <summary>
@@ -452,7 +516,10 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 Vec3 forward = rig.FootForward(side);
                 b.SetFoot(side, ball, forward, 0, forward + Vec3.UnitX * (side * 0.2));
             }
-            return b.Build();
+            PoseResult pose = b.Build();
+            // the tail swings up with the wind-up and down with the blow, for balance
+            pose.TailLift = 0.25 * raise - 0.1 * crouch;
+            return pose;
         }
 
         /// <summary>How far back the legs hang while hovering, radians.</summary>
@@ -475,8 +542,17 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 RelaxedArms(b, chest, 0, 0.03);
             }
             DanglingLegs(b, HoverLegAngle);
-            return b.Build();
+            PoseResult pose = b.Build();
+            // slow, gentle wingbeats holding the body up; the tail hangs and drifts
+            pose.LeftWingLift = pose.RightWingLift = HoverWings(ph);
+            pose.TailSwing = 0.05;
+            pose.TailPhase = ph;
+            pose.TailLift = -0.1;
+            return pose;
         }
+
+        /// <summary>The wings while hovering at phase <paramref name="ph"/>: slow, gentle beats.</summary>
+        private static double HoverWings(double ph) => 0.25 + 0.3 * Math.Sin(ph);
 
         /// <summary>anims.fly: leaning into the flight, legs trailing in the flight direction.</summary>
         private PoseResult Fly(double t, bool gun, double move)
@@ -495,7 +571,13 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
                 RelaxedArms(b, chest, 0, 0.02);
             }
             DanglingLegs(b, lean + 0.1, move);
-            return b.Build();
+            PoseResult pose = b.Build();
+            // full wingbeats, one per loop; the tail streams out behind, rippling
+            pose.LeftWingLift = pose.RightWingLift = 0.35 + 0.55 * Math.Sin(ph);
+            pose.TailSwing = 0.06;
+            pose.TailPhase = 2 * ph;
+            pose.TailLift = 0.25;
+            return pose;
         }
 
         /// <summary>
@@ -520,7 +602,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
             {
                 DanglingLegs(b, HoverLegAngle, 0, MathUtil.Smoothstep(0.05, 0.7, lift));
             }
-            return b.Build();
+            PoseResult pose = b.Build();
+            // the wings open and beat hard once to lift off, ending as the first hover frame's
+            pose.LeftWingLift = pose.RightWingLift = HoverWings(0) * MathUtil.Smoothstep(0, 1, t) + 0.6 * Math.Sin(Math.PI * t);
+            pose.TailLift = -0.1 * lift;
+            return pose;
         }
 
         /// <summary>

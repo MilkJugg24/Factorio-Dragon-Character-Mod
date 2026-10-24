@@ -36,6 +36,16 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         private readonly List<(Transform part, Transform bone, Vector3 position, Quaternion rotation)> links =
             new List<(Transform, Transform, Vector3, Quaternion)>();
 
+        // wing roots (bones named "wing" whose parent bone is not) and which side each is on; those of the body
+        // turn before the loose parts follow their bones, the others (on a part of their own) after
+        private readonly List<(Transform root, bool left, bool inBody)> wings = new List<(Transform, bool, bool)>();
+
+        // the tail's bones (named "tail"), root first
+        private readonly List<Transform> tail = new List<Transform>();
+
+        // the body's right and forward at rest, pivot space
+        private Vector3 restRight, restForward;
+
         // the held tools, built from Unity's primitives (the sizes of Core's stick figure)
         private GameObject gun;
         private GameObject pickaxe;
@@ -164,7 +174,155 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
             {
                 restRotations.Add(bone.Key, Quaternion.Inverse(Pivot.rotation) * bone.Value.rotation);
             }
+            Vector3 across = Pivot.InverseTransformPoint(bones[HumanBone.RightUpperArm].position) -
+                Pivot.InverseTransformPoint(bones[HumanBone.LeftUpperArm].position);
+            restRight = Vector3.ProjectOnPlane(across, Vector3.up).normalized;
+            restForward = Vector3.Cross(restRight, Vector3.up);
+            FindWings();
+            FindTail();
             BuildProps();
+        }
+
+        private static bool Named(Transform t, string word) => t.name.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0;
+
+        /// <summary>The highest bone of the trunk the rig maps (upper chest, chest, spine or hips).</summary>
+        private HumanBone TopOfTrunk() =>
+            new[] { HumanBone.UpperChest, HumanBone.Chest, HumanBone.Spine, HumanBone.Hips }.First(bones.ContainsKey);
+
+        /// <summary>
+        /// The wings' root bones: bones of any mesh named "wing" whose nearest parent bone is not, each on the side
+        /// its bones lie. A root that only follows a body wing bone of its own name is left to follow it.
+        /// </summary>
+        private void FindWings()
+        {
+            var skin = new HashSet<Transform>(Avatar.GetComponentsInChildren<SkinnedMeshRenderer>(true)
+                .SelectMany(r => r.bones).Where(b => b != null));
+            skin.UnionWith(bones.Values);
+            Transform ParentBone(Transform t)
+            {
+                for (Transform p = t.parent; p != null && p != Avatar.transform; p = p.parent)
+                {
+                    if (skin.Contains(p))
+                    {
+                        return p;
+                    }
+                }
+                return null;
+            }
+            List<Transform> roots = skin.Where(t => Named(t, "wing") && !(ParentBone(t) is Transform p && Named(p, "wing")))
+                .OrderBy(t => t.name, StringComparer.Ordinal).ToList();
+            var followers = new HashSet<Transform>(links.Where(l => roots.Contains(l.bone)).Select(l => l.part));
+            Vector3 top = Pivot.InverseTransformPoint(bones[TopOfTrunk()].position);
+            var unsided = new List<string>();
+            foreach (Transform root in roots.Where(r => !followers.Contains(r)))
+            {
+                Vector3 centre = Vector3.zero;
+                Transform[] chain = root.GetComponentsInChildren<Transform>(true);
+                foreach (Transform t in chain)
+                {
+                    centre += Pivot.InverseTransformPoint(t.position);
+                }
+                float side = Vector3.Dot(centre / chain.Length - top, restRight);
+                if (Math.Abs(side) < 0.01f)
+                {
+                    unsided.Add(root.name);
+                    continue;
+                }
+                wings.Add((root, side < 0, InBody(root)));
+            }
+            if (wings.Count > 0)
+            {
+                Notes.Add("wings that flap and stretch: " + string.Join(", ", wings.Select(w => $"{w.root.name} ({(w.left ? "left" : "right")})")));
+            }
+            else
+            {
+                Notes.Add("no wing bones (named \"wing\") found: nothing flaps");
+            }
+            if (unsided.Count > 0)
+            {
+                Notes.Add("wing bones in the middle, left still (neither left nor right): " + string.Join(", ", unsided));
+            }
+        }
+
+        /// <summary>
+        /// The tail: the longest chain of the body's bones named "tail", from a bone whose parent is not, through
+        /// the child named "tail" with the most bones below it.
+        /// </summary>
+        private void FindTail()
+        {
+            Transform hips = bones[HumanBone.Hips];
+            List<Transform> best = null;
+            foreach (Transform root in hips.GetComponentsInChildren<Transform>(true).Where(t => Named(t, "tail") && !Named(t.parent, "tail")))
+            {
+                var chain = new List<Transform>();
+                for (Transform t = root; t != null;)
+                {
+                    chain.Add(t);
+                    t = t.Cast<Transform>().Where(c => Named(c, "tail"))
+                        .OrderByDescending(c => c.GetComponentsInChildren<Transform>(true).Length).FirstOrDefault();
+                }
+                if (best == null || chain.Count > best.Count)
+                {
+                    best = chain;
+                }
+            }
+            if (best == null)
+            {
+                Notes.Add("no tail bones (named \"tail\") found: nothing sways");
+                return;
+            }
+            tail.AddRange(best);
+            Notes.Add($"tail that sways: {best[0].name} to {best[best.Count - 1].name} ({best.Count} bones)");
+        }
+
+        /// <summary>How <paramref name="bone"/> is turned from its rest, world space.</summary>
+        private Quaternion TurnFromRest(HumanBone bone) =>
+            bones[bone].rotation * Quaternion.Inverse(Pivot.rotation * restRotations[bone]);
+
+        /// <summary>
+        /// Swings the tail (each bone a little more than its parent, a wave running down it) about the hips' up axis
+        /// and raises it about their sideways axis, as <paramref name="pose"/> asks.
+        /// </summary>
+        private void PoseTail(PoseResult pose)
+        {
+            if (tail.Count == 0 || (pose.TailSwing == 0 && pose.TailLift == 0))
+            {
+                return;
+            }
+            Quaternion hips = TurnFromRest(HumanBone.Hips) * Pivot.rotation;
+            Vector3 up = hips * Vector3.up, right = hips * restRight;
+            Transform tip = tail[tail.Count - 1];
+            Vector3 along = tip.position - tail[0].position;
+            if (tip.childCount > 0 && along.sqrMagnitude < 1e-8f)
+            {
+                along = tip.GetChild(0).position - tail[0].position;
+            }
+            // raising turns the tail's end up, whichever way it hangs
+            float liftSign = Vector3.Dot(Quaternion.AngleAxis(1, right) * along, up) >= Vector3.Dot(along, up) ? 1 : -1;
+            float lift = (float)(pose.TailLift / tail.Count * 180 / Math.PI) * liftSign;
+            for (int i = 0; i < tail.Count; i++)
+            {
+                float swing = (float)(pose.TailSwing * Math.Sin(pose.TailPhase - PoseResult.TailWaveDelay * i) * 180 / Math.PI);
+                tail[i].rotation = Quaternion.AngleAxis(swing, up) * Quaternion.AngleAxis(lift, right) * tail[i].rotation;
+            }
+        }
+
+        /// <summary>Turns the wing roots (of the body, or the others) about the chest's forward axis, outwards and up.</summary>
+        private void PoseWings(PoseResult pose, bool inBody)
+        {
+            Quaternion chest = TurnFromRest(TopOfTrunk()) * Pivot.rotation;
+            Vector3 forward = chest * restForward, up = chest * Vector3.up;
+            foreach ((Transform root, bool left, bool body) in wings)
+            {
+                double lift = left ? pose.LeftWingLift : pose.RightWingLift;
+                if (body != inBody || lift == 0)
+                {
+                    continue;
+                }
+                Vector3 outward = chest * (left ? -restRight : restRight);
+                float sign = Vector3.Dot(Quaternion.AngleAxis(1, forward) * outward, up) >= Vector3.Dot(outward, up) ? 1 : -1;
+                root.rotation = Quaternion.AngleAxis(sign * (float)(lift * 180 / Math.PI), forward) * root.rotation;
+            }
         }
 
         /// <summary>
@@ -545,7 +703,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
         /// <summary>
         /// Poses the avatar as PoseResult documents: from the rest pose, parent first, every listed bone gets
         /// the rotation <c>delta * rest</c> (in the pivot's space), then the hips move to the pose's hips
-        /// position, then the parts held on the body follow their bones and the held tool is placed, then the
+        /// position, the tail sways and the wings turn (<see cref="PoseResult.TailSwing"/>,
+        /// <see cref="PoseResult.LeftWingLift"/>), then the parts held on the body follow their bones and the held tool is placed, then the
         /// whole avatar drops onto the ground if the pose asks for it. Fingers don't close around the tools yet.
         /// </summary>
         public void ApplyPose(PoseResult pose)
@@ -559,7 +718,11 @@ namespace MilkJugg24.FactorioAvatarExporter.Editor
                 }
             }
             bones[HumanBone.Hips].position = Pivot.TransformPoint(ToUnity(pose.HipsPosition, MetersPerTile));
+            // the tail and the body's wings first, so the parts held on them follow
+            PoseTail(pose);
+            PoseWings(pose, true);
             FollowLinks();
+            PoseWings(pose, false);
             PlaceProp(pose.Prop);
             if (pose.GroundToLowestPoint)
             {

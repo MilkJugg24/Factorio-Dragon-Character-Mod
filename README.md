@@ -10,8 +10,8 @@ Play Factorio 2.1 as your own avatar. Two parts work together:
 - **Avatar Characters**, a Factorio mod (`avatar-characters/`). It turns the installed avatar packs into
   characters. Every player picks their own look in the avatar window, or stays the engineer.
 
-Work in progress: the exporter poses your avatar in every animation and writes the pack, but fingers don't
-grip yet and wings and tails stay still. See the
+Work in progress: the exporter poses your avatar in every animation and writes the pack (wings flap and
+stretch, tails sway), but fingers don't grip yet. See the
 [exporter's README](unity/Packages/com.milkjugg24.factorio-avatar-exporter/README.md).
 
 The newest release on the [Releases](../../releases) page has both downloads side by side: the

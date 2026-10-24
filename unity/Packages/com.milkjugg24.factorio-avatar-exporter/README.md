@@ -134,7 +134,9 @@ Each character uses video memory on every player's computer; `report.txt` says h
 you might fear, because the game compresses sprites. In a test, a bundle of 12 characters at 64 pixels per
 tile added about 120 MB of video memory and about a second of loading time, and the game ran at a full
 60 frames per second with all 12 on screen. Avatars with big wings or long hair take more, and so does a
-bigger **Size in game** (at 100%, about a quarter more than in that test).
+bigger **Size in game** (at 100%, about a quarter more than in that test). From exporter 0.7.0 on, the
+idle animations last 16 seconds instead of about 2 (48 frames instead of 8), which makes a pack about 70%
+bigger.
 
 ## Updating your avatar
 
@@ -186,8 +188,26 @@ anything it couldn't change. Then save, and remove the mod.
 ## What it doesn't do yet
 
 - Fingers don't close around the gun and pickaxe, which are simple stand-in shapes.
-- Wings, tails and ears stay in their rest pose in every animation.
+- Ears stay in their rest pose. Wings move only when their bones have "wing" in their names, and the
+  tail only when its bones have "tail" in their names (see below).
 - The player colour doesn't tint the avatar.
+
+## How it moves
+
+- **Idle:** the avatar breathes, shifts its weight from foot to foot and looks around. Every 8 seconds one
+  wing stretches out, the left and then the right, and the head turns towards it.
+- **Running:** the hips drop and rise with each step, tilt and turn with the legs, and the chest and arms
+  swing against them, elbows bent. The shooting versions (which the game shows from your first shot on)
+  move the same way, more gently, so the gun stays on target.
+- **Flying** (mech armor): the wings flap; hovering, they beat slowly.
+- **Wings:** bones whose names contain "wing" (any letter case), on any mesh. The first such bone of
+  each chain turns, so the whole wing follows; its side comes from where the wing lies.
+- **Tail:** the avatar's own bones below the hips whose names contain "tail", a chain from the root to
+  the tip. It sways in a wave from root to tip and lifts while running and flying. A tail that is part
+  of the body mesh works too, as long as it has its own bones. Anything held on a tail bone (a tuft, for
+  example) moves with it.
+
+The **Report** lists the wing and tail bones it found.
 
 ## More about the exporter window
 

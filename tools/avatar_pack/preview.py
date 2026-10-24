@@ -54,7 +54,11 @@ class Pack:
         """The image of one frame of a layer and where its centre is, in pixels from the entity position."""
         info = meta["layers"][layer]
         w, h = info["width"], info["height"]
-        if "filenames" in info:
+        if "filenames" in info and "frames_per_file" in info:
+            per_file = info["frames_per_file"]
+            sheet = self.sheet(info["filenames"][column // per_file])
+            column %= per_file
+        elif "filenames" in info:
             lines = info["lines_per_file"]
             sheet = self.sheet(info["filenames"][row // lines])
             row %= lines

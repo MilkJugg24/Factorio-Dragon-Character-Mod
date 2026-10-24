@@ -230,25 +230,34 @@ class Painter:
 
 
 def write_layer(folder, mod_name, anim, layer, images, frames, max_sheet):
-    """Packs images[row][frame] into one sheet, or several split by rows. Returns the layer table."""
+    """Packs images[row][frame] into one sheet, or several split by rows or, for a row too wide, by
+    frames. Returns the layer table."""
     rows = len(images)
     w, h = images[0][0].size
-    if frames * w > max_sheet or h > max_sheet:
-        raise SystemExit(f"{anim}-{layer}: frames of {w}x{h} px do not fit --max-sheet {max_sheet}")
-    lines = max_sheet // h
-    chunks = [range(start, min(start + lines, rows)) for start in range(0, rows, lines)]
+    wide, tall = frames * w > max_sheet, rows * h > max_sheet
+    if w > max_sheet or h > max_sheet or (wide and tall):
+        raise SystemExit(f"{anim}-{layer}: {rows} x {frames} frames of {w}x{h} px do not fit --max-sheet {max_sheet}")
+    lines = max_sheet // h if tall else rows
+    per_file = max_sheet // w if wide else frames
+    if wide:
+        chunks = [(range(rows), range(start, min(start + per_file, frames))) for start in range(0, frames, per_file)]
+    else:
+        chunks = [(range(start, min(start + lines, rows)), range(frames)) for start in range(0, rows, lines)]
     paths = []
-    for n, chunk in enumerate(chunks, 1):
-        sheet = Image.new("RGBA", (frames * w, len(chunk) * h))
-        for y, row in enumerate(chunk):
-            for x in range(frames):
-                sheet.paste(images[row][x], (x * w, y * h))
+    for n, (chunk_rows, chunk_frames) in enumerate(chunks, 1):
+        sheet = Image.new("RGBA", (len(chunk_frames) * w, len(chunk_rows) * h))
+        for y, row in enumerate(chunk_rows):
+            for x, f in enumerate(chunk_frames):
+                sheet.paste(images[row][f], (x * w, y * h))
         name = f"{anim}-{layer}.png" if len(chunks) == 1 else f"{anim}-{layer}-{n}.png"
         sheet.save(os.path.join(folder, "graphics", name), optimize=True)
         paths.append(f"__{mod_name}__/graphics/{name}")
     info = {"width": w, "height": h}
     if len(paths) == 1:
         info["filename"] = paths[0]
+    elif wide:
+        info["filenames"] = paths
+        info["frames_per_file"] = per_file
     else:
         info["filenames"] = paths
         info["lines_per_file"] = lines

@@ -83,8 +83,9 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// <summary>All animations in the order they are rendered and written.</summary>
         public static readonly IReadOnlyList<AnimationInfo> All = new[]
         {
-            new AnimationInfo(Idle, 8, 8, true, 0.06, false, false, true),
-            new AnimationInfo(IdleGun, 8, 8, true, 0.06, false, true, true),
+            // 48 frames over 16 s: a wing stretches every 8 s, the other side each time
+            new AnimationInfo(Idle, 8, 48, true, 0.05, false, false, true),
+            new AnimationInfo(IdleGun, 8, 48, true, 0.05, false, true, true),
             new AnimationInfo(Run, 8, 12, true, 0.6, false, false, true),
             new AnimationInfo(RunGun, 18, 12, true, 0.6, false, true, true),
             new AnimationInfo(Mine, 8, 12, true, 0.415, false, false, true),

@@ -85,8 +85,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
     {
         public const string ModPrefix = "avatar-bundle-";
 
-        /// <summary>The first avatar-characters version that loads bundles.</summary>
-        public const string MinMainModVersion = "0.3.0";
+        /// <summary>The first avatar-characters version that loads bundles (and frames_per_file, 0.4.0).</summary>
+        public const string MinMainModVersion = "0.4.0";
 
         public const string Dependency = PackFormat.MainMod + " >= " + MinMainModVersion;
 

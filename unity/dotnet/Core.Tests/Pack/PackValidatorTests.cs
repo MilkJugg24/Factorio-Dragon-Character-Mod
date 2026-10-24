@@ -65,8 +65,8 @@ namespace MilkJugg24.FactorioAvatarExporter.Core.Tests.Pack
                 "animation \"idle\" has a \"shadow-flipped\" layer, which the pack format does not use");
             yield return Case("WrongDirections", p => p.SetLayer("run", PackLayers.Shadow, Sheets(4, 12)),
                 "animation \"run\" layer \"shadow\" has 4 directions; the pack format needs 8");
-            yield return Case("FrameCountsDiffer", p => p.SetLayer("idle", PackLayers.Shadow, Sheets(8, 7)),
-                "animation \"idle\" layer \"shadow\" has 7 frames, but layer \"base\" has 8");
+            yield return Case("FrameCountsDiffer", p => p.SetLayer("run", PackLayers.Shadow, Sheets(8, 7)),
+                "animation \"run\" layer \"shadow\" has 7 frames, but layer \"base\" has 12");
             yield return Case("TooManyFrames", p =>
             {
                 foreach (string layer in new[] { PackLayers.Base, PackLayers.Mask, PackLayers.Shadow })

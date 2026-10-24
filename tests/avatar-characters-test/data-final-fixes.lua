@@ -81,7 +81,15 @@ if mods["avatar-pack-test"] then
     check(run_gun.layers[2].apply_runtime_tint == true, "pack test: mask not tinted")
     check(run_gun.layers[3].draw_as_shadow == true, "pack test: shadow not drawn as shadow")
     check(anim.flipped_shadow_running_with_gun ~= nil, "pack test: no flipped shadow")
-    check(anim.idle.layers[1].filename == "__avatar-pack-test__/graphics/idle-base.png", "pack test: idle filename")
+    local idle = anim.idle.layers[1]
+    check(idle.filename == nil and idle.filenames == nil and idle.stripes and #idle.stripes == 2,
+      "pack test: idle (16 frames) not split by frames into 2 stripes")
+    check(idle.stripes and idle.stripes[2].filename == "__avatar-pack-test__/graphics/idle-base-2.png"
+      and idle.stripes[1].width_in_frames + idle.stripes[2].width_in_frames == 16
+      and idle.stripes[1].height_in_frames == 8 and idle.line_length == nil and idle.frame_count == 16,
+      "pack test: idle stripes")
+    check(anim.idle_with_gun.layers[1].filename == "__avatar-pack-test__/graphics/idle-gun-base.png",
+      "pack test: idle-gun filename")
     check(anim.idle.layers[1].animation_speed == 0.08, "pack test: idle speed override")
     check(anim.running.layers[1].animation_speed == 0.5, "pack test: run speed override")
     check(anim.mining_with_tool.layers[1].animation_speed == 0.415, "pack test: default mine speed")
@@ -135,7 +143,7 @@ for name, mod_data in pairs(data.raw["mod-data"] or {}) do
     local folder = "__" .. d.mod .. "__/characters/" .. d.id .. "/"
     local character = data.raw["character"][name]
     local idle = character and character.animations[1].idle.layers[1]
-    local file = idle and (idle.filename or idle.filenames[1]) or ""
+    local file = idle and (idle.filename or (idle.filenames or {})[1] or ((idle.stripes or {})[1] or {}).filename) or ""
     check(file:sub(1, #folder) == folder, "bundled pack " .. name .. " draws " .. file .. ", not from " .. folder)
     check(character and character.icon:sub(1, #folder) == folder, "bundled pack " .. name .. ": icon not in its bundle")
   end

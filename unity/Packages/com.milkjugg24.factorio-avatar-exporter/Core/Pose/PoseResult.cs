@@ -98,6 +98,28 @@ namespace MilkJugg24.FactorioAvatarExporter.Core
         /// (used by the corpse, whose height depends on the mesh).
         /// </summary>
         public bool GroundToLowestPoint { get; set; }
+
+        /// <summary>
+        /// How far the left and right wing are raised and swung out from their rest, radians, for avatars with
+        /// wings (bones named "wing"; ignored otherwise): the renderer turns each wing's root bone about the
+        /// chest's forward axis, outwards and up.
+        /// </summary>
+        public double LeftWingLift { get; set; }
+        public double RightWingLift { get; set; }
+
+        /// <summary>
+        /// The tail's sideways swing, for avatars with tail bones (named "tail"): each tail bone, from the root,
+        /// turns <c>TailSwing * sin(TailPhase - TailWaveDelay * index)</c> radians about the hips' up axis
+        /// (positive to the avatar's right), so a wave runs down the tail and its tip trails.
+        /// </summary>
+        public double TailSwing { get; set; }
+        public double TailPhase { get; set; }
+
+        /// <summary>How far the tail is raised, radians, spread over its bones (positive up).</summary>
+        public double TailLift { get; set; }
+
+        /// <summary>Phase delay of the tail's wave per bone, radians.</summary>
+        public const double TailWaveDelay = 0.7;
     }
 
     /// <summary>Timing values written to the pack (docs/avatar-pack-format.md, "timing").</summary>
